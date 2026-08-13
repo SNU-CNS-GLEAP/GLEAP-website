@@ -1,12 +1,17 @@
-import { getLocale } from "next-intl/server";
+import { setRequestLocale } from "next-intl/server";
 import { requireAdmin } from "@/lib/auth";
+
+type Props = {
+  children: React.ReactNode;
+  params: Promise<{ locale: string }>;
+};
 
 export default async function AdminDashboardLayout({
   children,
-}: {
-  children: React.ReactNode;
-}) {
-  const locale = await getLocale();
+  params,
+}: Props) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   await requireAdmin(locale);
 
   return <>{children}</>;

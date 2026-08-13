@@ -1,9 +1,14 @@
-import { getLocale, getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { activityCategories } from "@/content/activities";
 import { localize } from "@/lib/localized-text";
 
-export default async function ActivitiesPage() {
-  const locale = await getLocale();
+type Props = {
+  params: Promise<{ locale: string }>;
+};
+
+export default async function ActivitiesPage({ params }: Props) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations("ActivitiesPage");
 
   return (

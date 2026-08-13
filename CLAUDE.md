@@ -193,6 +193,24 @@ Tiptap은 툴바 UI를 직접 만들어야 해서 초기 작업량이 조금 더
 
 ---
 
+## 성능: 정적 렌더링
+
+next-intl은 기본적으로 요청 헤더에서 locale을 읽기 때문에, 아무 설정 없이는
+`[locale]` 하위 페이지가 전부 동적 렌더링(`ƒ`)으로 빠진다. 매 요청마다 서버 함수를
+실행하게 되고, Vercel Hobby 기본 리전(워싱턴 D.C.)까지 왕복하느라 서울에서 200~400ms가
+추가로 든다 — 버그가 아니라 설정 누락.
+
+- `src/app/[locale]/layout.tsx`의 `generateStaticParams()`로 `ko`/`en` 두 로케일을 명시
+- **모든 `[locale]` 하위 layout·page**에서 `next-intl/server`의 `setRequestLocale(locale)`을
+  `params` await 직후에 호출. **하나라도 빠뜨리면 그 아래 트리 전체가 다시 동적으로 남는다** —
+  새 페이지를 추가할 때 반드시 같이 넣을 것
+- `admin`, `admin/login`은 세션 쿠키를 읽어야 해서 여전히 `ƒ`가 정상. 관리자 전용이라 영향 미미
+- `vercel.json`에서 `regions: ["icn1"]`(서울)로 함수 실행 리전 고정.
+  → **나중에 Neon 만들 때도 서울/도쿄 리전으로 맞출 것.** Neon은 리전을 나중에 못 바꾸므로
+  함수는 서울인데 DB가 미국이면 이번엔 DB 왕복에서 손해를 본다
+- 확인 방법: `npm run build` 출력에서 admin 제외 전부 `●`(SSG)인지 확인.
+  배포 후에는 응답 헤더 `x-vercel-cache: HIT`/`PRERENDER`, `x-vercel-id`에 `iad1`이 없는지 확인
+
 ## 개발 시 주의
 
 - **DB**: Neon 브랜치를 따로 만들어 로컬에서 사용. 운영 연결 문자열을 `.env.local`에 두지 않는다. 스키마 변경이 잦으므로 필수

@@ -1,12 +1,14 @@
-import { getLocale } from "next-intl/server";
+import { setRequestLocale } from "next-intl/server";
 import { login } from "./actions";
 
 type Props = {
+  params: Promise<{ locale: string }>;
   searchParams: Promise<{ error?: string }>;
 };
 
-export default async function AdminLoginPage({ searchParams }: Props) {
-  const locale = await getLocale();
+export default async function AdminLoginPage({ params, searchParams }: Props) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const { error } = await searchParams;
 
   return (

@@ -1,8 +1,14 @@
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 
-export default function Home() {
-  const t = useTranslations("HomePage");
+type Props = {
+  params: Promise<{ locale: string }>;
+};
+
+export default async function Home({ params }: Props) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations("HomePage");
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center bg-surface font-sans">

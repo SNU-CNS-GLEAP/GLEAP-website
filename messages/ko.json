@@ -18,5 +18,10 @@
   },
   "ActivitiesPage": {
     "title": "활동 소개"
+  },
+  "Footer": {
+    "rights": "© {year} GLEAP. All rights reserved.",
+    "contact": "문의",
+    "developer": "개발"
   }
 }

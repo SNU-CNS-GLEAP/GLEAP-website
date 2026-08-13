@@ -1,5 +1,3 @@
-@AGENTS.md
-
 # GLEAP 홈페이지
 
 서울대 자연과학대학 우수학생자치단체 GLEAP 공식 홈페이지.
@@ -31,6 +29,7 @@ Claude Code 세션 컨텍스트 겸 인수인계 문서. **결정된 사항과 �
 | DB | Neon Postgres | Vercel 마켓플레이스 연동 시 env 자동 주입. 브랜칭 지원 |
 | 이미지 | Vercel Blob | Hobby 1GB 저장 / 10GB 전송 무료 |
 | 인증 | iron-session + bcrypt 해시 | 계정 1개라 사용자 테이블 자체가 불필요 |
+| 에디터 | Tiptap + `@tiptap/markdown` | 노션형 편집 UI + Markdown 저장을 동시에 확보 |
 | i18n | next-intl | App Router 지원 |
 
 ### 검토했으나 채택하지 않은 것
@@ -94,7 +93,8 @@ npm run dev
 
 - **경로 기반** (`/ko/about`, `/en/about`). 쿼리스트링(`?lang=`) 방식 아님 — 검색엔진이 별개 페이지로 색인
 - `src/app/[locale]/` 아래에 전체 페이지 배치
-- `src/middleware.ts`에서 언어 없는 경로 리다이렉트 + 선택 언어 쿠키 저장
+- `src/proxy.ts`에서 언어 없는 경로 리다이렉트 + 선택 언어 쿠키 저장
+  (Next.js 16부터 `middleware.ts` 파일명이 `proxy.ts`로 변경됨 — 기능은 동일, `AGENTS.md` 경고에 따라 로컬 문서로 확인함)
 - UI 문구는 `messages/ko.json`, `messages/en.json`. **JSX에 한국어 직접 작성 금지**
 
 > App Router에는 `next.config`의 `i18n` 옵션이 없다. 검색 시 나오는 Pages Router 방식 문서는 무시할 것.
@@ -103,8 +103,45 @@ npm run dev
 
 - 스키마는 **언어별 컬럼** 방식 (`title_ko`, `title_en`, `body_ko`, `body_en`). 언어 2개 고정 + 수백 건 규모에서 별도 번역 테이블보다 단순
 - 발행 시 번역 API로 영문을 자동 생성해 저장하고 "자동 번역됨" 배지 표시. 관리자가 수정 가능
+  - 본문이 Markdown이므로 번역 API가 링크·강조 문법을 깨뜨리지 않는지 확인 필요.
+    문제가 있으면 마크다운 인식 옵션이 있는 API를 쓰거나 블록 단위로 분할 전송
 - 번역이 없는 경우 한국어 원문을 노출하되 **해당 블록에 `lang="ko"` 명시**
   → 페이지가 `lang="en"`이면 크롬이 번역 제안을 띄우지 않으므로 반드시 필요
+
+---
+
+## 에디터 / 본문 저장 형식
+
+**Tiptap(위지윅) + `@tiptap/markdown`(양방향 변환). DB에는 Markdown 원문 저장.**
+
+- 작성자는 노션처럼 편집하고, 저장 시 Markdown으로 직렬화
+- 외부 Markdown 텍스트를 붙여넣거나 초기 콘텐츠로 주입 가능
+- `@tiptap/markdown`은 오픈소스이며 무료.
+  DOCX/PDF 변환(Tiptap Conversion)은 별도 유료 제품이므로 사용하지 않는다
+
+### 확장(extension) 선정 원칙
+
+**폰트 크기·색상·정렬 관련 확장은 설치하지 않는다.**
+작성자가 만들 수 있는 것은 문단·제목·목록·강조·링크·이미지로 제한하고,
+시각적 표현은 전적으로 CSS가 결정한다.
+→ 매년 작성자가 바뀌어도 게시물 스타일이 일관되게 유지되는 유일한 장치.
+
+Markdown에는 색상·폰트 크기 문법이 없으므로 저장 단계에서도 한 번 더 걸러진다.
+
+> 확장을 추가·제거할 때는 이 문서의 확장 목록도 함께 갱신할 것.
+> 후배가 에디터를 손볼 때 "왜 이 확장만 켜져 있는지"를 알 수 있어야 한다.
+
+### 대안 검토
+
+- **Toast UI Editor** — 툴바 포함 완제품이라 초기 구현은 빠르지만, 커스터마이즈 여지가 적음
+- **HTML 저장** — 렌더링은 쉬우나 XSS 대응 부담 + 향후 이식성 저하
+
+Tiptap은 툴바 UI를 직접 만들어야 해서 초기 작업량이 조금 더 많다. (선택 시 감안한 비용)
+
+### 이미지
+
+에디터 내 업로드 버튼 → Blob 업로드 → 본문에 `![](url)` 자동 삽입.
+이 기능이 없으면 비개발자가 글을 못 쓴다. **필수 구현.**
 
 ---
 
@@ -127,14 +164,14 @@ npm run dev
 
 - [x] 스택 결정
 - [x] `create-next-app` 스캐폴딩, 첫 푸시
-- [ ] GitHub Organization 생성 및 레포 이전
-- [ ] Vercel 프로젝트 연결, 도메인 추가 → 학교 DNS 신청 (승인까지 시간 소요)
-- [ ] i18n 구조 세팅 (`[locale]`, middleware, messages)
+- [x] GitHub Organization 생성 및 레포 이전
+- [x] Vercel 프로젝트 연결, 도메인 추가 → 학교 DNS 신청 (승인까지 시간 소요)
+- [x] i18n 구조 세팅 (`[locale]`, proxy, messages) — next-intl 사용, `localePrefix: "always"` 기본값이라 `/ko`, `/en` 모두 접두사 붙음
 - [ ] 정적 페이지 (소개 / 구성원 / 활동)
 - [ ] Neon 연결 + 게시물 스키마 + 목록/상세
 - [ ] 관리자 로그인
-- [ ] 글 작성 폼
-- [ ] Blob 이미지 업로드
+- [ ] 글 작성 폼 (Tiptap 에디터 + 툴바)
+- [ ] Blob 이미지 업로드 (에디터 내 삽입 포함)
 - [ ] 갤러리
 - [ ] README 인수인계 문서 정리
 

@@ -38,7 +38,7 @@ export const cohorts: Cohort[] = [
     },
     members: [
       {
-        name: { ko: "김철수" },
+        name: { ko: "문현호" },
         department: { ko: "생명과학부" },
       },
     ],

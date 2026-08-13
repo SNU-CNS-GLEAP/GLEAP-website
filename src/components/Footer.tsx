@@ -1,7 +1,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import { localize } from "@/lib/localized-text";
 
-const developerName = { ko: "문현호 (Octo Moon)", en: "Moon Hyunho (Octo Moon)" };
+const developerName = { ko: "15기 문현호", en: "15th Moon Hyunho" };
 
 export function Footer() {
   const t = useTranslations("Footer");

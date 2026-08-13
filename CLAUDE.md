@@ -69,6 +69,9 @@ SESSION_SECRET=
 - **`NEXT_PUBLIC_` 접두사는 브라우저 번들에 노출됨.** public 레포이므로 비밀값에 절대 사용 금지
 - `.env.local` 수정 후에는 dev 서버 재시작 필요
 - Vercel 대시보드에서 값 변경 시 Redeploy 해야 반영됨
+- **`ADMIN_PASSWORD_HASH`처럼 `$`로 시작하는 bcrypt 해시를 `.env.local`에 넣을 때는 각 `$`를 `\$`로 이스케이프할 것.**
+  Next.js가 로컬에서 `.env.local`을 읽을 때 dotenv-expand로 `$2b`, `$10` 같은 부분을 변수 참조로 오인해 잘라먹는다.
+  (Vercel은 값을 직접 주입하므로 이 문제가 없음 — 이스케이프는 로컬 전용)
 
 ### 세팅 방법
 
@@ -107,6 +110,35 @@ npm run dev
     문제가 있으면 마크다운 인식 옵션이 있는 API를 쓰거나 블록 단위로 분할 전송
 - 번역이 없는 경우 한국어 원문을 노출하되 **해당 블록에 `lang="ko"` 명시**
   → 페이지가 `lang="en"`이면 크롬이 번역 제안을 띄우지 않으므로 반드시 필요
+
+### 정적 페이지 콘텐츠 (소개 / 구성원 / 활동)
+
+**DB에 넣지 않고 코드에 데이터 파일로 둔다.** `src/content/*.ts` (about.ts, members.ts, activities.ts).
+
+- 이유: 1년에 몇 번 안 바뀌는 콘텐츠에 DB 스키마 + 관리자 편집 UI까지 만드는 건 과함.
+  대신 "배열 항목 고치고 `git push`"로 끝나게 해서 유지보수 비용을 낮춘다.
+  사진도 Blob이 아니라 `public/`에 커밋 — 배포 시점에 같이 버전 관리되고 `git revert`로 롤백 가능
+- 번역은 `messages/*.json`(UI 문구용)이 아니라 **각 항목 안에 `{ ko, en }` 필드로 나란히** 둔다
+  (`src/lib/localized-text.ts`의 `LocalizedText` 타입 + `localize()` 헬퍼).
+  두 언어를 별도 파일로 분리하면 항목 개수·순서가 어긋나기 쉬워서, 게시물 스키마의
+  `title_ko`/`title_en` 패턴과 동일한 원칙을 그대로 적용한 것
+- `en`이 비어있으면 `localize()`가 한국어 원문 + `lang="ko"`를 반환 (게시물과 동일한 fallback 규칙)
+- 현재 `src/content/` 안의 데이터는 실제 명단/활동이 아니라 자리표시자(placeholder). 실제 데이터로 교체 필요
+
+---
+
+## 관리자 인증
+
+**iron-session + bcrypt. 계정 1개, DB 불필요** (비밀번호 해시는 `ADMIN_PASSWORD_HASH` 환경변수).
+그래서 Neon 연결보다 먼저, 정적 페이지와 같은 단계에서 만들어 둠 — 이후 게시판/갤러리 등
+모든 관리자 기능이 이 로그인 위에 얹히므로 나중에 끼워 넣는 것보다 먼저 만드는 게 쌌음.
+
+- `src/lib/session.ts`: iron-session 설정 (`getSession()`)
+- `src/lib/auth.ts`: `verifyPassword()`, `requireAdmin(locale)` (세션 없으면 로그인 페이지로 redirect)
+- `src/app/[locale]/admin/login/`: 로그인 폼 + Server Action (`actions.ts`)
+- `src/app/[locale]/admin/(dashboard)/`: 로그인 필요한 라우트 그룹.
+  `layout.tsx`에서 `requireAdmin()` 호출 — 이 그룹 안에 게시판/갤러리 관리 페이지를 앞으로 추가
+- 로그아웃도 Server Action (`(dashboard)/actions.ts`)
 
 ---
 
@@ -167,9 +199,9 @@ Tiptap은 툴바 UI를 직접 만들어야 해서 초기 작업량이 조금 더
 - [x] GitHub Organization 생성 및 레포 이전
 - [x] Vercel 프로젝트 연결, 도메인 추가 → 학교 DNS 신청 (승인까지 시간 소요)
 - [x] i18n 구조 세팅 (`[locale]`, proxy, messages) — next-intl 사용, `localePrefix: "always"` 기본값이라 `/ko`, `/en` 모두 접두사 붙음
-- [ ] 정적 페이지 (소개 / 구성원 / 활동)
+- [x] 정적 페이지 뼈대 (소개 / 구성원 / 활동) — 라우트·Nav·`src/content/*.ts` 패턴은 완성, 실제 명단·활동 내역은 placeholder라 교체 필요
+- [x] 관리자 로그인 (iron-session + bcrypt) — 로그인/세션 유지/로그아웃 확인 완료. 실제 관리 기능(글 작성 등)은 게시판 스키마 이후
 - [ ] Neon 연결 + 게시물 스키마 + 목록/상세
-- [ ] 관리자 로그인
 - [ ] 글 작성 폼 (Tiptap 에디터 + 툴바)
 - [ ] Blob 이미지 업로드 (에디터 내 삽입 포함)
 - [ ] 갤러리

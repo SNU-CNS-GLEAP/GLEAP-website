@@ -1,7 +1,22 @@
 {
+  "Nav": {
+    "home": "Home",
+    "about": "About",
+    "members": "Members",
+    "activities": "Activities"
+  },
   "HomePage": {
     "title": "GLEAP",
     "subtitle": "Honors Student Council, College of Natural Sciences, Seoul National University",
     "description": "This site is currently under construction."
+  },
+  "AboutPage": {
+    "title": "About Us"
+  },
+  "MembersPage": {
+    "title": "Members"
+  },
+  "ActivitiesPage": {
+    "title": "Activities"
   }
 }

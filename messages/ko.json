@@ -1,7 +1,22 @@
 {
+  "Nav": {
+    "home": "홈",
+    "about": "글립 소개",
+    "members": "구성원",
+    "activities": "활동 소개"
+  },
   "HomePage": {
     "title": "GLEAP",
     "subtitle": "서울대학교 자연과학대학 우수학생단체",
     "description": "이 사이트는 현재 준비 중입니다."
+  },
+  "AboutPage": {
+    "title": "글립 소개"
+  },
+  "MembersPage": {
+    "title": "구성원"
+  },
+  "ActivitiesPage": {
+    "title": "활동 소개"
   }
 }

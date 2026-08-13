@@ -20,7 +20,7 @@ export default async function ActivitiesPage() {
               {category.programs.map((program, i) => {
                 const name = localize(program.name, locale);
                 return (
-                  <li key={i} className="text-zinc-700 dark:text-zinc-300" lang={name.lang}>
+                  <li key={i} className="text-foreground" lang={name.lang}>
                     {name.text}
                   </li>
                 );

@@ -124,6 +124,9 @@ npm run dev
   `title_ko`/`title_en` 패턴과 동일한 원칙을 그대로 적용한 것
 - `en`이 비어있으면 `localize()`가 한국어 원문 + `lang="ko"`를 반환 (게시물과 동일한 fallback 규칙)
 - 현재 `src/content/` 안의 데이터는 실제 명단/활동이 아니라 자리표시자(placeholder). 실제 데이터로 교체 필요
+- 영문 작성 시 [서울대 자연대 공식 GLEAP 소개 페이지](https://science.snu.ac.kr/en/campus-life/activity/gleap)를
+  톤·용어 참고용으로 사용 (활동 3분류를 Academic / Social Contribution / Exchange로 표기).
+  `about.ts`는 이미 이 페이지를 참고해 실제 영문으로 채워둔 예시임 — 그대로 복사하지 말고 참고만 할 것
 
 ---
 
@@ -139,6 +142,19 @@ npm run dev
 - `src/app/[locale]/admin/(dashboard)/`: 로그인 필요한 라우트 그룹.
   `layout.tsx`에서 `requireAdmin()` 호출 — 이 그룹 안에 게시판/갤러리 관리 페이지를 앞으로 추가
 - 로그아웃도 Server Action (`(dashboard)/actions.ts`)
+
+---
+
+## 디자인 컬러
+
+로고(`public/logo_gleap.png`)의 네이비/그레이 기준 팔레트. **다크모드는 의도적으로 없음** —
+로고가 밝은 배경 전용으로 만들어져 있어서, 시스템 다크모드를 따라가면 로고와 배경이 어긋남.
+
+- 색상 토큰은 `src/app/globals.css`의 `:root` 블록 하나에서만 관리
+  (`--background`, `--surface`, `--foreground`, `--primary`, `--muted`, `--border`).
+  **여기 값만 바꾸면 사이트 전체 색이 바뀜**
+- Tailwind에서는 `bg-primary`, `text-muted`, `border-border`처럼 그대로 유틸리티 클래스로 사용
+  (`@theme inline`에서 `--color-*`로 매핑해둠)
 
 ---
 

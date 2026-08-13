@@ -19,11 +19,11 @@ export default async function AdminLoginPage({ searchParams }: Props) {
           placeholder="비밀번호"
           required
           autoFocus
-          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+          className="rounded border border-border px-3 py-2"
         />
         <button
           type="submit"
-          className="rounded bg-black px-3 py-2 text-white dark:bg-white dark:text-black"
+          className="rounded bg-primary px-3 py-2 text-white"
         >
           로그인
         </button>

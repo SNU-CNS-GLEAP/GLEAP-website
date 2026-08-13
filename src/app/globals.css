@@ -1,22 +1,27 @@
 @import "tailwindcss";
 
+/*
+ * GLEAP 브랜드 컬러 — public/logo_gleap.png 기준.
+ * 사이트 전체 색을 바꾸고 싶으면 이 값들만 고치면 됨 (다크모드 없음, 항상 밝은 배경 고정).
+ */
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --surface: #f5f6f8; /* 카드/구역 배경 등 살짝 구분이 필요할 때 */
+  --foreground: #1a1a1a;
+  --primary: #1b3a7a; /* 로고의 네이비 (A, P) */
+  --muted: #6b6b6b; /* 로고의 그레이 (G L E) */
+  --border: #e5e5e5;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
   --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {

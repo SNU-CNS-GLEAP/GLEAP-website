@@ -17,7 +17,7 @@ export default async function MembersPage() {
             <h2 className="text-xl font-semibold" lang={label.lang}>
               {label.text}
             </h2>
-            <p className="text-sm text-zinc-500" lang={description.lang}>
+            <p className="text-sm text-muted" lang={description.lang}>
               {description.text}
             </p>
             <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3">
@@ -27,16 +27,16 @@ export default async function MembersPage() {
                 const role = member.role ? localize(member.role, locale) : null;
                 return (
                   <li key={i} className="flex flex-col items-center gap-2 text-center">
-                    <div className="h-20 w-20 rounded-full bg-zinc-200 dark:bg-zinc-800" />
+                    <div className="h-20 w-20 rounded-full bg-surface" />
                     <span className="text-sm font-medium" lang={name.lang}>
                       {name.text}
                     </span>
                     {role && (
-                      <span className="text-xs text-zinc-500" lang={role.lang}>
+                      <span className="text-xs text-primary" lang={role.lang}>
                         {role.text}
                       </span>
                     )}
-                    <span className="text-xs text-zinc-400" lang={department.lang}>
+                    <span className="text-xs text-muted" lang={department.lang}>
                       {department.text}
                     </span>
                   </li>

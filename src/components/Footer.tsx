@@ -24,8 +24,9 @@ export function Footer() {
         </span>
         <span aria-hidden>·</span>
         <span lang={developer.lang}>
+          {t("developer")}: 
           <a href={developerLink} target="_blank" rel="noopener noreferrer" className="hover:text-primary">
-          {t("developer")}: {developer.text}
+          {developer.text}
           </a>
         </span>
       </div>

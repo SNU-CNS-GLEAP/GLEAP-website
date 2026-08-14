@@ -3,6 +3,8 @@ import { localize } from "@/lib/localized-text";
 
 const developerName = { ko: "15기 문현호", en: "15th Moon Hyunho" };
 
+const developerLink = "https://github.com/SNU-CNS-GLEAP/GLEAP-website";
+
 export function Footer() {
   const t = useTranslations("Footer");
   const locale = useLocale();
@@ -22,9 +24,8 @@ export function Footer() {
         </span>
         <span aria-hidden>·</span>
         <span lang={developer.lang}>
-          {t("developer")}: {developer.text} ·{" "}
-          <a href="mailto:octahedron00@gmail.com" className="hover:text-primary">
-            octahedron00@gmail.com
+          <a href={developerLink} target="_blank" rel="noopener noreferrer" className="hover:text-primary">
+          {t("developer")}: {developer.text}
           </a>
         </span>
       </div>

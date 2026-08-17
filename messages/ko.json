@@ -3,7 +3,12 @@
     "home": "홈",
     "about": "글립 소개",
     "members": "구성원",
-    "activities": "활동 소개"
+    "membersCurrent": "현재 구성원",
+    "membersAlumni": "Alumni",
+    "activities": "활동 소개",
+    "news": "소식",
+    "menu": "메뉴",
+    "close": "닫기"
   },
   "HomePage": {
     "title": "GLEAP",
@@ -16,12 +21,22 @@
   "MembersPage": {
     "title": "구성원"
   },
+  "AlumniPage": {
+    "title": "Alumni"
+  },
   "ActivitiesPage": {
-    "title": "활동 소개"
+    "title": "활동 소개",
+    "learnMore": "자세히 보기",
+    "backToAll": "← 활동 소개로"
+  },
+  "NewsPage": {
+    "title": "소식",
+    "comingSoon": "공지사항, 부원 안내, 행사 후기, 월간 글립 등 GLEAP 소식을 전하는 게시판을 준비하고 있습니다."
   },
   "Footer": {
     "rights": "© {year} GLEAP. All rights reserved.",
     "contact": "문의",
-    "developer": "개발"
+    "developer": "개발",
+    "admin": "관리자"
   }
 }

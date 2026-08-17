@@ -1,4 +1,5 @@
 import { useLocale, useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { localize } from "@/lib/localized-text";
 
 const developerName = { ko: "15기 문현호", en: "15th Moon Hyunho" };
@@ -29,6 +30,10 @@ export function Footer() {
           {developer.text}
           </a>
         </span>
+        <span aria-hidden>·</span>
+        <Link href="/admin" className="text-muted/70 hover:text-primary">
+          {t("admin")}
+        </Link>
       </div>
     </footer>
   );

@@ -3,7 +3,12 @@
     "home": "Home",
     "about": "About",
     "members": "Members",
-    "activities": "Activities"
+    "membersCurrent": "Current Members",
+    "membersAlumni": "Alumni",
+    "activities": "Activities",
+    "news": "News",
+    "menu": "Menu",
+    "close": "Close"
   },
   "HomePage": {
     "title": "GLEAP",
@@ -16,12 +21,22 @@
   "MembersPage": {
     "title": "Members"
   },
+  "AlumniPage": {
+    "title": "Alumni"
+  },
   "ActivitiesPage": {
-    "title": "Activities"
+    "title": "Activities",
+    "learnMore": "Learn more",
+    "backToAll": "← Back to Activities"
+  },
+  "NewsPage": {
+    "title": "News",
+    "comingSoon": "A board for GLEAP news — notices, member announcements, event recaps, and our Monthly GLEAP science cards — is on the way."
   },
   "Footer": {
     "rights": "© {year} GLEAP. All rights reserved.",
     "contact": "Contact",
-    "developer": "Dev by"
+    "developer": "Dev by",
+    "admin": "Admin"
   }
 }

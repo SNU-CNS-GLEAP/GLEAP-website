@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { activityCategories } from "@/content/activities";
 import { localize } from "@/lib/localized-text";
+import { Link } from "@/i18n/navigation";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -31,6 +32,12 @@ export default async function ActivitiesPage({ params }: Props) {
                 );
               })}
             </ul>
+            <Link
+              href={`/activities/${category.id}`}
+              className="w-fit text-sm font-medium text-primary hover:underline"
+            >
+              {t("learnMore")}
+            </Link>
           </section>
         );
       })}

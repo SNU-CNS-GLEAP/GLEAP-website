@@ -128,6 +128,31 @@ npm run dev
   톤·용어 참고용으로 사용 (활동 3분류를 Academic / Social Contribution / Exchange로 표기).
   `about.ts`는 이미 이 페이지를 참고해 실제 영문으로 채워둔 예시임 — 그대로 복사하지 말고 참고만 할 것
 
+### 헤더 서브메뉴 / 세부 페이지
+
+기존 Wix 사이트(`snucnsgleap.wixsite.com`)의 세부 메뉴 구조를 참고해 각 상위 메뉴를 실제 페이지로 분리:
+
+- **구성원**: `/members`(현재 구성원, `cohorts` 기수별 표시) / `/members/alumni`(`alumni` 배열).
+  Wix는 "13기&14기 구성원"처럼 기수를 못박아 링크 이름을 지었지만, 그러면 매년 이름을 바꿔야 해서
+  "현재 구성원 / Alumni"로 일반화함 — 실제 기수 목록은 `cohorts` 배열 갱신만으로 처리
+- **활동 소개**: `/activities`(3분류 개요, 기존 유지) / `/activities/[category]`(카테고리별 상세).
+  `activityCategories`의 `id`(social/academic/exchange)를 라우트 파라미터로 그대로 사용하고
+  `generateStaticParams`로 정적 생성 — 새 카테고리를 추가해도 코드 수정 없이 자동으로 페이지 생성됨
+- Nav의 드롭다운 라벨 중 "구성원" 하위 항목은 `messages/*.json`(`Nav.membersCurrent`/`membersAlumni`,
+  고정 UI 문구)에, "활동 소개" 하위 항목은 `activityCategories`의 `title`을 그대로 재사용
+  (콘텐츠 배열이 이미 다국어 필드를 갖고 있어 번역 문구를 중복 관리하지 않기 위함)
+- 모바일(`md` 미만)에서는 상단 드롭다운 대신 햄버거 버튼 → 전체 화면 오버레이로 모든 메뉴를
+  들여쓰기 트리 형태로 한 번에 보여준다(`src/components/MobileNav.tsx`). 아코디언처럼 접혀있지 않고
+  항상 펼쳐진 "사이트맵" 형태 — 메뉴 항목이 10개 안팎으로 적어서 단계별 탐색보다 한눈에 보이는 게 나음
+- **소식**: `/news`. Wix 원본에서 빠져있던 탭 — 공지사항/부원 안내/행사 후기/월간 글립(과학 카드뉴스)을
+  올릴 게시판 자리. 아직 Neon·에디터가 없어 지금은 "준비 중" 안내만 있는 placeholder
+  (`admin` 대시보드와 동일한 패턴). 게시판 스키마가 생기면 이 라우트에 목록/상세를 붙이면 됨
+- **활동의 "기수별 실제 내용"은 `activities.ts`에 넣지 않는다.** 이 파일은 "매년 거의 안 바뀌는
+  3분류 구조 + 프로그램 이름"만 담당하고, 그 해의 구체적 진행 내용/사진/후기는 게시판(소식)에
+  글로 쌓는 것을 전제로 함 — 코드 수정 없이 매년 반복되는 기록이 게시판 쪽에만 생기게 하려는 것.
+  게시판 스키마를 만들 때 "활동 카테고리" 태그 필드를 고려하면 나중에 `/activities/[category]`
+  페이지에 "관련 소식" 목록을 붙일 수 있음
+
 ---
 
 ## 관리자 인증
@@ -142,6 +167,12 @@ npm run dev
 - `src/app/[locale]/admin/(dashboard)/`: 로그인 필요한 라우트 그룹.
   `layout.tsx`에서 `requireAdmin()` 호출 — 이 그룹 안에 게시판/갤러리 관리 페이지를 앞으로 추가
 - 로그아웃도 Server Action (`(dashboard)/actions.ts`)
+- **관리자 모드 시각 구분**: `Nav.tsx`가 이미 클라이언트 컴포넌트라 `usePathname()`으로
+  `/admin` 진입(로그인 페이지 `/admin/login`은 제외) 여부를 판단해 헤더 테두리 색 + "ADMIN" 배지를
+  다르게 표시. 세션 쿠키를 직접 읽지 않고 경로만 보는 방식이라, 공개 페이지들의 정적 렌더링에는
+  전혀 영향을 주지 않음. 색상은 `--admin` 토큰(디자인 컬러 섹션 참고)
+- Footer 우측 끝에 `/admin`으로 가는 작은 링크(`Footer.admin`) 배치 — 로그인 안 된 상태면
+  `requireAdmin`이 알아서 로그인 페이지로 보냄
 
 ---
 
@@ -151,8 +182,10 @@ npm run dev
 로고가 밝은 배경 전용으로 만들어져 있어서, 시스템 다크모드를 따라가면 로고와 배경이 어긋남.
 
 - 색상 토큰은 `src/app/globals.css`의 `:root` 블록 하나에서만 관리
-  (`--background`, `--surface`, `--foreground`, `--primary`, `--muted`, `--border`).
+  (`--background`, `--surface`, `--foreground`, `--primary`, `--muted`, `--border`, `--admin`).
   **여기 값만 바꾸면 사이트 전체 색이 바뀜**
+- `--admin`은 관리자 대시보드 진입 시 헤더를 구분하는 용도로만 사용 (`primary`의 네이비와
+  겹치지 않게 의도적으로 다른 색조(amber 계열)를 선택함)
 - Tailwind에서는 `bg-primary`, `text-muted`, `border-border`처럼 그대로 유틸리티 클래스로 사용
   (`@theme inline`에서 `--color-*`로 매핑해둠)
 

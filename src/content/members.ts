@@ -14,6 +14,15 @@ export type Cohort = {
   members: Member[];
 };
 
+// TODO: 실제 동문 명단으로 교체. cohorts와 별개로, 진급/졸업한 이전 기수 회원을 담는다.
+export const alumni: Member[] = [
+  {
+    name: { ko: "김철수" },
+    role: { ko: "12기 회장" },
+    department: { ko: "물리천문학부" },
+  },
+];
+
 // TODO: 실제 기수/명단으로 교체. 항목 하나가 회원 한 명. photo는 /public 안의 경로.
 export const cohorts: Cohort[] = [
   {

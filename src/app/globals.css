@@ -11,6 +11,7 @@
   --primary: #1b3a7a; /* 로고의 네이비 (A, P) */
   --muted: #6b6b6b; /* 로고의 그레이 (G L E) */
   --border: #e5e5e5;
+  --admin: #b45309; /* 관리자 모드 표시 전용. 네이비(primary)와 겹치지 않는 색으로 의도적으로 선택 */
 }
 
 @theme inline {
@@ -20,6 +21,7 @@
   --color-primary: var(--primary);
   --color-muted: var(--muted);
   --color-border: var(--border);
+  --color-admin: var(--admin);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }

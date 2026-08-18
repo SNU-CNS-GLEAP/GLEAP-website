@@ -1,10 +1,22 @@
 import type { LocalizedText } from "@/lib/localized-text";
 
+// 학번은 개인정보라 사이트에 공개하지 않기로 함(레포가 public이라 커밋 즉시 영구 노출됨).
+// 필요하면 role/department 문구에 기수 정보를 녹이는 정도로 충분.
 export type Member = {
   name: LocalizedText;
   role?: LocalizedText;
   department: LocalizedText;
+  // public/members/ 안의 경로. 파일명은 "{기수id}-{실명}.webp" (예: /members/15-문현호.webp).
+  // 어차피 이름이 화면에 그대로 노출되므로 파일명도 실명으로 — 학번 같은 식별자를 새로 안 만들어도 됨.
   photo?: string;
+  email?: string;
+  // 전부 선택 입력. 비워두면 해당 아이콘/버튼이 자동으로 숨겨짐.
+  links?: {
+    blog?: string; // 네이버 블로그든 티스토리든 URL만
+    instagram?: string;
+    github?: string;
+    linkedin?: string;
+  };
 };
 
 export type Cohort = {
@@ -23,7 +35,16 @@ export const alumni: Member[] = [
   },
 ];
 
-// TODO: 실제 기수/명단으로 교체. 항목 하나가 회원 한 명. photo는 /public 안의 경로.
+// TODO: 실제 기수/명단으로 교체. 항목 하나가 회원 한 명.
+// 채우는 예시 (전부 선택 필드 — 없는 항목은 그냥 생략):
+// {
+//   name: { ko: "문현호" },
+//   role: { ko: "회장" },
+//   department: { ko: "생명과학부" },
+//   photo: "/members/15-문현호.webp",
+//   email: "example@snu.ac.kr",
+//   links: { blog: "https://...", instagram: "https://instagram.com/...", github: "https://github.com/..." },
+// }
 export const cohorts: Cohort[] = [
   {
     id: "14",

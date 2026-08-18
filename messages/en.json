@@ -24,6 +24,13 @@
   "AlumniPage": {
     "title": "Alumni"
   },
+  "MemberCard": {
+    "email": "Email",
+    "blog": "Blog",
+    "instagram": "Instagram",
+    "github": "GitHub",
+    "linkedin": "LinkedIn"
+  },
   "ActivitiesPage": {
     "title": "Activities",
     "learnMore": "Learn more",

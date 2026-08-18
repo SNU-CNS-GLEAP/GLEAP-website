@@ -24,6 +24,13 @@
   "AlumniPage": {
     "title": "Alumni"
   },
+  "MemberCard": {
+    "email": "이메일",
+    "blog": "블로그",
+    "instagram": "인스타그램",
+    "github": "GitHub",
+    "linkedin": "LinkedIn"
+  },
   "ActivitiesPage": {
     "title": "활동 소개",
     "learnMore": "자세히 보기",

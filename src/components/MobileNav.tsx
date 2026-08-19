@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
@@ -16,11 +16,6 @@ export function MobileNav({ locale }: { locale: string }) {
   const t = useTranslations("Nav");
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-
-  // 페이지 이동 시 오버레이 자동 닫기
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
 
   return (
     <div className="md:hidden">
@@ -54,18 +49,18 @@ export function MobileNav({ locale }: { locale: string }) {
         </div>
 
         <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-6 py-6 text-lg">
-          <Link href="/" className="py-2 font-medium hover:text-primary">
+          <Link href="/" onClick={() => setOpen(false)} className="py-2 font-medium hover:text-primary">
             {t("home")}
           </Link>
-          <Link href="/about" className="py-2 font-medium hover:text-primary">
+          <Link href="/about" onClick={() => setOpen(false)} className="py-2 font-medium hover:text-primary">
             {t("about")}
           </Link>
 
           <span className="pt-2 font-medium">{t("members")}</span>
-          <Link href="/members" className="py-2 pl-4 text-base text-muted hover:text-primary">
+          <Link href="/members" onClick={() => setOpen(false)} className="py-2 pl-4 text-base text-muted hover:text-primary">
             {t("membersCurrent")}
           </Link>
-          <Link href="/members/alumni" className="py-2 pl-4 text-base text-muted hover:text-primary">
+          <Link href="/members/alumni" onClick={() => setOpen(false)} className="py-2 pl-4 text-base text-muted hover:text-primary">
             {t("membersAlumni")}
           </Link>
 
@@ -76,6 +71,7 @@ export function MobileNav({ locale }: { locale: string }) {
               <Link
                 key={category.id}
                 href={`/activities/${category.id}`}
+                onClick={() => setOpen(false)}
                 className="py-2 pl-4 text-base text-muted hover:text-primary"
                 lang={title.lang}
               >
@@ -84,14 +80,17 @@ export function MobileNav({ locale }: { locale: string }) {
             );
           })}
 
-          <Link href="/news" className="py-2 font-medium hover:text-primary">
+          <Link href="/news" onClick={() => setOpen(false)} className="py-2 font-medium hover:text-primary">
             {t("news")}
+          </Link>
+          <Link href="/community" onClick={() => setOpen(false)} className="py-2 font-medium hover:text-primary">
+            {t("community")}
           </Link>
         </nav>
 
         <div className="flex gap-4 border-t border-border px-6 py-4 text-sm text-muted">
           {routing.locales.map((l) => (
-            <Link key={l} href={pathname} locale={l} className="hover:text-primary">
+            <Link key={l} href={pathname} locale={l} onClick={() => setOpen(false)} className="hover:text-primary">
               {localeLabels[l]}
             </Link>
           ))}

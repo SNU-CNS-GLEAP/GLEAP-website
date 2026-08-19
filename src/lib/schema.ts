@@ -27,7 +27,13 @@ export const posts = pgTable("posts", {
   bodyEn: text("body_en"),
   // 작성자가 직접 입력하는 이름 표기용 크레딧. 로그인 계정과 무관(관리자 1명뿐이라 계정 연결 의미 없음), 선택 입력.
   authorName: text("author_name"),
+  // 목록 정렬·화면 표시에 쓰는 "게시일". 관리자가 자유롭게 지정 가능(예: 어제 있었던 행사를
+  // 오늘 올려도 어제 날짜로 보이게). 실제 서버 반영 시각은 created_at/updated_at이 담당하므로
+  // 이 컬럼은 순수 편집용 날짜.
+  publishedAt: timestamp("published_at", { withTimezone: true }).notNull().defaultNow(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  // 실제 마지막 수정 시각. Postgres가 자동 갱신하지 않으므로, 글 수정 기능 구현 시
+  // 저장 로직에서 명시적으로 new Date()를 넣어줘야 함.
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

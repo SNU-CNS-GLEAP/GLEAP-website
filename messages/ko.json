@@ -23,7 +23,9 @@
     "title": "구성원"
   },
   "AlumniPage": {
-    "title": "Alumni"
+    "title": "Alumni",
+    "selectCohort": "기수 선택",
+    "empty": "아직 등록된 명단이 없습니다."
   },
   "MemberCard": {
     "email": "이메일",
@@ -46,7 +48,8 @@
     "totalCount": "총 {count}건",
     "prev": "이전",
     "next": "다음",
-    "pageOf": "{page} / {totalPages}"
+    "pageOf": "{page} / {totalPages}",
+    "backToList": "← 목록으로"
   },
   "Footer": {
     "rights": "© {year} GLEAP. All rights reserved.",

@@ -175,6 +175,18 @@ npm run dev
 - **구성원 사진**: `public/members/` 아래에 `{기수id}{실명}.jpg` 이름으로 커밋 (예: `/members/15문현호.jpg`).
   이름이 어차피 화면에 그대로 노출되므로 파일명도 실명 기반으로 통일 — 별도 식별자(학번 등)를 새로 만들지 않음.
   카드 렌더링은 `src/components/MemberCard.tsx` 하나를 `/members`, `/members/alumni` 양쪽에서 공유
+- **Alumni 기준**: 별도 배열이 아니라 `cohorts` 하나에서 파생됨. `members.ts`의 `cohorts`는 1기부터
+  최신 기수까지 전부 담고, `CURRENT_COHORT_COUNT`(현재 2)로 지정한 최신 N개 기수만 `currentCohorts`
+  (`/members`에 표시), 그 이전 전부가 `alumniCohorts`(`/members/alumni`)로 자동 계산됨. 매년 신입
+  기수가 `cohorts`에 추가돼도 이 상수 하나 그대로 두면 가장 오래된 현재 구성원 기수가 자동으로
+  alumni로 넘어감 — 코드 수정 불필요. 11~13기는 Wix에서 실명단을 확인해 채워둠(13기는 "13th
+  members" 목록, 11·12기는 Wix Alumni 페이지의 기수 드롭다운이 SSR로 내려주는 JSON을 직접
+  파싱해 확인). 1~10기는 Wix 쪽에도 드롭다운 옵션(8~12기)만 있고 실제 등록된 인원이 없어
+  그대로 빈 자리표시자(`members: []`)로 남겨둠 — 나중에 명단이 확인되면 채울 것
+- **Alumni 페이지 UI**: `/members/alumni`는 서버 컴포넌트(SSG 유지)가 `alumniCohorts` 전체를
+  클라이언트 컴포넌트 `AlumniCohortBrowser`에 넘기고, 그 안의 `<select>`로 기수를 골라 클라이언트에서
+  필터링한다. 기본 선택값은 `DEFAULT_ALUMNI_COHORT_ID`(최신 기수 - `CURRENT_COHORT_COUNT`, 지금은
+  13기). API 호출 없이 이미 전달받은 데이터 안에서만 걸러내는 방식이라 정적 렌더링에 영향 없음
 - 영문 작성 시 [서울대 자연대 공식 GLEAP 소개 페이지](https://science.snu.ac.kr/en/campus-life/activity/gleap)를
   톤·용어 참고용으로 사용 (활동 3분류를 Academic / Social Contribution / Exchange로 표기).
   `about.ts`는 이미 이 페이지를 참고해 실제 영문으로 채워둔 예시임 — 그대로 복사하지 말고 참고만 할 것
@@ -273,9 +285,13 @@ DB 기반 콘텐츠(소식 게시판)를 관리자가 볼 때는 그 페이지�
 ### 확장(extension) 선정 원칙
 
 **폰트 크기·색상·정렬 관련 확장은 설치하지 않는다.**
-작성자가 만들 수 있는 것은 문단·제목·목록·강조·링크·이미지로 제한하고,
+작성자가 만들 수 있는 것은 문단·제목(H2~H4)·목록·강조·링크·이미지·인용문으로 제한하고,
 시각적 표현은 전적으로 CSS가 결정한다.
 → 매년 작성자가 바뀌어도 게시물 스타일이 일관되게 유지되는 유일한 장치.
+
+인용문은 처음엔 목록에서 빠져 있었으나(허용 목록을 만들 때 실사용을 미처 고려 못함),
+행사 후기에 참가자 발언을 인용하는 등 실제로 자주 쓰여 다시 켰다. 코드/코드블록/수평선/
+밑줄/취소선은 여전히 미허용 — 필요해지면 이 절과 `PostEditor.tsx`를 같이 갱신할 것.
 
 Markdown에는 색상·폰트 크기 문법이 없으므로 저장 단계에서도 한 번 더 걸러진다.
 

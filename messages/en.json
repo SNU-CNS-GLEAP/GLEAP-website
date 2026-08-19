@@ -23,7 +23,9 @@
     "title": "Members"
   },
   "AlumniPage": {
-    "title": "Alumni"
+    "title": "Alumni",
+    "selectCohort": "Select Generation",
+    "empty": "No roster has been added yet."
   },
   "MemberCard": {
     "email": "Email",
@@ -46,7 +48,8 @@
     "totalCount": "{count} posts",
     "prev": "Previous",
     "next": "Next",
-    "pageOf": "{page} / {totalPages}"
+    "pageOf": "{page} / {totalPages}",
+    "backToList": "← Back to list"
   },
   "Footer": {
     "rights": "© {year} GLEAP. All rights reserved.",

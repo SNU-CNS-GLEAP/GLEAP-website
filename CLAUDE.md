@@ -37,7 +37,12 @@ Claude Code 세션 컨텍스트 겸 인수인계 문서. **결정된 사항과 �
 - **VPS 구입** — 월 $5 비용도 문제지만, OS 업데이트·TLS 갱신·프로세스 관리를 매 기수 담당할 사람이 필요해짐
 - **학내 서버** — 관리 인수인계 난이도. 학교 도메인은 CNAME만 등록하면 외부 호스팅으로도 쓸 수 있어 학내 서버를 쓸 이유가 없음
 - **React + FastAPI (기존 getgrida 스택)** — 무료 티어에서 상시 프로세스가 잠들어 첫 요청 지연 발생. 게시물 CRUD뿐인 규모에 백엔드를 분리할 이유 없음
-- **Supabase** — DB+인증+스토리지 통합은 편하나 락인이 크고 학습 범위가 넓어짐
+- **Supabase** — DB+인증+스토리지 통합은 편하나 락인이 크고 학습 범위가 넓어짐.
+  결정적으로는 리전 문제: Supabase는 서울 리전을 지원하지만(Neon은 없음, 가장 가까운 게 싱가포르),
+  **무료 티어는 1주일간 DB 요청이 없으면 프로젝트가 자동 일시정지되고, 이건 수동으로만 재개 가능**함.
+  방학·시험 기간에 아무도 안 들어오면 사이트가 조용히 멈춰버리는 리스크가, 서울-싱가포르 왕복
+  지연(약 70~100ms, 대부분 정적 페이지라 체감 적음)보다 "매년 담당자 바뀌는" 이 프로젝트엔 더 치명적이라
+  판단. Neon 무료 티어는 비활성 시 컴퓨트가 0으로 스케일되지만 다음 요청에 자동으로 깨어남(수동 조치 불필요)
 
 ---
 
@@ -60,11 +65,16 @@ Claude Code 세션 컨텍스트 겸 인수인계 문서. **결정된 사항과 �
 
 ```
 DATABASE_URL=
+DATABASE_URL_UNPOOLED=
 BLOB_READ_WRITE_TOKEN=
 ADMIN_PASSWORD_HASH=
 SESSION_SECRET=
 ```
 
+- Vercel의 Neon 연동은 `vercel env pull` 시 `PGHOST`/`POSTGRES_URL`/`POSTGRES_PRISMA_URL` 등
+  레거시 호환용 변수를 15개 가까이 같이 내려준다. **우리는 `@neondatabase/serverless`만 쓰므로
+  위 두 개(`DATABASE_URL`, `DATABASE_URL_UNPOOLED`) 외 나머지는 지워도 됨** — 안 지워도 동작엔
+  문제없지만, 파일이 짧아야 후임이 "이게 다 뭐지" 안 하게 됨
 - `src/lib/env.ts`에서 진입 시 존재 여부를 검증하고 없으면 즉시 throw
 - **`NEXT_PUBLIC_` 접두사는 브라우저 번들에 노출됨.** public 레포이므로 비밀값에 절대 사용 금지
 - `.env.local` 수정 후에는 dev 서버 재시작 필요
@@ -87,6 +97,22 @@ cp .env.example .env.local   # 개인 Neon 브랜치 값으로 채움
 
 npm run dev
 ```
+
+### Neon 브랜치
+
+- **dev용 브랜치**: Neon 콘솔 → 프로젝트 → **Integrations** → Vercel 연동 **Manage** →
+  **Settings** → "Create a branch for your development environment" 켜고 Save changes.
+  `vercel-dev`라는 영구 브랜치가 만들어지고 Vercel의 **Development** 환경변수가 그 브랜치를
+  가리키게 자동 설정됨 — 이 값을 `vercel env pull`이나 복붙으로 `.env.local`에 넣으면 로컬 작업이
+  실제 서비스 데이터와 완전히 분리됨. **"Automatically delete obsolete Neon branches"도 같이
+  켜둘 것** (안 켜면 PR 미리보기용 브랜치가 계속 쌓임)
+- **main → dev로 최신 데이터 가져오기**: 브랜치는 git처럼 머지가 안 됨. dev를 최신 프로덕션
+  상태로 갱신하고 싶으면 Neon 콘솔에서 dev 브랜치 선택 → **Reset from parent** (완전 덮어쓰기,
+  dev에 있던 내용은 사라짐). 반대 방향(dev → main)은 애초에 필요 없음 — 실제 게시글은
+  관리자가 배포된 사이트에서 직접 씀
+- **Neon Auth**: 계정이 1개뿐이고 회원가입 자체가 없는 구조라([관리자 인증] 참고) 켜지 않기로
+  함. 나중에 정말 필요해지면 Neon 콘솔 → **Auth** 페이지 → Enable Auth (생성 시점에만 되는 설정
+  아니라 언제든 추가 가능)
 
 ---
 
@@ -317,7 +343,7 @@ next-intl은 기본적으로 요청 헤더에서 locale을 읽기 때문에, 아
 - [ ] 글 작성 폼 (Tiptap 에디터 + 툴바)
 - [ ] Blob 이미지 업로드 (에디터 내 삽입 포함)
 - [ ] 갤러리
-- [ ] README 인수인계 문서 정리
+- [x] README 인수인계 문서 정리 — 신규 합류자 대상 `README.md` 작성, boilerplate `next_README.md` 제거
 
 ---
 

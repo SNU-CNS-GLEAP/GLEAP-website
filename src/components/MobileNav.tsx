@@ -6,13 +6,14 @@ import { Link, usePathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { activityCategories } from "@/content/activities";
 import { localize } from "@/lib/localized-text";
+import { logout } from "@/app/[locale]/admin/(dashboard)/actions";
 
 const localeLabels: Record<string, string> = {
   ko: "한국어",
   en: "English",
 };
 
-export function MobileNav({ locale }: { locale: string }) {
+export function MobileNav({ locale, isAdminMode }: { locale: string; isAdminMode: boolean }) {
   const t = useTranslations("Nav");
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -89,12 +90,19 @@ export function MobileNav({ locale }: { locale: string }) {
           </Link>
         </nav>
 
-        <div className="flex gap-4 border-t border-border px-6 py-4 text-sm text-muted">
+        <div className="flex items-center gap-4 border-t border-border px-6 py-4 text-sm text-muted">
           {routing.locales.map((l) => (
             <Link key={l} href={pathname} locale={l} className="hover:text-primary">
               {localeLabels[l]}
             </Link>
           ))}
+          {isAdminMode && (
+            <form action={logout.bind(null, locale)} className="ml-auto">
+              <button type="submit" className="text-admin hover:underline">
+                로그아웃
+              </button>
+            </form>
+          )}
         </div>
       </div>
     </div>

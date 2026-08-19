@@ -5,6 +5,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { localize } from "@/lib/localized-text";
 import { getPost } from "@/lib/posts";
+import { AdminEditButton } from "@/components/admin/AdminEditButton";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -63,6 +64,7 @@ export default async function NewsDetailPage({ params }: Props) {
           <span className="rounded-full border border-border px-2 py-0.5">{post.type}</span>
           <span>{dateFormatter.format(post.publishedAt)}</span>
           {post.authorName && <span>· {post.authorName}</span>}
+          <AdminEditButton postId={post.id} />
         </div>
         <h1 className="text-2xl font-semibold tracking-tight" lang={title.lang}>
           {title.text}

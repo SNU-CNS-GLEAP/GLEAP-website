@@ -3,6 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { localize } from "@/lib/localized-text";
 import { getPosts, getPostTypes } from "@/lib/posts";
 import { excerpt } from "@/lib/text";
+import { AdminEditButton } from "@/components/admin/AdminEditButton";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -87,6 +88,7 @@ export default async function NewsPage({ params, searchParams }: Props) {
                     <span className="rounded-full border border-border px-2 py-0.5">{post.type}</span>
                     <span>{dateFormatter.format(post.publishedAt)}</span>
                     {post.authorName && <span>· {post.authorName}</span>}
+                    <AdminEditButton postId={post.id} />
                   </div>
                   <Link
                     href={`/news/${post.id}`}

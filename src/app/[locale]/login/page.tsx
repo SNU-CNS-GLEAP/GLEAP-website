@@ -11,8 +11,8 @@ export default async function LoginPage({ params }: Props) {
   const t = await getTranslations("MemberLoginPage");
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-16">
-      <div className="flex flex-col gap-2">
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center gap-6 px-6 py-16 text-center">
+      <div className="flex flex-col items-center gap-2">
         <h1 className="text-3xl font-semibold tracking-tight">{t("title")}</h1>
         <p className="max-w-xl text-muted">{t("description")}</p>
       </div>

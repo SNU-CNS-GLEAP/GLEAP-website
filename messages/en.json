@@ -22,7 +22,9 @@
     "title": "Members"
   },
   "AlumniPage": {
-    "title": "Alumni"
+    "title": "Alumni",
+    "selectCohort": "Select Generation",
+    "empty": "No roster has been added yet."
   },
   "MemberCard": {
     "email": "Email",

@@ -175,6 +175,18 @@ npm run dev
 - **구성원 사진**: `public/members/` 아래에 `{기수id}{실명}.jpg` 이름으로 커밋 (예: `/members/15문현호.jpg`).
   이름이 어차피 화면에 그대로 노출되므로 파일명도 실명 기반으로 통일 — 별도 식별자(학번 등)를 새로 만들지 않음.
   카드 렌더링은 `src/components/MemberCard.tsx` 하나를 `/members`, `/members/alumni` 양쪽에서 공유
+- **Alumni 기준**: 별도 배열이 아니라 `cohorts` 하나에서 파생됨. `members.ts`의 `cohorts`는 1기부터
+  최신 기수까지 전부 담고, `CURRENT_COHORT_COUNT`(현재 2)로 지정한 최신 N개 기수만 `currentCohorts`
+  (`/members`에 표시), 그 이전 전부가 `alumniCohorts`(`/members/alumni`)로 자동 계산됨. 매년 신입
+  기수가 `cohorts`에 추가돼도 이 상수 하나 그대로 두면 가장 오래된 현재 구성원 기수가 자동으로
+  alumni로 넘어감 — 코드 수정 불필요. 1~12기는 아직 명단이 없는 자리표시자(`members: []`)이고,
+  13기는 Wix 사이트에서 기수가 명시돼 있던 10명만 옮겨둔 상태. 8~12기 소속이 불확실한 나머지 16명은
+  `members.ts` 파일 상단에 주석(TODO)으로만 남겨뒀으니 실제 기수를 확인하는 대로 해당 cohort의
+  `members`로 옮길 것
+- **Alumni 페이지 UI**: `/members/alumni`는 서버 컴포넌트(SSG 유지)가 `alumniCohorts` 전체를
+  클라이언트 컴포넌트 `AlumniCohortBrowser`에 넘기고, 그 안의 `<select>`로 기수를 골라 클라이언트에서
+  필터링한다. 기본 선택값은 `DEFAULT_ALUMNI_COHORT_ID`(최신 기수 - `CURRENT_COHORT_COUNT`, 지금은
+  13기). API 호출 없이 이미 전달받은 데이터 안에서만 걸러내는 방식이라 정적 렌더링에 영향 없음
 - 영문 작성 시 [서울대 자연대 공식 GLEAP 소개 페이지](https://science.snu.ac.kr/en/campus-life/activity/gleap)를
   톤·용어 참고용으로 사용 (활동 3분류를 Academic / Social Contribution / Exchange로 표기).
   `about.ts`는 이미 이 페이지를 참고해 실제 영문으로 채워둔 예시임 — 그대로 복사하지 말고 참고만 할 것

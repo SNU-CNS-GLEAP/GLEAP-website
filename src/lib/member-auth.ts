@@ -10,6 +10,10 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import {
+  isMemberEmailConfigured,
+  sendMemberVerificationEmail,
+} from "@/lib/member-email";
+import {
   authAccounts,
   authSessions,
   authUsers,
@@ -67,11 +71,33 @@ export const memberAuth = betterAuth({
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
+    // 이메일 소유를 확인하기 전에는 로그인 세션을 만들지 않는다.
+    requireEmailVerification: true,
+  },
+  emailVerification: {
+    // 가입 직후 이메일 주소의 실제 소유 여부를 확인한다.
+    sendOnSignUp: true,
+    // 인증 전 로그인 시에도 새 인증 링크를 다시 보낸다.
+    sendOnSignIn: true,
+    autoSignInAfterVerification: true,
+    expiresIn: 60 * 60,
+    sendVerificationEmail: async ({ user, url }) => {
+      await sendMemberVerificationEmail({
+        email: user.email,
+        verificationUrl: url,
+      });
+    },
   },
   // 회원가입 요청은 DB에 실제 계정이 생기기 전에 승인 목록과 대조한다.
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
       if (ctx.path !== "/sign-up/email") return;
+
+      if (!isMemberEmailConfigured()) {
+        throw new APIError("BAD_REQUEST", {
+          message: "이메일 인증 설정을 준비 중입니다. 운영진에게 문의해 주세요.",
+        });
+      }
 
       const email = normalizeEmail(ctx.body?.email);
       const approvedMember = await findApprovedMember(email);

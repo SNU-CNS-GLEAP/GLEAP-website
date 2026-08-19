@@ -14,14 +14,17 @@ export function MemberAuthForm({ locale, mode }: Props) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<{
+    text: string;
+    tone: "error" | "success";
+  } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isSignup = mode === "sign-up";
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setMessage("");
+    setMessage(null);
     setIsSubmitting(true);
 
     const callbackURL = `/${locale}/member`;
@@ -41,7 +44,18 @@ export function MemberAuthForm({ locale, mode }: Props) {
     setIsSubmitting(false);
 
     if (result.error) {
-      setMessage(result.error.message ?? "다시 확인해 주세요.");
+      setMessage({
+        tone: "error",
+        text: result.error.message ?? "다시 확인해 주세요.",
+      });
+      return;
+    }
+
+    if (isSignup) {
+      setMessage({
+        tone: "success",
+        text: "인증 이메일을 보냈습니다. 메일함의 링크를 눌러야 회원 기능을 사용할 수 있습니다.",
+      });
       return;
     }
 
@@ -85,7 +99,15 @@ export function MemberAuthForm({ locale, mode }: Props) {
           className="rounded border border-border px-3 py-2 font-normal"
         />
       </label>
-      {message && <p className="text-sm text-red-700">{message}</p>}
+      {message && (
+        <p
+          className={`text-sm ${
+            message.tone === "error" ? "text-red-700" : "text-green-700"
+          }`}
+        >
+          {message.text}
+        </p>
+      )}
       <button
         type="submit"
         disabled={isSubmitting}

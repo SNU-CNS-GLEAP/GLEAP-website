@@ -30,7 +30,8 @@ export async function getPosts({ page, q, type }: PostListParams) {
       .select()
       .from(posts)
       .where(where)
-      .orderBy(desc(posts.createdAt))
+      // id를 2차 정렬 기준으로 둬 published_at이 같은 날짜라도 페이지네이션 순서가 흔들리지 않게 함.
+      .orderBy(desc(posts.publishedAt), desc(posts.id))
       .limit(PAGE_SIZE)
       .offset((page - 1) * PAGE_SIZE),
     db.select({ count: sql<number>`count(*)::int` }).from(posts).where(where),
@@ -41,4 +42,9 @@ export async function getPosts({ page, q, type }: PostListParams) {
     total: count,
     totalPages: Math.max(1, Math.ceil(count / PAGE_SIZE)),
   };
+}
+
+export async function getPost(id: number) {
+  const rows = await db.select().from(posts).where(eq(posts.id, id)).limit(1);
+  return rows[0];
 }

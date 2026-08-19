@@ -45,7 +45,8 @@
     "totalCount": "{count} posts",
     "prev": "Previous",
     "next": "Next",
-    "pageOf": "{page} / {totalPages}"
+    "pageOf": "{page} / {totalPages}",
+    "backToList": "← Back to list"
   },
   "Footer": {
     "rights": "© {year} GLEAP. All rights reserved.",

@@ -85,12 +85,16 @@ export default async function NewsPage({ params, searchParams }: Props) {
                 <li key={post.id} className="flex flex-col gap-1 py-5">
                   <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
                     <span className="rounded-full border border-border px-2 py-0.5">{post.type}</span>
-                    <span>{dateFormatter.format(post.createdAt)}</span>
+                    <span>{dateFormatter.format(post.publishedAt)}</span>
                     {post.authorName && <span>· {post.authorName}</span>}
                   </div>
-                  <span className="text-lg font-medium" lang={title.lang}>
+                  <Link
+                    href={`/news/${post.id}`}
+                    className="text-lg font-medium hover:text-primary hover:underline"
+                    lang={title.lang}
+                  >
                     {title.text}
-                  </span>
+                  </Link>
                   <p className="text-sm text-muted" lang={body.lang}>
                     {excerpt(body.text)}
                   </p>

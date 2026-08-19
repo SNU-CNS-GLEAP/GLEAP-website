@@ -48,3 +48,29 @@ export async function getPost(id: number) {
   const rows = await db.select().from(posts).where(eq(posts.id, id)).limit(1);
   return rows[0];
 }
+
+type CreatePostInput = {
+  type: string;
+  titleKo: string;
+  titleEn?: string;
+  bodyKo: string;
+  bodyEn?: string;
+  authorName?: string;
+  publishedAt: Date;
+};
+
+export async function createPost(input: CreatePostInput) {
+  const [row] = await db
+    .insert(posts)
+    .values({
+      type: input.type,
+      titleKo: input.titleKo,
+      titleEn: input.titleEn,
+      bodyKo: input.bodyKo,
+      bodyEn: input.bodyEn,
+      authorName: input.authorName,
+      publishedAt: input.publishedAt,
+    })
+    .returning({ id: posts.id });
+  return row.id;
+}

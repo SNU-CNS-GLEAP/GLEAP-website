@@ -49,17 +49,17 @@ export async function getPost(id: number) {
   return rows[0];
 }
 
-type CreatePostInput = {
+type PostInput = {
   type: string;
   titleKo: string;
-  titleEn?: string;
+  titleEn: string | null;
   bodyKo: string;
-  bodyEn?: string;
-  authorName?: string;
+  bodyEn: string | null;
+  authorName: string | null;
   publishedAt: Date;
 };
 
-export async function createPost(input: CreatePostInput) {
+export async function createPost(input: PostInput) {
   const [row] = await db
     .insert(posts)
     .values({
@@ -73,4 +73,25 @@ export async function createPost(input: CreatePostInput) {
     })
     .returning({ id: posts.id });
   return row.id;
+}
+
+export async function updatePost(id: number, input: PostInput) {
+  await db
+    .update(posts)
+    .set({
+      type: input.type,
+      titleKo: input.titleKo,
+      titleEn: input.titleEn,
+      bodyKo: input.bodyKo,
+      bodyEn: input.bodyEn,
+      authorName: input.authorName,
+      publishedAt: input.publishedAt,
+      // 실제 마지막 수정 시각 갱신 — schema.ts에 적어둔 대로 Postgres가 자동으로 해주지 않음.
+      updatedAt: new Date(),
+    })
+    .where(eq(posts.id, id));
+}
+
+export async function deletePost(id: number) {
+  await db.delete(posts).where(eq(posts.id, id));
 }

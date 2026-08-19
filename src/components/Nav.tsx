@@ -79,7 +79,21 @@ export function Nav() {
   const t = useTranslations("Nav");
   const locale = useLocale();
   const pathname = usePathname();
-  const isAdminMode = pathname.startsWith("/admin") && !pathname.startsWith("/admin/login");
+  const [isAdminSession, setIsAdminSession] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/session-status")
+      .then((res) => res.json())
+      .then((data) => setIsAdminSession(Boolean(data.isAdmin)))
+      .catch(() => {});
+  }, []);
+
+  // 경로 기반 체크는 로그인 상태 fetch가 끝나기 전에도(또는 실패해도) /admin 안에서는
+  // 바로 표시되게 하는 fallback. 실제 로그인 상태(isAdminSession)는 /admin 밖에서도
+  // 헤더가 유지되게 함 — 세션 쿠키를 서버 컴포넌트에서 직접 읽지 않으므로 공개 페이지의
+  // 정적 렌더링에는 영향 없음 (CLAUDE.md "공개 페이지에서의 수정 진입점" 패턴).
+  const isAdminMode =
+    isAdminSession || (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login"));
 
   return (
     <header

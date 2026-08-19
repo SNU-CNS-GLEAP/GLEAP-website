@@ -14,12 +14,20 @@ export default async function AdminDashboardPage({ params }: Props) {
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-6 py-16">
       <h1 className="text-2xl font-semibold">관리자</h1>
       <p className="text-muted">로그인되었습니다.</p>
-      <Link
-        href="/admin/news/new"
-        className="w-fit rounded bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90"
-      >
-        새 글 쓰기
-      </Link>
+      <div className="flex gap-2">
+        <Link
+          href="/admin/news"
+          className="w-fit rounded border border-border px-4 py-2 text-sm font-medium hover:border-primary hover:text-primary"
+        >
+          게시물 관리
+        </Link>
+        <Link
+          href="/admin/news/new"
+          className="w-fit rounded bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+        >
+          새 글 쓰기
+        </Link>
+      </div>
       <form action={logout.bind(null, locale)}>
         <button
           type="submit"

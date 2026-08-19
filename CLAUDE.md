@@ -127,7 +127,7 @@ npm run dev
 - **구성원 프로필 필드**: `Member` 타입에 `email?`, `links?`(blog/instagram/github/linkedin, 전부 선택)를 추가.
   **학번은 넣지 않기로 함** — 레포가 public이라 커밋 즉시 영구 공개되는데, 학번을 사이트에
   노출할 이유가 딱히 없어서 (기수 정보는 이미 `role`/`department` 문구나 소속 `Cohort`로 충분히 드러남)
-- **구성원 사진**: `public/members/` 아래에 `{기수id}-{실명}.webp` 이름으로 커밋 (예: `/members/15-문현호.webp`).
+- **구성원 사진**: `public/members/` 아래에 `{기수id}{실명}.jpg` 이름으로 커밋 (예: `/members/15문현호.jpg`).
   이름이 어차피 화면에 그대로 노출되므로 파일명도 실명 기반으로 통일 — 별도 식별자(학번 등)를 새로 만들지 않음.
   카드 렌더링은 `src/components/MemberCard.tsx` 하나를 `/members`, `/members/alumni` 양쪽에서 공유
 - 영문 작성 시 [서울대 자연대 공식 GLEAP 소개 페이지](https://science.snu.ac.kr/en/campus-life/activity/gleap)를

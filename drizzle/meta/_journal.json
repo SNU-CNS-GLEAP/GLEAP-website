@@ -15,6 +15,27 @@
       "when": 1787118010740,
       "tag": "0001_complete_the_fury",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1787121256172,
+      "tag": "0002_harsh_vulcan",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1787122003372,
+      "tag": "0003_sweet_micromax",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1787131926109,
+      "tag": "0004_tough_sage",
+      "breakpoints": true
     }
   ]
 }

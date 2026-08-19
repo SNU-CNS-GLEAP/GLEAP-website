@@ -10,4 +10,6 @@ export const env = {
   adminPasswordHash: required("ADMIN_PASSWORD_HASH"),
   sessionSecret: required("SESSION_SECRET"),
   databaseUrl: required("DATABASE_URL"),
+  betterAuthSecret: required("BETTER_AUTH_SECRET"),
+  betterAuthUrl: required("BETTER_AUTH_URL"),
 };

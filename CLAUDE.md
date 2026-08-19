@@ -102,6 +102,25 @@ npm run dev
 
 > App Router에는 `next.config`의 `i18n` 옵션이 없다. 검색 시 나오는 Pages Router 방식 문서는 무시할 것.
 
+### 게시물 스키마 (Drizzle ORM)
+
+- `src/lib/schema.ts`에 `posts` 테이블 정의, `src/lib/db.ts`가 `@neondatabase/serverless` +
+  `drizzle-orm/neon-http`로 만든 클라이언트를 내보냄. 규모(게시물 CRUD 하나)에 Prisma는
+  무겁다고 판단 — Drizzle은 스키마가 TS 파일 하나라 읽기 쉽고 마이그레이션도 가벼움
+- 컬럼: `type`(자유 문자열 — 월간 글립/저널 클럽/행사/공지사항 등. enum이 아닌 이유는
+  분류가 늘어날 수 있는데 enum이면 늘 때마다 마이그레이션이 필요해서), `title_ko`/`body_ko`(필수),
+  `title_en`/`body_en`(선택 — 비어있으면 `localize()`가 한국어로 폴백, 아래 번역 절과 동일 규칙),
+  `author_name`(선택, 작성자가 직접 입력하는 크레딧 표기용 — 계정이 1개뿐이라 로그인과 무관),
+  `created_at`/`updated_at`
+- 본문은 Markdown 원문 저장. **렌더링 컴포넌트를 만들 때 raw HTML 통과 옵션(예: `rehype-raw`)은
+  절대 켜지 않을 것** — 그래야 본문에 `<script>` 같은 게 섞여도 문자 그대로만 표시되고 실행되지 않음.
+  에디터 쪽 확장 제한(폰트/색상 미허용)과 같은 목적의 안전장치
+- 마이그레이션: `schema.ts` 수정 → `npm run db:generate`(diff SQL 생성) → `npm run db:migrate`
+  (현재 `.env.local`의 `DATABASE_URL_UNPOOLED`가 가리키는 DB에 적용). `drizzle.config.ts`가
+  마이그레이션 전용으로 unpooled 연결을 쓰도록 지정돼 있음
+- "자동 번역됨" 배지, 활동 카테고리 태그 필드는 아직 스키마에 없음 — 번역 API 연동이랑
+  `/activities/[category]` 연계 기능을 실제로 붙일 때 마이그레이션 추가할 것
+
 ### 게시물 번역
 
 - 스키마는 **언어별 컬럼** 방식 (`title_ko`, `title_en`, `body_ko`, `body_en`). 언어 2개 고정 + 수백 건 규모에서 별도 번역 테이블보다 단순
@@ -293,7 +312,8 @@ next-intl은 기본적으로 요청 헤더에서 locale을 읽기 때문에, 아
 - [x] i18n 구조 세팅 (`[locale]`, proxy, messages) — next-intl 사용, `localePrefix: "always"` 기본값이라 `/ko`, `/en` 모두 접두사 붙음
 - [x] 정적 페이지 뼈대 (소개 / 구성원 / 활동) — 라우트·Nav·`src/content/*.ts` 패턴은 완성, 실제 명단·활동 내역은 placeholder라 교체 필요
 - [x] 관리자 로그인 (iron-session + bcrypt) — 로그인/세션 유지/로그아웃 확인 완료. 실제 관리 기능(글 작성 등)은 게시판 스키마 이후
-- [ ] Neon 연결 + 게시물 스키마 + 목록/상세
+- [x] Neon 연결 + 게시물 스키마(`posts` 테이블, Drizzle) — dev 브랜치에 마이그레이션 적용 완료
+- [ ] `/news` 목록/상세 페이지 (DB 연동)
 - [ ] 글 작성 폼 (Tiptap 에디터 + 툴바)
 - [ ] Blob 이미지 업로드 (에디터 내 삽입 포함)
 - [ ] 갤러리

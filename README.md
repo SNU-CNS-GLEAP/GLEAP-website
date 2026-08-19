@@ -2,9 +2,7 @@
 
 서울대학교 자연과학대학 우수학생자치단체 **GLEAP** 공식 홈페이지.
 
-최첨단 기술, Next.js로 리뉴얼했습니다.
-
----
+최첨단 기술, Next.js로 리뉴얼 중에 있습니다.
 
 ## 이게 뭐죠
 
@@ -15,14 +13,13 @@
 
 ## 기술 스택
 
-- **Next.js** (App Router, TypeScript, Tailwind CSS) — 더 알아보고 싶으시면 
-  [next-memo.md](next-memo.md)에 설명을 정리하고 있습니다
+- **Next.js** (App Router, TypeScript, Tailwind CSS) — [next-memo.md](next-memo.md)에 설명 정리 중
 - **Neon Postgres** — 게시판 데이터 저장, [Drizzle ORM](https://orm.drizzle.team/)으로 스키마 관리
 - **Vercel** — 호스팅. `git push`가 곧 배포
 - *next-intl* — 다국어(i18n)
 - *iron-session* — 관리자 로그인
 
-조합 선택의 기준은 [CLAUDE.md의 "스택" 섹션](CLAUDE.md#스택)에 정리하고 있습니다. 
+조합 선택의 기준은 [CLAUDE.md의 "스택" 섹션](CLAUDE.md#스택)에 정리하고 있습니다.
 
 ## 시작하기
 
@@ -85,48 +82,48 @@ drizzle/              DB 마이그레이션 파일 (자동 생성, 직접 수정
 **구성원/활동 소개 내용 수정** — TXT 수정만 하면 됩니다! `src/content/members.ts`,
 `src/content/activities.ts`, `src/content/about.ts`를 고치고 `git push`하면 끝.
 
-**게시판 테이블 구조 변경** — `src/lib/schema.ts`를 고친 뒤:
+**관리자 비밀번호 변경** — bcrypt 해시를 새로 만들어 Vercel의 `ADMIN_PASSWORD_HASH`
+환경변수를 교체하고 Redeploy.
+
+**DB 확장 및 관리** — 필요 시, `src/lib/schema.ts`를 고친 뒤:
 
 ```bash
 npm run db:generate   # 변경분으로 마이그레이션 SQL 생성
 npm run db:migrate    # 지금 .env.local이 가리키는 DB에 적용
 ```
 
-**관리자 비밀번호 변경** — bcrypt 해시를 새로 만들어 Vercel의 `ADMIN_PASSWORD_HASH`
-환경변수를 교체하고 Redeploy 하세요.
-
 ## 배포
 
-`main` 브랜치에 `git push`하면 Vercel이 자동으로 배포해요. PR을 올리면 Preview URL이
-따로 생겨서 배포 전에 미리 확인할 수 있어요.
+`main` 브랜치에 `git push`하면 Vercel이 자동 배포, 30초 후 홈페이지에 반영됩니다.
 
-**`vercel --prod` 써서 직접 배포 금지** — 커밋 안 된 로컬 상태가 그대로
-나가버려요. 
+**`vercel --prod` 써서 직접 배포 금지** — 무슨 일이 일어날지 모릅니다...
 
 ## 더 알아보기
 
-- [CLAUDE.md](CLAUDE.md) — 설계 결정과 그 이유를 담은 문서. 뭔가 "왜 이렇게 돼있지?" 싶으면
-  여기부터 찾아보세요
-- [next-memo.md](next-memo.md) — Next.js 16의 새로운 구조/기능 학습 메모
+- [CLAUDE.md](CLAUDE.md) — 설계 결정과 이유 정리 w/ Claude
+- [next-memo.md](next-memo.md) — Next.js 16의 구조/기능 메모
 
 # Honor's wall
 
 ## Maintaners list
 
-[13기 김민준](?)
+2026, 2027: 15기 [문현호](https://github.com/octahedron00)
+
+2024, 2025: 13기 [김민준](https://github.com/)
 
 ## Dev By 글홈 TF
 
 Gleap 홈페이지 개발 TF 2기 (2026.08.19 ~ 현재)
 
-대표 [15기 문현호](https://github.com/octahedron00)
+대표 15기 [문현호](https://github.com/octahedron00)
 
-[15기 고주형](https://github.com/kojuhyeong)
+14기 [박정민](https://github.com/Minhub1204), 15기 
+[고주형](https://github.com/kojuhyeong),
+[서채원](https://github.com/),
+[차혜린](https://github.com/)
 
-[14기 박정민](https://github.com/Minhub1204)
+## 문의하기
 
-[15기 서채원](?)
-
-[15기 차혜린](?)
+내부 문의: 가장 최신 Maintaner를 찾아가세요.
 
 외부 문의: snucnsgleap@gmail.com

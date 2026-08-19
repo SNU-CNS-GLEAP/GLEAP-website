@@ -50,6 +50,14 @@ Claude Code 세션 컨텍스트 겸 인수인계 문서. **결정된 사항과 �
 - 데이터 접근의 최종 보안 경계는 Supabase RLS다. 화면에서 버튼을 숨기는 것만으로 권한을 판단하지 않는다.
 - 기존 `iron-session` 관리자 화면은 기존 운영 흐름을 보존하기 위해 당장 유지한다. Supabase 운영진(`profiles.is_admin`) 기반 공지 작성·회원 초대 화면은 별도 단계에서 통합한다.
 
+일단은 넣어두지만, 이후 반드시 Neon 등으로 migration 할 것. 
+- **Supabase** — DB+인증+스토리지 통합은 편하나 락인이 크고 학습 범위가 넓어짐.
+  결정적으로는 리전 문제: Supabase는 서울 리전을 지원하지만(Neon은 없음, 가장 가까운 게 싱가포르),
+  **무료 티어는 1주일간 DB 요청이 없으면 프로젝트가 자동 일시정지되고, 이건 수동으로만 재개 가능**함.
+  방학·시험 기간에 아무도 안 들어오면 사이트가 조용히 멈춰버리는 리스크가, 서울-싱가포르 왕복
+  지연(약 70~100ms, 대부분 정적 페이지라 체감 적음)보다 "매년 담당자 바뀌는" 이 프로젝트엔 더 치명적이라
+  판단. Neon 무료 티어는 비활성 시 컴퓨트가 0으로 스케일되지만 다음 요청에 자동으로 깨어남(수동 조치 불필요)
+
 ---
 
 ## 소유권 / 계정 구조
@@ -71,6 +79,7 @@ Claude Code 세션 컨텍스트 겸 인수인계 문서. **결정된 사항과 �
 
 ```
 DATABASE_URL=
+DATABASE_URL_UNPOOLED=
 BLOB_READ_WRITE_TOKEN=
 ADMIN_PASSWORD_HASH=
 SESSION_SECRET=
@@ -78,6 +87,10 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 ```
 
+- Vercel의 Neon 연동은 `vercel env pull` 시 `PGHOST`/`POSTGRES_URL`/`POSTGRES_PRISMA_URL` 등
+  레거시 호환용 변수를 15개 가까이 같이 내려준다. **우리는 `@neondatabase/serverless`만 쓰므로
+  위 두 개(`DATABASE_URL`, `DATABASE_URL_UNPOOLED`) 외 나머지는 지워도 됨** — 안 지워도 동작엔
+  문제없지만, 파일이 짧아야 후임이 "이게 다 뭐지" 안 하게 됨
 - `src/lib/env.ts`에서 진입 시 존재 여부를 검증하고 없으면 즉시 throw
 - **`NEXT_PUBLIC_` 접두사는 브라우저 번들에 노출됨.** public 레포이므로 비밀값에 절대 사용 금지
 - Supabase URL과 **publishable key**는 공개되어도 되는 프로젝트 식별·접속 값이며 `NEXT_PUBLIC_` 접두사를 사용한다. `service_role` / secret key는 브라우저와 이 레포에 절대 넣지 않는다.
@@ -102,6 +115,22 @@ cp .env.example .env.local   # 개인 Neon 브랜치 값으로 채움
 npm run dev
 ```
 
+### Neon 브랜치
+
+- **dev용 브랜치**: Neon 콘솔 → 프로젝트 → **Integrations** → Vercel 연동 **Manage** →
+  **Settings** → "Create a branch for your development environment" 켜고 Save changes.
+  `vercel-dev`라는 영구 브랜치가 만들어지고 Vercel의 **Development** 환경변수가 그 브랜치를
+  가리키게 자동 설정됨 — 이 값을 `vercel env pull`이나 복붙으로 `.env.local`에 넣으면 로컬 작업이
+  실제 서비스 데이터와 완전히 분리됨. **"Automatically delete obsolete Neon branches"도 같이
+  켜둘 것** (안 켜면 PR 미리보기용 브랜치가 계속 쌓임)
+- **main → dev로 최신 데이터 가져오기**: 브랜치는 git처럼 머지가 안 됨. dev를 최신 프로덕션
+  상태로 갱신하고 싶으면 Neon 콘솔에서 dev 브랜치 선택 → **Reset from parent** (완전 덮어쓰기,
+  dev에 있던 내용은 사라짐). 반대 방향(dev → main)은 애초에 필요 없음 — 실제 게시글은
+  관리자가 배포된 사이트에서 직접 씀
+- **Neon Auth**: 계정이 1개뿐이고 회원가입 자체가 없는 구조라([관리자 인증] 참고) 켜지 않기로
+  함. 나중에 정말 필요해지면 Neon 콘솔 → **Auth** 페이지 → Enable Auth (생성 시점에만 되는 설정
+  아니라 언제든 추가 가능)
+
 ---
 
 ## i18n
@@ -115,6 +144,25 @@ npm run dev
 - UI 문구는 `messages/ko.json`, `messages/en.json`. **JSX에 한국어 직접 작성 금지**
 
 > App Router에는 `next.config`의 `i18n` 옵션이 없다. 검색 시 나오는 Pages Router 방식 문서는 무시할 것.
+
+### 게시물 스키마 (Drizzle ORM)
+
+- `src/lib/schema.ts`에 `posts` 테이블 정의, `src/lib/db.ts`가 `@neondatabase/serverless` +
+  `drizzle-orm/neon-http`로 만든 클라이언트를 내보냄. 규모(게시물 CRUD 하나)에 Prisma는
+  무겁다고 판단 — Drizzle은 스키마가 TS 파일 하나라 읽기 쉽고 마이그레이션도 가벼움
+- 컬럼: `type`(자유 문자열 — 월간 글립/저널 클럽/행사/공지사항 등. enum이 아닌 이유는
+  분류가 늘어날 수 있는데 enum이면 늘 때마다 마이그레이션이 필요해서), `title_ko`/`body_ko`(필수),
+  `title_en`/`body_en`(선택 — 비어있으면 `localize()`가 한국어로 폴백, 아래 번역 절과 동일 규칙),
+  `author_name`(선택, 작성자가 직접 입력하는 크레딧 표기용 — 계정이 1개뿐이라 로그인과 무관),
+  `created_at`/`updated_at`
+- 본문은 Markdown 원문 저장. **렌더링 컴포넌트를 만들 때 raw HTML 통과 옵션(예: `rehype-raw`)은
+  절대 켜지 않을 것** — 그래야 본문에 `<script>` 같은 게 섞여도 문자 그대로만 표시되고 실행되지 않음.
+  에디터 쪽 확장 제한(폰트/색상 미허용)과 같은 목적의 안전장치
+- 마이그레이션: `schema.ts` 수정 → `npm run db:generate`(diff SQL 생성) → `npm run db:migrate`
+  (현재 `.env.local`의 `DATABASE_URL_UNPOOLED`가 가리키는 DB에 적용). `drizzle.config.ts`가
+  마이그레이션 전용으로 unpooled 연결을 쓰도록 지정돼 있음
+- "자동 번역됨" 배지, 활동 카테고리 태그 필드는 아직 스키마에 없음 — 번역 API 연동이랑
+  `/activities/[category]` 연계 기능을 실제로 붙일 때 마이그레이션 추가할 것
 
 ### 게시물 번역
 
@@ -144,6 +192,18 @@ npm run dev
 - **구성원 사진**: `public/members/` 아래에 `{기수id}{실명}.jpg` 이름으로 커밋 (예: `/members/15문현호.jpg`).
   이름이 어차피 화면에 그대로 노출되므로 파일명도 실명 기반으로 통일 — 별도 식별자(학번 등)를 새로 만들지 않음.
   카드 렌더링은 `src/components/MemberCard.tsx` 하나를 `/members`, `/members/alumni` 양쪽에서 공유
+- **Alumni 기준**: 별도 배열이 아니라 `cohorts` 하나에서 파생됨. `members.ts`의 `cohorts`는 1기부터
+  최신 기수까지 전부 담고, `CURRENT_COHORT_COUNT`(현재 2)로 지정한 최신 N개 기수만 `currentCohorts`
+  (`/members`에 표시), 그 이전 전부가 `alumniCohorts`(`/members/alumni`)로 자동 계산됨. 매년 신입
+  기수가 `cohorts`에 추가돼도 이 상수 하나 그대로 두면 가장 오래된 현재 구성원 기수가 자동으로
+  alumni로 넘어감 — 코드 수정 불필요. 11~13기는 Wix에서 실명단을 확인해 채워둠(13기는 "13th
+  members" 목록, 11·12기는 Wix Alumni 페이지의 기수 드롭다운이 SSR로 내려주는 JSON을 직접
+  파싱해 확인). 1~10기는 Wix 쪽에도 드롭다운 옵션(8~12기)만 있고 실제 등록된 인원이 없어
+  그대로 빈 자리표시자(`members: []`)로 남겨둠 — 나중에 명단이 확인되면 채울 것
+- **Alumni 페이지 UI**: `/members/alumni`는 서버 컴포넌트(SSG 유지)가 `alumniCohorts` 전체를
+  클라이언트 컴포넌트 `AlumniCohortBrowser`에 넘기고, 그 안의 `<select>`로 기수를 골라 클라이언트에서
+  필터링한다. 기본 선택값은 `DEFAULT_ALUMNI_COHORT_ID`(최신 기수 - `CURRENT_COHORT_COUNT`, 지금은
+  13기). API 호출 없이 이미 전달받은 데이터 안에서만 걸러내는 방식이라 정적 렌더링에 영향 없음
 - 영문 작성 시 [서울대 자연대 공식 GLEAP 소개 페이지](https://science.snu.ac.kr/en/campus-life/activity/gleap)를
   톤·용어 참고용으로 사용 (활동 3분류를 Academic / Social Contribution / Exchange로 표기).
   `about.ts`는 이미 이 페이지를 참고해 실제 영문으로 채워둔 예시임 — 그대로 복사하지 말고 참고만 할 것
@@ -244,9 +304,13 @@ DB 기반 콘텐츠(소식 게시판)를 관리자가 볼 때는 그 페이지�
 ### 확장(extension) 선정 원칙
 
 **폰트 크기·색상·정렬 관련 확장은 설치하지 않는다.**
-작성자가 만들 수 있는 것은 문단·제목·목록·강조·링크·이미지로 제한하고,
+작성자가 만들 수 있는 것은 문단·제목(H2~H4)·목록·강조·링크·이미지·인용문으로 제한하고,
 시각적 표현은 전적으로 CSS가 결정한다.
 → 매년 작성자가 바뀌어도 게시물 스타일이 일관되게 유지되는 유일한 장치.
+
+인용문은 처음엔 목록에서 빠져 있었으나(허용 목록을 만들 때 실사용을 미처 고려 못함),
+행사 후기에 참가자 발언을 인용하는 등 실제로 자주 쓰여 다시 켰다. 코드/코드블록/수평선/
+밑줄/취소선은 여전히 미허용 — 필요해지면 이 절과 `PostEditor.tsx`를 같이 갱신할 것.
 
 Markdown에는 색상·폰트 크기 문법이 없으므로 저장 단계에서도 한 번 더 걸러진다.
 
@@ -309,11 +373,12 @@ next-intl은 기본적으로 요청 헤더에서 locale을 읽기 때문에, 아
 - [x] i18n 구조 세팅 (`[locale]`, proxy, messages) — next-intl 사용, `localePrefix: "always"` 기본값이라 `/ko`, `/en` 모두 접두사 붙음
 - [x] 정적 페이지 뼈대 (소개 / 구성원 / 활동) — 라우트·Nav·`src/content/*.ts` 패턴은 완성, 실제 명단·활동 내역은 placeholder라 교체 필요
 - [x] 관리자 로그인 (iron-session + bcrypt) — 로그인/세션 유지/로그아웃 확인 완료. 실제 관리 기능(글 작성 등)은 게시판 스키마 이후
-- [ ] Neon 연결 + 게시물 스키마 + 목록/상세
+- [x] Neon 연결 + 게시물 스키마(`posts` 테이블, Drizzle) — dev 브랜치에 마이그레이션 적용 완료
+- [ ] `/news` 목록/상세 페이지 (DB 연동)
 - [ ] 글 작성 폼 (Tiptap 에디터 + 툴바)
 - [ ] Blob 이미지 업로드 (에디터 내 삽입 포함)
 - [ ] 갤러리
-- [ ] README 인수인계 문서 정리
+- [x] README 인수인계 문서 정리 — 신규 합류자 대상 `README.md` 작성, boilerplate `next_README.md` 제거
 
 ---
 

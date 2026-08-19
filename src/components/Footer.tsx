@@ -2,7 +2,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { localize } from "@/lib/localized-text";
 
-const developerName = { ko: "15기 문현호", en: "15th Moon Hyunho" };
+const developerName = { ko: "글홈 TF", en: "GLEAP Home TF" };
 
 const developerLink = "https://github.com/SNU-CNS-GLEAP/GLEAP-website";
 

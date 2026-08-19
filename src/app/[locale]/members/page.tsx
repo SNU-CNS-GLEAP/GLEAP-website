@@ -1,5 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { cohorts } from "@/content/members";
+import { currentCohorts } from "@/content/members";
 import { localize } from "@/lib/localized-text";
 import { MemberCard } from "@/components/MemberCard";
 
@@ -16,7 +16,7 @@ export default async function MembersPage({ params }: Props) {
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-12 px-6 py-16">
       <h1 className="text-3xl font-semibold tracking-tight">{t("title")}</h1>
-      {cohorts.map((cohort) => {
+      {currentCohorts.map((cohort) => {
         const label = localize(cohort.label, locale);
         const description = localize(cohort.description, locale);
         return (

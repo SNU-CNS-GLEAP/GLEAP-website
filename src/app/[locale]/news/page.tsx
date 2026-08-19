@@ -1,57 +1,130 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { hasSupabaseConfig } from "@/lib/supabase/config";
-import { createPublicClient } from "@/lib/supabase/public";
-
-export const dynamic = "force-dynamic";
+import { localize } from "@/lib/localized-text";
+import { getPosts, getPostTypes } from "@/lib/posts";
+import { excerpt } from "@/lib/text";
+import { AdminEditButton } from "@/components/admin/AdminEditButton";
 
 type Props = {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ q?: string; type?: string; page?: string }>;
 };
 
-export default async function NewsPage({ params }: Props) {
+export default async function NewsPage({ params, searchParams }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("NewsPage");
 
-  if (!hasSupabaseConfig()) {
-    return (
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-6 py-16">
-        <h1 className="text-3xl font-semibold tracking-tight">{t("title")}</h1>
-        <p className="text-muted">{t("comingSoon")}</p>
-      </main>
-    );
+  const sp = await searchParams;
+  const q = sp.q?.trim() || undefined;
+  const type = sp.type?.trim() || undefined;
+  const page = Math.max(1, Number(sp.page) || 1);
+
+  const [{ posts, total, totalPages }, types] = await Promise.all([
+    getPosts({ page, q, type }),
+    getPostTypes(),
+  ]);
+
+  const dateFormatter = new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  function buildHref(overrides: { page?: string }) {
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (type) params.set("type", type);
+    const nextPage = overrides.page;
+    if (nextPage && nextPage !== "1") params.set("page", nextPage);
+    const queryString = params.toString();
+    return queryString ? `/news?${queryString}` : "/news";
   }
 
-  const supabase = createPublicClient();
-  const { data: notices } = await supabase
-    .from("posts")
-    .select("id, title, content, created_at")
-    .eq("category", "notice")
-    .eq("is_public", true)
-    .order("created_at", { ascending: false });
-
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-6 py-16">
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-16">
       <h1 className="text-3xl font-semibold tracking-tight">{t("title")}</h1>
-      {notices && notices.length > 0 ? (
-        <ul className="flex flex-col divide-y divide-border border-y border-border">
-          {notices.map((notice) => (
-            <li key={notice.id}>
-              <Link href={`/news/${notice.id}`} className="block py-5 hover:text-primary">
-                <h2 className="text-lg font-semibold">{notice.title}</h2>
-                <p className="mt-1 line-clamp-2 whitespace-pre-wrap text-sm text-muted">{notice.content}</p>
-                <time className="mt-2 block text-xs text-muted">
-                  {new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(
-                    new Date(notice.created_at),
-                  )}
-                </time>
-              </Link>
-            </li>
+
+      <form action={`/${locale}/news`} className="flex flex-wrap gap-2">
+        <select
+          name="type"
+          defaultValue={type ?? ""}
+          className="rounded border border-border bg-background px-3 py-2 text-sm"
+        >
+          <option value="">{t("filterAll")}</option>
+          {types.map((tp) => (
+            <option key={tp} value={tp}>
+              {tp}
+            </option>
           ))}
-        </ul>
-      ) : (
+        </select>
+        <input
+          type="text"
+          name="q"
+          defaultValue={q ?? ""}
+          placeholder={t("searchPlaceholder")}
+          className="min-w-0 flex-1 rounded border border-border bg-background px-3 py-2 text-sm"
+        />
+        <button
+          type="submit"
+          className="rounded bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+        >
+          {t("search")}
+        </button>
+      </form>
+
+      {posts.length === 0 ? (
         <p className="text-muted">{t("empty")}</p>
+      ) : (
+        <>
+          <p className="text-xs text-muted">{t("totalCount", { count: total })}</p>
+          <ul className="flex flex-col divide-y divide-border">
+            {posts.map((post) => {
+              const title = localize({ ko: post.titleKo, en: post.titleEn ?? undefined }, locale);
+              const body = localize({ ko: post.bodyKo, en: post.bodyEn ?? undefined }, locale);
+              return (
+                <li key={post.id} className="flex flex-col gap-1 py-5">
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
+                    <span className="rounded-full border border-border px-2 py-0.5">{post.type}</span>
+                    <span>{dateFormatter.format(post.publishedAt)}</span>
+                    {post.authorName && <span>· {post.authorName}</span>}
+                    <AdminEditButton postId={post.id} />
+                  </div>
+                  <Link
+                    href={`/news/${post.id}`}
+                    className="text-lg font-medium hover:text-primary hover:underline"
+                    lang={title.lang}
+                  >
+                    {title.text}
+                  </Link>
+                  <p className="text-sm text-muted" lang={body.lang}>
+                    {excerpt(body.text)}
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      )}
+
+      {totalPages > 1 && (
+        <nav className="flex items-center justify-center gap-4 text-sm">
+          {page > 1 ? (
+            <Link href={buildHref({ page: String(page - 1) })} className="text-primary hover:underline">
+              {t("prev")}
+            </Link>
+          ) : (
+            <span className="text-muted/50">{t("prev")}</span>
+          )}
+          <span className="text-muted">{t("pageOf", { page, totalPages })}</span>
+          {page < totalPages ? (
+            <Link href={buildHref({ page: String(page + 1) })} className="text-primary hover:underline">
+              {t("next")}
+            </Link>
+          ) : (
+            <span className="text-muted/50">{t("next")}</span>
+          )}
+        </nav>
       )}
     </main>
   );

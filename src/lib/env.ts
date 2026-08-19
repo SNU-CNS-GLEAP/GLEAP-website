@@ -9,4 +9,5 @@ function required(name: string): string {
 export const env = {
   adminPasswordHash: required("ADMIN_PASSWORD_HASH"),
   sessionSecret: required("SESSION_SECRET"),
+  databaseUrl: required("DATABASE_URL"),
 };

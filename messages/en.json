@@ -23,7 +23,9 @@
     "title": "Members"
   },
   "AlumniPage": {
-    "title": "Alumni"
+    "title": "Alumni",
+    "selectCohort": "Select Generation",
+    "empty": "No roster has been added yet."
   },
   "MemberCard": {
     "email": "Email",
@@ -39,9 +41,15 @@
   },
   "NewsPage": {
     "title": "News",
-    "comingSoon": "A board for GLEAP news — notices, member announcements, event recaps, and our Monthly GLEAP science cards — is on the way.",
-    "empty": "There are no public notices yet.",
-    "backToList": "← Back to news"
+    "filterAll": "All",
+    "searchPlaceholder": "Search by title",
+    "search": "Search",
+    "empty": "No posts yet.",
+    "totalCount": "{count} posts",
+    "prev": "Previous",
+    "next": "Next",
+    "pageOf": "{page} / {totalPages}",
+    "backToList": "← Back to list"
   },
   "MemberLoginPage": {
     "title": "Member sign in",

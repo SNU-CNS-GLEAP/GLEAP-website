@@ -8,6 +8,7 @@ import { routing } from "@/i18n/routing";
 import { activityCategories } from "@/content/activities";
 import { localize } from "@/lib/localized-text";
 import { MobileNav } from "@/components/MobileNav";
+import { logout } from "@/app/[locale]/admin/(dashboard)/actions";
 
 const localeLabels: Record<string, string> = {
   ko: "한국어",
@@ -79,7 +80,24 @@ export function Nav() {
   const t = useTranslations("Nav");
   const locale = useLocale();
   const pathname = usePathname();
-  const isAdminMode = pathname.startsWith("/admin") && !pathname.startsWith("/admin/login");
+  const [isAdminSession, setIsAdminSession] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/session-status")
+      .then((res) => res.json())
+      .then((data) => setIsAdminSession(Boolean(data.isAdmin)))
+      .catch(() => {});
+    // pathname을 deps에 넣는 이유: 이 컴포넌트는 루트 레이아웃에 있어 클라이언트 전환 시
+    // 리마운트되지 않는다. deps가 []면 로그인/로그아웃(둘 다 redirect로 경로가 바뀜) 이후에도
+    // 최초 마운트 시점의 로그인 상태가 그대로 남아 헤더가 안 바뀌는 문제가 있었음.
+  }, [pathname]);
+
+  // 경로 기반 체크는 로그인 상태 fetch가 끝나기 전에도(또는 실패해도) /admin 안에서는
+  // 바로 표시되게 하는 fallback. 실제 로그인 상태(isAdminSession)는 /admin 밖에서도
+  // 헤더가 유지되게 함 — 세션 쿠키를 서버 컴포넌트에서 직접 읽지 않으므로 공개 페이지의
+  // 정적 렌더링에는 영향 없음 (CLAUDE.md "공개 페이지에서의 수정 진입점" 패턴).
+  const isAdminMode =
+    isAdminSession || (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login"));
 
   return (
     <header
@@ -126,15 +144,22 @@ export function Nav() {
           </Link>
         </div>
 
-        <div className="hidden gap-3 text-sm text-muted md:flex">
+        <div className="hidden items-center gap-3 text-sm text-muted md:flex">
           {routing.locales.map((l) => (
             <Link key={l} href={pathname} locale={l} className="hover:text-primary">
               {localeLabels[l]}
             </Link>
           ))}
+          {isAdminMode && (
+            <form action={logout.bind(null, locale)}>
+              <button type="submit" className="text-admin hover:underline">
+                로그아웃
+              </button>
+            </form>
+          )}
         </div>
 
-        <MobileNav locale={locale} />
+        <MobileNav locale={locale} isAdminMode={isAdminMode} />
       </nav>
     </header>
   );

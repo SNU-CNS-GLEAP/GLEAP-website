@@ -23,7 +23,9 @@
     "title": "구성원"
   },
   "AlumniPage": {
-    "title": "Alumni"
+    "title": "Alumni",
+    "selectCohort": "기수 선택",
+    "empty": "아직 등록된 명단이 없습니다."
   },
   "MemberCard": {
     "email": "이메일",
@@ -39,9 +41,15 @@
   },
   "NewsPage": {
     "title": "소식",
-    "comingSoon": "공지사항, 부원 안내, 행사 후기, 월간 글립 등 GLEAP 소식을 전하는 게시판을 준비하고 있습니다.",
-    "empty": "공개된 공지사항이 아직 없습니다.",
-    "backToList": "← 소식 목록으로"
+    "filterAll": "전체",
+    "searchPlaceholder": "제목 검색",
+    "search": "검색",
+    "empty": "게시물이 없습니다.",
+    "totalCount": "총 {count}건",
+    "prev": "이전",
+    "next": "다음",
+    "pageOf": "{page} / {totalPages}",
+    "backToList": "← 목록으로"
   },
   "MemberLoginPage": {
     "title": "회원 로그인",

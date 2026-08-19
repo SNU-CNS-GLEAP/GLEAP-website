@@ -179,10 +179,10 @@ npm run dev
   최신 기수까지 전부 담고, `CURRENT_COHORT_COUNT`(현재 2)로 지정한 최신 N개 기수만 `currentCohorts`
   (`/members`에 표시), 그 이전 전부가 `alumniCohorts`(`/members/alumni`)로 자동 계산됨. 매년 신입
   기수가 `cohorts`에 추가돼도 이 상수 하나 그대로 두면 가장 오래된 현재 구성원 기수가 자동으로
-  alumni로 넘어감 — 코드 수정 불필요. 1~12기는 아직 명단이 없는 자리표시자(`members: []`)이고,
-  13기는 Wix 사이트에서 기수가 명시돼 있던 10명만 옮겨둔 상태. 8~12기 소속이 불확실한 나머지 16명은
-  `members.ts` 파일 상단에 주석(TODO)으로만 남겨뒀으니 실제 기수를 확인하는 대로 해당 cohort의
-  `members`로 옮길 것
+  alumni로 넘어감 — 코드 수정 불필요. 11~13기는 Wix에서 실명단을 확인해 채워둠(13기는 "13th
+  members" 목록, 11·12기는 Wix Alumni 페이지의 기수 드롭다운이 SSR로 내려주는 JSON을 직접
+  파싱해 확인). 1~10기는 Wix 쪽에도 드롭다운 옵션(8~12기)만 있고 실제 등록된 인원이 없어
+  그대로 빈 자리표시자(`members: []`)로 남겨둠 — 나중에 명단이 확인되면 채울 것
 - **Alumni 페이지 UI**: `/members/alumni`는 서버 컴포넌트(SSG 유지)가 `alumniCohorts` 전체를
   클라이언트 컴포넌트 `AlumniCohortBrowser`에 넘기고, 그 안의 `<select>`로 기수를 골라 클라이언트에서
   필터링한다. 기본 선택값은 `DEFAULT_ALUMNI_COHORT_ID`(최신 기수 - `CURRENT_COHORT_COUNT`, 지금은

@@ -27,28 +27,12 @@ export type Cohort = {
 };
 
 // Alumni는 더 이상 별도 배열이 아니라 cohorts 기반으로 계산됨(아래 [Alumni 기준] 참고).
-// 기존 Wix 사이트("13기 & 14기 구성원" / "Alumni" 페이지, 2026-08 스냅샷)에서 기수가 확인되는
-// 13기 10명은 cohorts의 13기 항목으로 옮겼음. 나머지 16명은 정확한 기수(8~12기 드롭다운)를
-// 확인할 수 없어 아래에 참고용으로만 남겨둠 — 실제 기수를 확인한 뒤 해당 cohort의 members로
-// 옮길 것. 영문 이름은 전부 추정 로마자 표기 — 본인 확인 후 실제 선호 표기로 교정 필요.
-//
-// TODO: 기수 미확인, cohorts 1~12기 members로 수동 배정 필요
-// { name: { ko: "우윤호", en: "Woo Yun-ho" }, department: { ko: "생명과학부", en: "Dept of Life Sciences" } },
-// { name: { ko: "박수현", en: "Park Su-hyun" }, role: { ko: "부회장", en: "Vice President" }, department: { ko: "통계학과", en: "Dept of Statistics" } },
-// { name: { ko: "김도연", en: "Kim Do-yeon" }, role: { ko: "홍보팀장", en: "PR Team Leader" }, department: { ko: "지구환경과학부", en: "Dept of Earth and Environmental Sciences" } },
-// { name: { ko: "김태훈", en: "Kim Tae-hoon" }, role: { ko: "교류팀장", en: "Exchange Team Leader" }, department: { ko: "물리천문학부", en: "Dept of Physics and Astronomy" } },
-// { name: { ko: "김형환", en: "Kim Hyung-hwan" }, role: { ko: "사회공헌팀장", en: "Social Contribution Team Leader" }, department: { ko: "통계학과", en: "Dept of Statistics" } },
-// { name: { ko: "배윤진", en: "Bae Yun-jin" }, role: { ko: "홍보팀장", en: "PR Team Leader" }, department: { ko: "물리천문학부", en: "Dept of Physics and Astronomy" } },
-// { name: { ko: "이성빈", en: "Lee Sung-bin" }, role: { ko: "학술팀장", en: "Academic Team Leader" }, department: { ko: "물리천문학부", en: "Dept of Physics and Astronomy" } },
-// { name: { ko: "이주영", en: "Lee Ju-young" }, role: { ko: "사회공헌팀장", en: "Social Contribution Team Leader" }, department: { ko: "지구환경과학부", en: "Dept of Earth and Environmental Sciences" } },
-// { name: { ko: "임동빈", en: "Lim Dong-bin" }, role: { ko: "사회공헌팀장", en: "Social Contribution Team Leader" }, department: { ko: "생명과학부", en: "Dept of Life Sciences" } },
-// { name: { ko: "최우정", en: "Choi Woo-jung" }, role: { ko: "교류팀장", en: "Exchange Team Leader" }, department: { ko: "화학부", en: "Dept of Chemistry" } },
-// { name: { ko: "함성종", en: "Ham Sung-jong" }, department: { ko: "생명과학부", en: "Dept of Life Sciences" } },
-// { name: { ko: "김병주", en: "Kim Byung-joo" }, role: { ko: "부회장", en: "Vice President" }, department: { ko: "화학부", en: "Dept of Chemistry" } },
-// { name: { ko: "김도훈", en: "Kim Do-hoon" }, role: { ko: "학술팀장", en: "Academic Team Leader" }, department: { ko: "수리과학부", en: "Dept of Mathematical Sciences" } },
-// { name: { ko: "손현기", en: "Son Hyun-ki" }, role: { ko: "사회공헌팀장", en: "Social Contribution Team Leader" }, department: { ko: "수리과학부", en: "Dept of Mathematical Sciences" } },
-// { name: { ko: "이동해", en: "Lee Dong-hae" }, role: { ko: "사회공헌팀장", en: "Social Contribution Team Leader" }, department: { ko: "수리과학부", en: "Dept of Mathematical Sciences" } },
-// { name: { ko: "서현우", en: "Seo Hyun-woo" }, role: { ko: "사회공헌팀장", en: "Social Contribution Team Leader" }, department: { ko: "물리천문학부", en: "Dept of Physics and Astronomy" } },
+// 기존 Wix 사이트("13기 & 14기 구성원" / "Alumni" 페이지, 2026-08 스냅샷)에서 옮겨 옴.
+// 13기 10명은 Wix "13th members" 목록에 기수가 명시돼 있었고, 나머지 16명(당시 기수 미확인)은
+// Wix Alumni 페이지의 기수 드롭다운(SSR로 내려오는 JSON, 8~12기 옵션 중 11·12기에만 실제 인원이
+// 있었음)을 다시 확인해 11기 6명 / 12기 10명으로 정확히 배정함 — 8·9·10기는 드롭다운 옵션만
+// 있고 원본에도 등록된 인원이 없어 우리 쪽도 그대로 빈 자리표시자로 둠.
+// 영문 이름은 전부 추정 로마자 표기 — 본인 확인 후 실제 선호 표기로 교정 필요.
 
 // 항목 하나가 회원 한 명. 채우는 예시 (전부 선택 필드 — 없는 항목은 그냥 생략):
 // {
@@ -131,13 +115,33 @@ export const cohorts: Cohort[] = [
     id: 11,
     label: { ko: "11기", en: "11th" },
     description: { ko: "GLEAP 11기 회원 명단입니다.", en: "Roster of GLEAP's 11th generation members." },
-    members: [],
+    members: [
+      { name: { ko: "함성종", en: "Ham Sung-jong" }, role: { ko: "회장", en: "President" }, department: { ko: "생명과학부", en: "Dept of Life Sciences" } },
+      { name: { ko: "김병주", en: "Kim Byung-joo" }, role: { ko: "부회장", en: "Vice President" }, department: { ko: "화학부", en: "Dept of Chemistry" } },
+      { name: { ko: "김도훈", en: "Kim Do-hoon" }, role: { ko: "학술팀장", en: "Academic Team Leader" }, department: { ko: "수리과학부", en: "Dept of Mathematical Sciences" } },
+      { name: { ko: "손현기", en: "Son Hyun-ki" }, role: { ko: "사회공헌팀장", en: "Social Contribution Team Leader" }, department: { ko: "수리과학부", en: "Dept of Mathematical Sciences" } },
+      { name: { ko: "이동해", en: "Lee Dong-hae" }, role: { ko: "사회공헌팀장", en: "Social Contribution Team Leader" }, department: { ko: "수리과학부", en: "Dept of Mathematical Sciences" } },
+      { name: { ko: "서현우", en: "Seo Hyun-woo" }, role: { ko: "사회공헌팀장", en: "Social Contribution Team Leader" }, department: { ko: "물리천문학부", en: "Dept of Physics and Astronomy" } },
+    ],
   },
   {
     id: 12,
     label: { ko: "12기", en: "12th" },
     description: { ko: "GLEAP 12기 회원 명단입니다.", en: "Roster of GLEAP's 12th generation members." },
-    members: [],
+    // 이주영의 원본 Wix 데이터는 role 필드에 한글 대신 영문("Social Contribution Team Leader")만
+    // 들어 있었음(원본 입력 실수로 추정) — 다른 12기 사회공헌팀장 표기와 통일해 한글을 채움.
+    members: [
+      { name: { ko: "우윤호", en: "Woo Yun-ho" }, role: { ko: "회장", en: "President" }, department: { ko: "생명과학부", en: "Dept of Life Sciences" } },
+      { name: { ko: "박수현", en: "Park Su-hyun" }, role: { ko: "부회장", en: "Vice President" }, department: { ko: "통계학과", en: "Dept of Statistics" } },
+      { name: { ko: "김도연", en: "Kim Do-yeon" }, role: { ko: "홍보팀장", en: "PR Team Leader" }, department: { ko: "지구환경과학부", en: "Dept of Earth and Environmental Sciences" } },
+      { name: { ko: "김태훈", en: "Kim Tae-hoon" }, role: { ko: "교류팀장", en: "Exchange Team Leader" }, department: { ko: "물리천문학부", en: "Dept of Physics and Astronomy" } },
+      { name: { ko: "김형환", en: "Kim Hyung-hwan" }, role: { ko: "사회공헌팀장", en: "Social Contribution Team Leader" }, department: { ko: "통계학과", en: "Dept of Statistics" } },
+      { name: { ko: "배윤진", en: "Bae Yun-jin" }, role: { ko: "홍보팀장", en: "PR Team Leader" }, department: { ko: "물리천문학부", en: "Dept of Physics and Astronomy" } },
+      { name: { ko: "이성빈", en: "Lee Sung-bin" }, role: { ko: "학술팀장", en: "Academic Team Leader" }, department: { ko: "물리천문학부", en: "Dept of Physics and Astronomy" } },
+      { name: { ko: "이주영", en: "Lee Ju-young" }, role: { ko: "사회공헌팀장", en: "Social Contribution Team Leader" }, department: { ko: "지구환경과학부", en: "Dept of Earth and Environmental Sciences" } },
+      { name: { ko: "임동빈", en: "Lim Dong-bin" }, role: { ko: "사회공헌팀장", en: "Social Contribution Team Leader" }, department: { ko: "생명과학부", en: "Dept of Life Sciences" } },
+      { name: { ko: "최우정", en: "Choi Woo-jung" }, role: { ko: "교류팀장", en: "Exchange Team Leader" }, department: { ko: "화학부", en: "Dept of Chemistry" } },
+    ],
   },
   {
     id: 13,

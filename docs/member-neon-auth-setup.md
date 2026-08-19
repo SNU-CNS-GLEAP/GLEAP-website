@@ -27,6 +27,10 @@ BETTER_AUTH_SECRET=<32바이트 이상 무작위 문자열>
 BETTER_AUTH_URL=https://gleap-website.vercel.app
 ```
 
+Preview 배포는 Vercel이 자동으로 만든 개별 주소를 사용합니다. 코드가 그
+주소를 자동 인식하므로 Preview용으로 `BETTER_AUTH_URL`을 따로 바꿀 필요는
+없습니다.
+
 로컬 개발에서는 `.env.local`에 다음처럼 넣습니다.
 
 ```text

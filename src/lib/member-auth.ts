@@ -22,6 +22,20 @@ function normalizeEmail(value: unknown): string {
   return typeof value === "string" ? value.trim().toLowerCase() : "";
 }
 
+/**
+ * Vercel Preview는 배포마다 별도의 주소를 사용한다. Preview 환경에서는
+ * Vercel이 제공하는 현재 배포 주소를 사용해 로그인 쿠키와 CORS를 맞춘다.
+ */
+function getAuthBaseUrl() {
+  if (process.env.VERCEL_ENV === "preview" && process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+
+  return env.betterAuthUrl;
+}
+
+const authBaseUrl = getAuthBaseUrl();
+
 async function findApprovedMember(email: string) {
   const [member] = await db
     .select({ email: memberAccess.email, role: memberAccess.role })
@@ -43,8 +57,8 @@ export const memberAuth = betterAuth({
     },
   }),
   secret: env.betterAuthSecret,
-  baseURL: env.betterAuthUrl,
-  trustedOrigins: [env.betterAuthUrl],
+  baseURL: authBaseUrl,
+  trustedOrigins: [env.betterAuthUrl, authBaseUrl],
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,

@@ -13,8 +13,9 @@ Claude Code 세션 컨텍스트 겸 인수인계 문서. **결정된 사항과 �
 ## 프로젝트 성격
 
 - 매우 가벼운 사이트. 소개 / 구성원 / 활동 / 소식(게시판) / 갤러리 수준
-- 동적인 부분은 사실상 **게시판 하나**
-- 관리자 계정 **1개**. 회원가입·비밀번호 재설정·이메일 인증 없음
+- 공개 영역은 가벼운 소개 / 구성원 / 활동 / 소식으로 유지한다.
+- 회원 전용 영역에는 프로필, 자유게시판, 댓글, 좋아요를 제공한다.
+- 회원 계정은 공개 가입이 아니라 **운영진 초대**로만 만든다.
 - **운영 비용 0원**이 요구사항
 - 학생 단체라 **집행부가 매년 교체됨** → 인수인계 용이성이 모든 기술 선택의 1순위 기준
 
@@ -26,7 +27,7 @@ Claude Code 세션 컨텍스트 겸 인수인계 문서. **결정된 사항과 �
 |---|---|---|
 | 프레임워크 | Next.js (App Router, TypeScript, Tailwind) | 프론트+API 통합. 별도 백엔드 서버 불필요 |
 | 호스팅 | Vercel Hobby | 무료. 서버 관리 대상이 생기지 않음 |
-| DB | Neon Postgres | Vercel 마켓플레이스 연동 시 env 자동 주입. 브랜칭 지원 |
+| DB / 회원 인증 | Supabase Postgres + Auth | 초대 기반 회원 로그인과 RLS(행 단위 접근 제어)를 한 서비스에서 관리 |
 | 이미지 | Vercel Blob | Hobby 1GB 저장 / 10GB 전송 무료 |
 | 인증 | iron-session + bcrypt 해시 | 계정 1개라 사용자 테이블 자체가 불필요 |
 | 에디터 | Tiptap + `@tiptap/markdown` | 노션형 편집 UI + Markdown 저장을 동시에 확보 |
@@ -37,6 +38,19 @@ Claude Code 세션 컨텍스트 겸 인수인계 문서. **결정된 사항과 �
 - **VPS 구입** — 월 $5 비용도 문제지만, OS 업데이트·TLS 갱신·프로세스 관리를 매 기수 담당할 사람이 필요해짐
 - **학내 서버** — 관리 인수인계 난이도. 학교 도메인은 CNAME만 등록하면 외부 호스팅으로도 쓸 수 있어 학내 서버를 쓸 이유가 없음
 - **React + FastAPI (기존 getgrida 스택)** — 무료 티어에서 상시 프로세스가 잠들어 첫 요청 지연 발생. 게시물 CRUD뿐인 규모에 백엔드를 분리할 이유 없음
+- **Neon 단독 + 자체 회원 인증** — 회원별 세션·권한·초대·행 단위 보안을 따로 구현해야 하므로 현재 요구사항에는 맞지 않음
+
+### 2026-08: 회원 기능으로 인한 변경
+
+초기 버전의 "관리자 1명만 사용하는 정적 사이트" 결정은 공개 홈페이지에만 적용한다.
+회원 로그인, 회원 프로필, 자유게시판, 댓글, 좋아요는 Supabase를 사용한다.
+
+- 공개 `/[locale]/news`는 `category = notice` 및 `is_public = true`인 글만 표시한다.
+- `/[locale]/community` 아래는 로그인한 회원만 접근한다.
+- 데이터 접근의 최종 보안 경계는 Supabase RLS다. 화면에서 버튼을 숨기는 것만으로 권한을 판단하지 않는다.
+- 기존 `iron-session` 관리자 화면은 기존 운영 흐름을 보존하기 위해 당장 유지한다. Supabase 운영진(`profiles.is_admin`) 기반 공지 작성·회원 초대 화면은 별도 단계에서 통합한다.
+
+일단은 넣어두지만, 이후 반드시 Neon 등으로 migration 할 것. 
 - **Supabase** — DB+인증+스토리지 통합은 편하나 락인이 크고 학습 범위가 넓어짐.
   결정적으로는 리전 문제: Supabase는 서울 리전을 지원하지만(Neon은 없음, 가장 가까운 게 싱가포르),
   **무료 티어는 1주일간 DB 요청이 없으면 프로젝트가 자동 일시정지되고, 이건 수동으로만 재개 가능**함.
@@ -69,6 +83,8 @@ DATABASE_URL_UNPOOLED=
 BLOB_READ_WRITE_TOKEN=
 ADMIN_PASSWORD_HASH=
 SESSION_SECRET=
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 ```
 
 - Vercel의 Neon 연동은 `vercel env pull` 시 `PGHOST`/`POSTGRES_URL`/`POSTGRES_PRISMA_URL` 등
@@ -77,6 +93,7 @@ SESSION_SECRET=
   문제없지만, 파일이 짧아야 후임이 "이게 다 뭐지" 안 하게 됨
 - `src/lib/env.ts`에서 진입 시 존재 여부를 검증하고 없으면 즉시 throw
 - **`NEXT_PUBLIC_` 접두사는 브라우저 번들에 노출됨.** public 레포이므로 비밀값에 절대 사용 금지
+- Supabase URL과 **publishable key**는 공개되어도 되는 프로젝트 식별·접속 값이며 `NEXT_PUBLIC_` 접두사를 사용한다. `service_role` / secret key는 브라우저와 이 레포에 절대 넣지 않는다.
 - `.env.local` 수정 후에는 dev 서버 재시작 필요
 - Vercel 대시보드에서 값 변경 시 Redeploy 해야 반영됨
 - **`ADMIN_PASSWORD_HASH`처럼 `$`로 시작하는 bcrypt 해시를 `.env.local`에 넣을 때는 각 `$`를 `\$`로 이스케이프할 것.**
@@ -236,6 +253,8 @@ npm run dev
   전혀 영향을 주지 않음. 색상은 `--admin` 토큰(디자인 컬러 섹션 참고)
 - Footer 우측 끝에 `/admin`으로 가는 작은 링크(`Footer.admin`) 배치 — 로그인 안 된 상태면
   `requireAdmin`이 알아서 로그인 페이지로 보냄
+
+> 회원 운영진 권한은 이 단일 관리자 비밀번호와 다르다. 회원 기능에서는 `public.profiles.is_admin`을 사용하고 Supabase RLS가 공지 작성 권한을 제한한다. 두 권한 체계의 통합은 기존 관리자 기능을 Supabase로 옮길 때만 수행한다.
 
 ### 공개 페이지에서의 수정 진입점 (설계 방향, 게시판 구현 시 적용)
 

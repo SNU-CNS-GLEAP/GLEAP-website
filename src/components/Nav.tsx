@@ -139,6 +139,9 @@ export function Nav() {
           <Link href="/news" className="hover:text-primary">
             {t("news")}
           </Link>
+          <Link href="/community" className="hover:text-primary">
+            {t("community")}
+          </Link>
         </div>
 
         <div className="hidden items-center gap-3 text-sm text-muted md:flex">

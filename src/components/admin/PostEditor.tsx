@@ -8,7 +8,7 @@ import { Placeholder } from "@tiptap/extension-placeholder";
 import { Markdown } from "@tiptap/markdown";
 
 // 허용 확장은 CLAUDE.md "에디터 / 본문 저장 형식" 절의 결정을 그대로 따름:
-// 문단·제목(H2~H4)·목록·강조(굵게/기울임)·링크·이미지만 허용. 인용문/코드/수평선/밑줄/취소선은
+// 문단·제목(H2~H4)·목록·강조(굵게/기울임)·링크·이미지·인용문만 허용. 코드/수평선/밑줄/취소선은
 // 폰트·색상·정렬류는 아니지만 문서에 명시된 허용 목록 밖이라 의도적으로 뺐음
 // (필요해지면 이 컴포넌트와 CLAUDE.md를 같이 갱신할 것).
 type Props = {
@@ -25,7 +25,6 @@ export function PostEditor({ name, defaultValue = "", placeholder = "내용을 �
     extensions: [
       StarterKit.configure({
         heading: { levels: [2, 3, 4] },
-        blockquote: false,
         code: false,
         codeBlock: false,
         horizontalRule: false,
@@ -50,7 +49,7 @@ export function PostEditor({ name, defaultValue = "", placeholder = "내용을 �
     editorProps: {
       attributes: {
         class:
-          "min-h-[300px] rounded-b border border-t-0 border-border px-3 py-2 text-sm leading-relaxed focus:outline-none [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:text-primary [&_a]:underline [&_img]:max-w-full [&_img]:rounded [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:text-base [&_h3]:font-semibold [&_h4]:font-semibold",
+          "min-h-[300px] rounded-b border border-t-0 border-border px-3 py-2 text-sm leading-relaxed focus:outline-none [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:text-primary [&_a]:underline [&_img]:max-w-full [&_img]:rounded [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:text-base [&_h3]:font-semibold [&_h4]:font-semibold [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-4 [&_blockquote]:text-muted",
       },
     },
   });
@@ -108,6 +107,9 @@ function Toolbar({ editor }: { editor: Editor }) {
       </ToolbarButton>
       <ToolbarButton active={editor.isActive("orderedList")} onClick={() => editor.chain().focus().toggleOrderedList().run()}>
         번호 목록
+      </ToolbarButton>
+      <ToolbarButton active={editor.isActive("blockquote")} onClick={() => editor.chain().focus().toggleBlockquote().run()}>
+        인용문
       </ToolbarButton>
       <Divider />
       <ToolbarButton active={editor.isActive("link")} onClick={promptLink}>

@@ -15,6 +15,10 @@ import {
   memberProfiles,
 } from "@/lib/schema";
 
+// 이 파일의 함수는 폼 제출 시 서버에서만 실행된다.
+// 브라우저가 권한을 주장하더라도, 실제 회원·작성자 검사는 여기서 다시 한다.
+
+// 브라우저의 입력 검증을 우회한 요청도 막기 위해 서버에서 필수값과 길이를 다시 확인한다.
 function requiredText(formData: FormData, key: string, maxLength: number) {
   const value = String(formData.get(key) ?? "").trim();
   if (!value || value.length > maxLength) throw new Error("입력 내용을 다시 확인해 주세요.");
@@ -29,6 +33,7 @@ function approvedEmail(formData: FormData) {
   return email;
 }
 
+// 프로필 링크에는 웹 주소만 저장해 잘못된 프로토콜 입력을 막는다.
 function optionalUrl(formData: FormData, key: string) {
   const value = String(formData.get(key) ?? "").trim();
   if (!value) return null;
@@ -41,6 +46,7 @@ function optionalUrl(formData: FormData, key: string) {
   }
 }
 
+// 활동 로그는 운영·문제 확인용 기록이다. 일반 회원 목록이나 게시글 화면에는 노출하지 않는다.
 async function writeActivity(actorId: string, action: string, targetType: string, targetId?: string) {
   await db.insert(memberActivityLogs).values({
     actorId,
@@ -54,6 +60,7 @@ export async function createPost(locale: string, formData: FormData) {
   const member = await requireMember(locale);
   const category = formData.get("category") === "notice" ? "notice" : "free";
 
+  // 자유글은 모든 승인 회원이 쓸 수 있지만, 공지는 운영진만 작성할 수 있다.
   if (category === "notice" && member.role !== "admin") {
     throw new Error("공지 작성 권한이 없습니다.");
   }
@@ -81,6 +88,7 @@ export async function updatePost(locale: string, postId: string, formData: FormD
     .where(eq(memberPosts.id, postId))
     .limit(1);
 
+  // URL이나 폼 값을 바꿔 보내도 남의 글을 수정하지 못하게 서버에서 작성자를 다시 비교한다.
   if (!post || post.authorId !== member.user.id) throw new Error("수정 권한이 없습니다.");
 
   const requestedCategory = formData.get("category") === "notice" ? "notice" : "free";
@@ -112,6 +120,7 @@ export async function deletePost(locale: string, postId: string) {
     .where(eq(memberPosts.id, postId))
     .limit(1);
 
+  // 삭제도 수정과 동일하게 본인 글만 가능하다.
   if (!post || post.authorId !== member.user.id) throw new Error("삭제 권한이 없습니다.");
 
   await db.delete(memberPosts).where(eq(memberPosts.id, postId));
@@ -128,6 +137,7 @@ export async function togglePostLike(locale: string, postId: string) {
     .where(and(eq(memberPostLikes.postId, postId), eq(memberPostLikes.userId, member.user.id)))
     .limit(1);
 
+  // 이미 좋아요를 눌렀으면 삭제해 취소하고, 없으면 새로 만든다.
   if (existingLike) {
     await db.delete(memberPostLikes).where(eq(memberPostLikes.id, existingLike.id));
   } else {
@@ -140,6 +150,7 @@ export async function togglePostLike(locale: string, postId: string) {
 
 export async function createComment(locale: string, postId: string, formData: FormData) {
   const member = await requireMember(locale);
+  // 댓글 작성 전 게시글 존재 여부를 확인해, 삭제된 글에 댓글이 남지 않게 한다.
   const [post] = await db.select({ id: memberPosts.id }).from(memberPosts).where(eq(memberPosts.id, postId)).limit(1);
   if (!post) throw new Error("존재하지 않는 글입니다.");
 
@@ -164,6 +175,7 @@ export async function deleteComment(locale: string, postId: string, commentId: s
     .where(eq(memberComments.id, commentId))
     .limit(1);
 
+  // 댓글 ID만 알아도 남의 댓글을 지울 수 없도록 작성자와 게시글 연결을 함께 확인한다.
   if (!comment || comment.authorId !== member.user.id || comment.postId !== postId) {
     throw new Error("삭제 권한이 없습니다.");
   }
@@ -181,6 +193,8 @@ export async function updateMyProfile(locale: string, formData: FormData) {
     .filter(Boolean)
     .slice(0, 10);
 
+  // 가입 직후 빈 프로필이 있어도, 과거 데이터 등으로 없을 수 있으므로
+  // 최초 저장은 생성하고 이후 저장은 본인 행만 갱신한다.
   await db
     .insert(memberProfiles)
     .values({

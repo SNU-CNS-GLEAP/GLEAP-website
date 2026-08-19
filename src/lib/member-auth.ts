@@ -36,6 +36,8 @@ function getAuthBaseUrl() {
 
 const authBaseUrl = getAuthBaseUrl();
 
+// Neon Auth 베타에서는 공개 회원가입을 완전히 끄는 기능이 없으므로,
+// member_access 테이블을 실제 동아리 회원 명단(허용 목록)으로 사용한다.
 async function findApprovedMember(email: string) {
   const [member] = await db
     .select({ email: memberAccess.email, role: memberAccess.role })
@@ -46,6 +48,8 @@ async function findApprovedMember(email: string) {
   return member;
 }
 
+// Better Auth는 로그인·세션·계정 테이블을 관리하고,
+// member_access는 "누가 GLEAP 회원인지"와 운영진 역할을 별도로 관리한다.
 export const memberAuth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
@@ -58,6 +62,7 @@ export const memberAuth = betterAuth({
   }),
   secret: env.betterAuthSecret,
   baseURL: authBaseUrl,
+  // 운영 사이트와 현재 배포 중인 Preview 주소에서만 인증 요청을 허용한다.
   trustedOrigins: [env.betterAuthUrl, authBaseUrl],
   emailAndPassword: {
     enabled: true,

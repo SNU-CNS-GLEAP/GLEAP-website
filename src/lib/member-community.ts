@@ -11,6 +11,11 @@ import {
   memberProfiles,
 } from "@/lib/schema";
 
+// 기존 공개 소식은 기존 posts 테이블이 담당한다.
+// 이 파일의 member_* 테이블은 로그인한 GLEAP 회원만 사용하는 커뮤니티 데이터다.
+
+// 목록 화면에서 댓글·좋아요 수를 함께 가져온다.
+// 두 테이블을 동시에 연결하므로 count(distinct ...)로 실제 개수만 센다.
 export async function getMemberPosts() {
   return db
     .select({
@@ -32,6 +37,7 @@ export async function getMemberPosts() {
     .orderBy(desc(memberPosts.createdAt));
 }
 
+// 상세 화면은 게시글·집계·댓글을 나누어 조회해 각 데이터의 역할을 명확히 한다.
 export async function getMemberPost(postId: string) {
   const [post] = await db
     .select({
@@ -78,6 +84,8 @@ export async function getMemberPost(postId: string) {
   return { ...post, ...counts, comments };
 }
 
+// 회원/프로필 페이지에서 공통으로 쓰는 단일 프로필 조회다.
+// 접근 권한은 페이지에서 requireMember로 먼저 확인한다.
 export async function getMemberProfile(userId: string) {
   const [profile] = await db
     .select({
@@ -98,6 +106,7 @@ export async function getMemberProfile(userId: string) {
   return profile ?? null;
 }
 
+// 회원 목록 페이지용 조회다. 공개 사이트의 Members 페이지 데이터와는 분리되어 있다.
 export async function getMemberProfiles() {
   return db
     .select({

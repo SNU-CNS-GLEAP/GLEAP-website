@@ -5,6 +5,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { localize } from "@/lib/localized-text";
 import { getPost } from "@/lib/posts";
+import { parseImageSrc } from "@/lib/image-width";
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
 
 type Props = {
@@ -24,10 +25,19 @@ const markdownComponents: Components = {
   li: (props) => <li className="leading-relaxed" {...props} />,
   blockquote: (props) => <blockquote className="border-l-2 border-border pl-4 text-muted" {...props} />,
   code: (props) => <code className="rounded bg-surface px-1 py-0.5 text-sm" {...props} />,
-  img: (props) => (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img className="max-w-full rounded" {...props} alt={props.alt ?? ""} />
-  ),
+  img: (props) => {
+    const { src, widthPercent } = parseImageSrc(String(props.src ?? ""));
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        {...props}
+        src={src}
+        alt={props.alt ?? ""}
+        className="max-w-full rounded"
+        style={widthPercent ? { width: `${widthPercent}%`, height: "auto" } : undefined}
+      />
+    );
+  },
 };
 
 export default async function NewsDetailPage({ params }: Props) {

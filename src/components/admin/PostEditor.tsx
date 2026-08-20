@@ -6,11 +6,53 @@ import { StarterKit } from "@tiptap/starter-kit";
 import { Image as TiptapImage } from "@tiptap/extension-image";
 import { Placeholder } from "@tiptap/extension-placeholder";
 import { Markdown } from "@tiptap/markdown";
+import { parseImageSrc, withImageWidth } from "@/lib/image-width";
 
 // 허용 확장은 CLAUDE.md "에디터 / 본문 저장 형식" 절의 결정을 그대로 따름:
 // 문단·제목(H2~H4)·목록·강조(굵게/기울임)·링크·이미지·인용문만 허용. 코드/수평선/밑줄/취소선은
 // 폰트·색상·정렬류는 아니지만 문서에 명시된 허용 목록 밖이라 의도적으로 뺐음
 // (필요해지면 이 컴포넌트와 CLAUDE.md를 같이 갱신할 것).
+
+// 자유 드래그 리사이즈(TiptapImage의 resize 옵션)는 켜지 않음: Markdown에는 크기를 담을 문법이
+// 없어서 폭을 %로만 다루고(비율 고정, 높이는 auto), Blob URL의 ?w= 쿼리에 실어 저장한다.
+// 저장/공개 렌더링 쪽은 src/lib/image-width.ts + news/[id]/page.tsx를 같이 볼 것.
+const ResizableImage = TiptapImage.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      widthPercent: {
+        default: null,
+        parseHTML: (element: HTMLElement) => {
+          const value = element.getAttribute("data-width-percent");
+          return value ? Number(value) : null;
+        },
+        renderHTML: (attributes: { widthPercent?: number | null }) => {
+          if (!attributes.widthPercent) return {};
+          return {
+            "data-width-percent": attributes.widthPercent,
+            style: `width: ${attributes.widthPercent}%; height: auto;`,
+          };
+        },
+      },
+    };
+  },
+  parseMarkdown: (token, helpers) => {
+    const { src, widthPercent } = parseImageSrc(token.href ?? "");
+    return helpers.createNode("image", {
+      src,
+      alt: token.text,
+      title: token.title,
+      widthPercent,
+    });
+  },
+  renderMarkdown: (node) => {
+    const alt = node.attrs?.alt ?? "";
+    const title = node.attrs?.title ?? "";
+    const src = withImageWidth(node.attrs?.src ?? "", node.attrs?.widthPercent);
+    return title ? `![${alt}](${src} "${title}")` : `![${alt}](${src})`;
+  },
+});
+
 type Props = {
   name: string;
   defaultValue?: string;
@@ -37,7 +79,7 @@ export function PostEditor({ name, defaultValue = "", placeholder = "내용을 �
           HTMLAttributes: { rel: "noopener noreferrer", target: "_blank" },
         },
       }),
-      TiptapImage,
+      ResizableImage,
       Placeholder.configure({ placeholder }),
       Markdown,
     ],
@@ -146,6 +188,27 @@ function Toolbar({ editor }: { editor: Editor }) {
         className="hidden"
         onChange={handleFileSelected}
       />
+      {editor.isActive("image") && (
+        <>
+          <Divider />
+          <span className="self-center px-1 text-xs text-muted">선택한 이미지 폭</span>
+          {[25, 50, 75, 100].map((pct) => (
+            <ToolbarButton
+              key={pct}
+              active={(editor.getAttributes("image").widthPercent ?? 100) === pct}
+              onClick={() =>
+                editor
+                  .chain()
+                  .focus()
+                  .updateAttributes("image", { widthPercent: pct === 100 ? null : pct })
+                  .run()
+              }
+            >
+              {pct}%
+            </ToolbarButton>
+          ))}
+        </>
+      )}
     </div>
   );
 }

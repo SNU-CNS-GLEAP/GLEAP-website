@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
 import { memberAuthClient } from "@/lib/member-auth-client";
 
 type Props = {
@@ -19,7 +18,6 @@ export function MemberAuthForm({
   initialName = "",
   initialCohort = "",
 }: Props) {
-  const router = useRouter();
   const [name, setName] = useState(initialName);
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
@@ -84,14 +82,14 @@ export function MemberAuthForm({
           text: "회원가입이 완료되었습니다. 로그인 화면으로 이동합니다.",
         });
         setTimeout(() => {
-          router.push(`/${locale}/member/login`);
-        }, 1200);
+          window.location.href = `/${locale}/member/login`;
+        }, 1000);
         return;
       }
     }
 
-    router.push(callbackURL);
-    router.refresh();
+    // 세션 쿠키가 온전히 전달되도록 전체 새로고침 이동을 수행한다.
+    window.location.href = callbackURL;
   }
 
   return (

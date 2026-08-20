@@ -139,7 +139,7 @@ export function Nav() {
           <Link href="/news" className="hover:text-primary">
             {t("news")}
           </Link>
-          <Link href="/community" className="hover:text-primary">
+          <Link href="/member" className="hover:text-primary">
             {t("community")}
           </Link>
         </div>

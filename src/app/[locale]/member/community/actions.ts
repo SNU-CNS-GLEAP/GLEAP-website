@@ -153,18 +153,18 @@ export async function createComment(locale: string, postId: string, formData: Fo
   const member = await requireMember(locale);
   // 댓글 작성 전 게시글 존재 여부를 확인해, 삭제된 글에 댓글이 남지 않게 한다.
   const [post] = await db.select({ id: memberPosts.id }).from(memberPosts).where(eq(memberPosts.id, postId)).limit(1);
-  if (!post) throw new Error(\"존재하지 않는 글입니다.\");
+  if (!post) throw new Error("존재하지 않는 글입니다.");
 
   const [comment] = await db
     .insert(memberComments)
     .values({
       postId,
       authorId: member.user.id,
-      content: requiredText(formData, \"content\", 2000),
+      content: requiredText(formData, "content", 2000),
     })
     .returning({ id: memberComments.id });
 
-  await writeActivity(member.user.id, \"create\", \"member_comment\", comment.id);
+  await writeActivity(member.user.id, "create", "member_comment", comment.id);
   revalidatePath(`/${locale}/member/community/${postId}`);
 }
 
@@ -178,18 +178,18 @@ export async function deleteComment(locale: string, postId: string, commentId: s
 
   // 댓글 ID만 알아도 남의 댓글을 지울 수 없도록 작성자와 게시글 연결을 함께 확인한다.
   if (!comment || comment.authorId !== member.user.id || comment.postId !== postId) {
-    throw new Error(\"삭제 권한이 없습니다.\");
+    throw new Error("삭제 권한이 없습니다.");
   }
 
   await db.delete(memberComments).where(eq(memberComments.id, commentId));
-  await writeActivity(member.user.id, \"delete\", \"member_comment\", commentId);
+  await writeActivity(member.user.id, "delete", "member_comment", commentId);
   revalidatePath(`/${locale}/member/community/${postId}`);
 }
 
 export async function updateMyProfile(locale: string, formData: FormData) {
   const member = await requireMember(locale);
-  const interests = String(formData.get(\"interests\") ?? \"\")
-    .split(\",\")
+  const interests = String(formData.get("interests") ?? "")
+    .split(",")
     .map((item) => item.trim())
     .filter(Boolean)
     .slice(0, 10);
@@ -200,29 +200,29 @@ export async function updateMyProfile(locale: string, formData: FormData) {
     .insert(memberProfiles)
     .values({
       userId: member.user.id,
-      name: requiredText(formData, \"name\", 80),
-      cohort: String(formData.get(\"cohort\") ?? \"\").trim().slice(0, 40) || null,
-      bio: String(formData.get(\"bio\") ?? \"\").trim().slice(0, 500) || null,
+      name: requiredText(formData, "name", 80),
+      cohort: String(formData.get("cohort") ?? "").trim().slice(0, 40) || null,
+      bio: String(formData.get("bio") ?? "").trim().slice(0, 500) || null,
       interests,
-      instagramUrl: optionalUrl(formData, \"instagramUrl\"),
-      githubUrl: optionalUrl(formData, \"githubUrl\"),
+      instagramUrl: optionalUrl(formData, "instagramUrl"),
+      githubUrl: optionalUrl(formData, "githubUrl"),
       role: member.role,
       updatedAt: new Date(),
     })
     .onConflictDoUpdate({
       target: memberProfiles.userId,
       set: {
-        name: requiredText(formData, \"name\", 80),
-        cohort: String(formData.get(\"cohort\") ?? \"\").trim().slice(0, 40) || null,
-        bio: String(formData.get(\"bio\") ?? \"\").trim().slice(0, 500) || null,
+        name: requiredText(formData, "name", 80),
+        cohort: String(formData.get("cohort") ?? "").trim().slice(0, 40) || null,
+        bio: String(formData.get("bio") ?? "").trim().slice(0, 500) || null,
         interests,
-        instagramUrl: optionalUrl(formData, \"instagramUrl\"),
-        githubUrl: optionalUrl(formData, \"githubUrl\"),
+        instagramUrl: optionalUrl(formData, "instagramUrl"),
+        githubUrl: optionalUrl(formData, "githubUrl"),
         updatedAt: new Date(),
       },
     });
 
-  await writeActivity(member.user.id, \"update\", \"member_profile\", member.user.id);
+  await writeActivity(member.user.id, "update", "member_profile", member.user.id);
   revalidatePath(`/${locale}/member`);
   revalidatePath(`/${locale}/member/profile`);
   redirect(`/${locale}/member/profile`);
@@ -234,11 +234,11 @@ export async function updateMyProfile(locale: string, formData: FormData) {
  */
 export async function approveMemberEmail(locale: string, formData: FormData) {
   const member = await requireMember(locale);
-  if (member.role !== \"admin\") throw new Error(\"운영진 권한이 필요합니다.\");
+  if (member.role !== "admin") throw new Error("운영진 권한이 필요합니다.");
 
   const email = approvedEmail(formData);
-  const role = formData.get(\"role\") === \"admin\" ? \"admin\" : \"member\";
-  const sendInvite = formData.get(\"sendInvite\") === \"true\" || formData.get(\"sendInvite\") === \"on\";
+  const role = formData.get("role") === "admin" ? "admin" : "member";
+  const sendInvite = formData.get("sendInvite") === "true" || formData.get("sendInvite") === "on";
 
   await db
     .insert(memberAccess)
@@ -262,16 +262,16 @@ export async function approveMemberEmail(locale: string, formData: FormData) {
       .where(eq(memberProfiles.userId, existingUser.id));
   }
 
-  await writeActivity(member.user.id, \"approve\", \"member_access\", email);
+  await writeActivity(member.user.id, "approve", "member_access", email);
 
   // 초대 메일 자동 발송 (설정되어 있고 체크된 경우)
   if (sendInvite && isMemberEmailConfigured()) {
     const inviteUrl = `${getAuthBaseUrl()}/${locale}/member/signup?email=${encodeURIComponent(email)}`;
     try {
       await sendMemberInvitationEmail({ email, inviteUrl, role });
-      await writeActivity(member.user.id, \"send_invite_email\", \"member_access\", email);
+      await writeActivity(member.user.id, "send_invite_email", "member_access", email);
     } catch (err) {
-      console.error(\"초대 메일 발송 실패:\", err);
+      console.error("초대 메일 발송 실패:", err);
     }
   }
 
@@ -283,7 +283,7 @@ export async function approveMemberEmail(locale: string, formData: FormData) {
  */
 export async function resendMemberInvitation(locale: string, email: string) {
   const member = await requireMember(locale);
-  if (member.role !== \"admin\") throw new Error(\"운영진 권한이 필요합니다.\");
+  if (member.role !== "admin") throw new Error("운영진 권한이 필요합니다.");
 
   const [approved] = await db
     .select({ email: memberAccess.email, role: memberAccess.role })
@@ -291,15 +291,15 @@ export async function resendMemberInvitation(locale: string, email: string) {
     .where(eq(memberAccess.email, email))
     .limit(1);
 
-  if (!approved) throw new Error(\"승인 명단에 없는 이메일입니다.\");
+  if (!approved) throw new Error("승인 명단에 없는 이메일입니다.");
 
   if (!isMemberEmailConfigured()) {
-    throw new Error(\"이메일 발송 설정이 완료되지 않았습니다.\");
+    throw new Error("이메일 발송 설정이 완료되지 않았습니다.");
   }
 
   const inviteUrl = `${getAuthBaseUrl()}/${locale}/member/signup?email=${encodeURIComponent(email)}`;
   await sendMemberInvitationEmail({ email, inviteUrl, role: approved.role });
-  await writeActivity(member.user.id, \"resend_invite_email\", \"member_access\", email);
+  await writeActivity(member.user.id, "resend_invite_email", "member_access", email);
   revalidatePath(`/${locale}/member/admin`);
 }
 
@@ -308,13 +308,13 @@ export async function resendMemberInvitation(locale: string, email: string) {
  */
 export async function removeMemberAccess(locale: string, email: string) {
   const member = await requireMember(locale);
-  if (member.role !== \"admin\") throw new Error(\"운영진 권한이 필요합니다.\");
+  if (member.role !== "admin") throw new Error("운영진 권한이 필요합니다.");
 
-  if (email === \"snucnsgleap@gmail.com\") {
-    throw new Error(\"기본 관리자 계정은 삭제할 수 없습니다.\");
+  if (email === "snucnsgleap@gmail.com") {
+    throw new Error("기본 관리자 계정은 삭제할 수 없습니다.");
   }
 
   await db.delete(memberAccess).where(eq(memberAccess.email, email));
-  await writeActivity(member.user.id, \"revoke\", \"member_access\", email);
+  await writeActivity(member.user.id, "revoke", "member_access", email);
   revalidatePath(`/${locale}/member/admin`);
 }

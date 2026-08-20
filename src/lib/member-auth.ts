@@ -28,15 +28,15 @@ function normalizeEmail(value: unknown): string {
 }
 
 /**
- * Vercel Preview는 배포마다 별도의 주소를 사용한다. Preview 환경에서는
- * Vercel이 제공하는 현재 배포 주소를 사용해 로그인 쿠키와 CORS를 맞춘다.
+ * Vercel Preview 및 Production 배포 환경 주소를 동적으로 감지하여
+ * 로그인 쿠키 및 CORS/Origin을 정확히 맞춘다.
  */
 export function getAuthBaseUrl() {
-  if (process.env.VERCEL_ENV === "preview" && process.env.VERCEL_URL) {
+  if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
   }
 
-  return env.betterAuthUrl;
+  return env.betterAuthUrl || "https://gleap-website.vercel.app";
 }
 
 const authBaseUrl = getAuthBaseUrl();
@@ -67,8 +67,17 @@ export const memberAuth = betterAuth({
   }),
   secret: env.betterAuthSecret,
   baseURL: authBaseUrl,
-  // 운영 사이트와 현재 배포 중인 Preview 주소에서만 인증 요청을 허용한다.
-  trustedOrigins: [env.betterAuthUrl, authBaseUrl],
+  // 대표 사이트, Vercel Preview/Production 전체 도메인 및 로컬호스트를 모두 신뢰된 Origin으로 등록
+  trustedOrigins: [
+    "https://gleap-website.vercel.app",
+    "https://www.gleap-website.vercel.app",
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3000",
+    /^https:\/\/.*\.vercel\.app$/,
+    authBaseUrl,
+    env.betterAuthUrl,
+  ].filter(Boolean),
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,

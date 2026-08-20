@@ -438,8 +438,8 @@ next-intl은 기본적으로 요청 헤더에서 locale을 읽기 때문에, 아
 - [x] 관리자 로그인 (iron-session + bcrypt) — 로그인/세션 유지/로그아웃 확인 완료. 실제 관리 기능(글 작성 등)은 게시판 스키마 이후
 - [x] Neon 연결 + 게시물 스키마(`posts` 테이블, Drizzle) — dev 브랜치에 마이그레이션 적용 완료
 - [ ] `/news` 목록/상세 페이지 (DB 연동)
-- [ ] 글 작성 폼 (Tiptap 에디터 + 툴바)
-- [ ] Blob 이미지 업로드 (에디터 내 삽입 포함)
+- [x] 글 작성 폼 (Tiptap 에디터 + 툴바)
+- [x] Blob 이미지 업로드 (에디터 내 삽입 포함) — 업로드/1600px·WebP 변환/폭 % 조절까지 완료
 - [ ] 갤러리
 - [x] README 인수인계 문서 정리 — 신규 합류자 대상 `README.md` 작성, boilerplate `next_README.md` 제거
 

@@ -35,6 +35,18 @@ function approvedEmail(formData: FormData) {
   return email;
 }
 
+// 인스타그램 아이디 정제 (URL이나 @ 기호가 들어와도 순수 아이디만 저장)
+function cleanInstagramUsername(value: unknown): string | null {
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+  const cleaned = raw
+    .replace(/^https?:\/\/(www\.)?instagram\.com\//i, "")
+    .replace(/^@/, "")
+    .replace(/\/.*$/, "")
+    .trim();
+  return cleaned ? cleaned : null;
+}
+
 // 프로필 링크에는 웹 주소만 저장해 잘못된 프로토콜 입력을 막는다.
 function optionalUrl(formData: FormData, key: string) {
   const value = String(formData.get(key) ?? "").trim();
@@ -226,6 +238,8 @@ export async function updateMyProfile(locale: string, formData: FormData) {
     .filter(Boolean)
     .slice(0, 10);
 
+  const instagramUrl = cleanInstagramUsername(formData.get("instagramUrl"));
+
   // 가입 직후 빈 프로필이 있어도, 과거 데이터 등으로 없을 수 있으므로
   // 최초 저장은 생성하고 이후 저장은 본인 행만 갱신한다.
   await db
@@ -236,7 +250,7 @@ export async function updateMyProfile(locale: string, formData: FormData) {
       cohort: String(formData.get("cohort") ?? "").trim().slice(0, 40) || null,
       bio: String(formData.get("bio") ?? "").trim().slice(0, 500) || null,
       interests,
-      instagramUrl: optionalUrl(formData, "instagramUrl"),
+      instagramUrl,
       githubUrl: optionalUrl(formData, "githubUrl"),
       role: member.role,
       updatedAt: new Date(),
@@ -248,7 +262,7 @@ export async function updateMyProfile(locale: string, formData: FormData) {
         cohort: String(formData.get("cohort") ?? "").trim().slice(0, 40) || null,
         bio: String(formData.get("bio") ?? "").trim().slice(0, 500) || null,
         interests,
-        instagramUrl: optionalUrl(formData, "instagramUrl"),
+        instagramUrl,
         githubUrl: optionalUrl(formData, "githubUrl"),
         updatedAt: new Date(),
       },

@@ -16,10 +16,25 @@ function getMemberPhotoPath(cohort?: string | null, name?: string | null): strin
   return `/members/${name}.jpg`;
 }
 
+function getInstagramLink(idOrUrl?: string | null): { url: string; display: string } | null {
+  if (!idOrUrl) return null;
+  const cleanId = idOrUrl
+    .replace(/^https?:\/\/(www\.)?instagram\.com\//i, "")
+    .replace(/^@/, "")
+    .replace(/\/.*$/, "")
+    .trim();
+  if (!cleanId) return null;
+  return {
+    url: `https://instagram.com/${cleanId}`,
+    display: `@${cleanId}`,
+  };
+}
+
 function MemberCard({ profile }: { profile: Profile }) {
   const isOfficialAdmin =
     profile.name.includes("관리자") || profile.name.includes("GLEAP");
   const photoPath = isOfficialAdmin ? "/logo_gleap.png" : getMemberPhotoPath(profile.cohort, profile.name);
+  const instagram = getInstagramLink(profile.instagramUrl);
 
   return (
     <article className="flex flex-col justify-between rounded-2xl border border-border bg-background p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md">
@@ -95,16 +110,16 @@ function MemberCard({ profile }: { profile: Profile }) {
         )}
       </div>
 
-      {(profile.instagramUrl || profile.githubUrl) && (
-        <div className="mt-5 flex items-center gap-3 border-t border-border pt-3.5 text-xs font-medium text-primary">
-          {profile.instagramUrl && (
+      {(instagram || profile.githubUrl) && (
+        <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-border pt-3.5 text-xs font-medium text-primary">
+          {instagram && (
             <a
-              href={profile.instagramUrl}
+              href={instagram.url}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-1 hover:underline"
             >
-              <span>📷 Instagram</span>
+              <span>📷 {instagram.display}</span>
             </a>
           )}
           {profile.githubUrl && (

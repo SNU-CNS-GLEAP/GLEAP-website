@@ -120,10 +120,10 @@ export async function getMemberProfiles() {
       role: memberProfiles.role,
     })
     .from(memberProfiles)
-    .orderBy(memberProfiles.name);
+    .orderBy(desc(memberProfiles.cohort), memberProfiles.name);
 }
 
-/** 운영진 화면에서 쓰는 승인 이메일 목록 (가입 완료 여부 및 등록 이름 연동). */
+/** 운영진 화면에서 쓰는 승인 이메일 목록 (가입 완료 여부, 등록 이름 및 기수 연동). */
 export async function getMemberAccessList() {
   return db
     .select({
@@ -132,9 +132,11 @@ export async function getMemberAccessList() {
       role: memberAccess.role,
       createdAt: memberAccess.createdAt,
       registeredName: authUsers.name,
+      registeredCohort: memberProfiles.cohort,
       isRegistered: sql<boolean>`${authUsers.id} is not null`,
     })
     .from(memberAccess)
     .leftJoin(authUsers, eq(memberAccess.email, authUsers.email))
+    .leftJoin(memberProfiles, eq(authUsers.id, memberProfiles.userId))
     .orderBy(desc(memberAccess.createdAt));
 }

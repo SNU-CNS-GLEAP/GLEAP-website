@@ -9,6 +9,7 @@ import { redirect } from "next/navigation";
 
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
+import { cohorts } from "@/content/members";
 import {
   isMemberEmailConfigured,
   sendMemberVerificationEmail,
@@ -110,7 +111,7 @@ export const memberAuth = betterAuth({
       }
     }),
   },
-  // 가입이 완료되면 DB 후크로 인증 완료 처리 및 빈 프로필을 자동 생성한다.
+  // 가입이 완료되면 DB 후크로 인증 완료 처리 및 기존 구성원 명단과 연동된 프로필을 자동 생성한다.
   databaseHooks: {
     user: {
       create: {
@@ -128,11 +129,38 @@ export const memberAuth = betterAuth({
             .set({ emailVerified: true, updatedAt: new Date() })
             .where(eq(authUsers.id, user.id));
 
+          // 기존 구성원 명단(src/content/members.ts)에서 이름으로 기수 및 프로필 링크 자동 연동
+          let matchedCohort: string | null = null;
+          let matchedBio: string | null = null;
+          let matchedInstagram: string | null = null;
+          let matchedGithub: string | null = null;
+
+          for (const c of cohorts) {
+            const found = c.members.find(
+              (m) => m.name.ko === user.name || m.name.en === user.name,
+            );
+            if (found) {
+              matchedCohort = `${c.id}기`;
+              if (found.department?.ko) {
+                matchedBio = found.role?.ko
+                  ? `${found.department.ko} · ${found.role.ko}`
+                  : found.department.ko;
+              }
+              if (found.links?.instagram) matchedInstagram = found.links.instagram;
+              if (found.links?.github) matchedGithub = found.links.github;
+              break;
+            }
+          }
+
           await db
             .insert(memberProfiles)
             .values({
               userId: user.id,
               name: user.name,
+              cohort: matchedCohort,
+              bio: matchedBio,
+              instagramUrl: matchedInstagram,
+              githubUrl: matchedGithub,
               role: approvedMember.role,
             })
             .onConflictDoNothing();

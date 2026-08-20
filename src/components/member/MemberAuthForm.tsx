@@ -8,11 +8,19 @@ type Props = {
   locale: string;
   mode: "sign-in" | "sign-up";
   initialEmail?: string;
+  initialName?: string;
+  initialCohort?: string;
 };
 
-export function MemberAuthForm({ locale, mode, initialEmail = "" }: Props) {
+export function MemberAuthForm({
+  locale,
+  mode,
+  initialEmail = "",
+  initialName = "",
+  initialCohort = "",
+}: Props) {
   const router = useRouter();
-  const [name, setName] = useState("");
+  const [name, setName] = useState(initialName);
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -41,7 +49,7 @@ export function MemberAuthForm({ locale, mode, initialEmail = "" }: Props) {
 
     const result = isSignup
       ? await memberAuthClient.signUp.email({
-          name,
+          name: name.trim(),
           email: email.trim().toLowerCase(),
           password,
           callbackURL,
@@ -98,6 +106,9 @@ export function MemberAuthForm({ locale, mode, initialEmail = "" }: Props) {
             required
             className="rounded-lg border border-border px-3 py-2 font-normal focus:border-primary focus:outline-none"
           />
+          {initialName && (
+            <span className="text-xs text-muted">운영진이 지정한 구성원 이름입니다.</span>
+          )}
         </label>
       )}
 
@@ -113,9 +124,16 @@ export function MemberAuthForm({ locale, mode, initialEmail = "" }: Props) {
           className="rounded-lg border border-border px-3 py-2 font-normal focus:border-primary focus:outline-none"
         />
         {isSignup && initialEmail && (
-          <span className="text-xs text-muted">초대받은 이메일 주소가 입력되었습니다.</span>
+          <span className="text-xs text-muted">초대받은 이메일 주소입니다.</span>
         )}
       </label>
+
+      {isSignup && initialCohort && (
+        <div className="rounded-lg bg-surface p-2.5 text-xs text-muted flex items-center justify-between">
+          <span>소속 기수:</span>
+          <span className="font-semibold text-primary">{initialCohort}</span>
+        </div>
+      )}
 
       <label className="flex flex-col gap-1.5 text-sm font-medium">
         {isSignup ? "사용할 비밀번호 (8자 이상)" : "비밀번호"}

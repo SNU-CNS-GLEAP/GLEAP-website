@@ -225,18 +225,21 @@ export async function updateMyProfile(locale: string, formData: FormData) {
   await writeActivity(member.user.id, "update", "member_profile", member.user.id);
   revalidatePath(`/${locale}/member`);
   revalidatePath(`/${locale}/member/profile`);
+  revalidatePath(`/${locale}/member/members`);
   redirect(`/${locale}/member/profile`);
 }
 
 /**
  * 운영진 승인 목록 관리 및 가입 초대장 발송 기능.
- * 여기에 등록된 이메일만 가입 화면에서 계정을 만들 수 있으며, 초대 메일을 함께 발송한다.
+ * 이름, 기수, 이메일, 역할을 함께 등록하여 프로필 및 구성원 데이터와 안전하게 연동한다.
  */
 export async function approveMemberEmail(locale: string, formData: FormData) {
   const member = await requireMember(locale);
   if (member.role !== "admin") throw new Error("운영진 권한이 필요합니다.");
 
   const email = approvedEmail(formData);
+  const name = String(formData.get("name") ?? "").trim();
+  const cohort = String(formData.get("cohort") ?? "").trim();
   const role = formData.get("role") === "admin" ? "admin" : "member";
   const sendInvite = formData.get("sendInvite") === "true" || formData.get("sendInvite") === "on";
 
@@ -248,7 +251,7 @@ export async function approveMemberEmail(locale: string, formData: FormData) {
       set: { role, updatedAt: new Date() },
     });
 
-  // 이미 가입한 회원의 프로필 표기도 새 권한과 맞춘다.
+  // 이미 가입한 회원이 있다면 프로필 정보(이름, 기수, 권한)를 함께 동기화한다.
   const [existingUser] = await db
     .select({ id: authUsers.id })
     .from(authUsers)
@@ -256,19 +259,41 @@ export async function approveMemberEmail(locale: string, formData: FormData) {
     .limit(1);
 
   if (existingUser) {
+    if (name) {
+      await db.update(authUsers).set({ name, updatedAt: new Date() }).where(eq(authUsers.id, existingUser.id));
+    }
     await db
-      .update(memberProfiles)
-      .set({ role, updatedAt: new Date() })
-      .where(eq(memberProfiles.userId, existingUser.id));
+      .insert(memberProfiles)
+      .values({
+        userId: existingUser.id,
+        name: name || "회원",
+        cohort: cohort || null,
+        role,
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: memberProfiles.userId,
+        set: {
+          ...(name ? { name } : {}),
+          ...(cohort ? { cohort } : {}),
+          role,
+          updatedAt: new Date(),
+        },
+      });
   }
 
   await writeActivity(member.user.id, "approve", "member_access", email);
 
-  // 초대 메일 자동 발송 (설정되어 있고 체크된 경우)
+  // 초대 메일 자동 발송
   if (sendInvite && isMemberEmailConfigured()) {
-    const inviteUrl = `${getAuthBaseUrl()}/${locale}/member/signup?email=${encodeURIComponent(email)}`;
+    const params = new URLSearchParams();
+    params.set("email", email);
+    if (name) params.set("name", name);
+    if (cohort) params.set("cohort", cohort);
+
+    const inviteUrl = `${getAuthBaseUrl()}/${locale}/member/signup?${params.toString()}`;
     try {
-      await sendMemberInvitationEmail({ email, inviteUrl, role });
+      await sendMemberInvitationEmail({ email, inviteUrl, name, cohort, role });
       await writeActivity(member.user.id, "send_invite_email", "member_access", email);
     } catch (err) {
       console.error("초대 메일 발송 실패:", err);
@@ -286,8 +311,15 @@ export async function resendMemberInvitation(locale: string, email: string) {
   if (member.role !== "admin") throw new Error("운영진 권한이 필요합니다.");
 
   const [approved] = await db
-    .select({ email: memberAccess.email, role: memberAccess.role })
+    .select({
+      email: memberAccess.email,
+      role: memberAccess.role,
+      name: memberProfiles.name,
+      cohort: memberProfiles.cohort,
+    })
     .from(memberAccess)
+    .leftJoin(authUsers, eq(memberAccess.email, authUsers.email))
+    .leftJoin(memberProfiles, eq(authUsers.id, memberProfiles.userId))
     .where(eq(memberAccess.email, email))
     .limit(1);
 
@@ -297,8 +329,19 @@ export async function resendMemberInvitation(locale: string, email: string) {
     throw new Error("이메일 발송 설정이 완료되지 않았습니다.");
   }
 
-  const inviteUrl = `${getAuthBaseUrl()}/${locale}/member/signup?email=${encodeURIComponent(email)}`;
-  await sendMemberInvitationEmail({ email, inviteUrl, role: approved.role });
+  const params = new URLSearchParams();
+  params.set("email", email);
+  if (approved.name) params.set("name", approved.name);
+  if (approved.cohort) params.set("cohort", approved.cohort);
+
+  const inviteUrl = `${getAuthBaseUrl()}/${locale}/member/signup?${params.toString()}`;
+  await sendMemberInvitationEmail({
+    email,
+    inviteUrl,
+    name: approved.name ?? undefined,
+    cohort: approved.cohort ?? undefined,
+    role: approved.role,
+  });
   await writeActivity(member.user.id, "resend_invite_email", "member_access", email);
   revalidatePath(`/${locale}/member/admin`);
 }

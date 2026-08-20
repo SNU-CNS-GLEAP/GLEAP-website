@@ -29,7 +29,7 @@ export default async function MemberAdminPage({ params }: Props) {
           <p className="text-sm font-semibold text-primary">운영진 전용</p>
           <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">회원 승인 및 초대 관리</h1>
           <p className="mt-1 text-sm text-muted">
-            부원의 이메일을 등록하고 가입 초대 링크를 발송합니다.
+            부원의 이름, 기수, 이메일을 등록하고 전용 가입 초대 링크를 발송합니다.
           </p>
         </div>
         <Link href="/member" className="text-sm font-medium text-primary hover:underline">
@@ -44,16 +44,41 @@ export default async function MemberAdminPage({ params }: Props) {
         </div>
         <p className="mt-1 text-xs text-muted-foreground">
           {emailConfigured
-            ? "Gmail SMTP 또는 메일 서비스가 연결되어 있어 승인 시 초대장이 자동으로 발송됩니다."
+            ? "Gmail SMTP 발송이 연결되어 있어 신규 회원 등록 시 맞춤 초대장이 자동으로 발송됩니다."
             : "환경변수(GMAIL_SMTP_USER, GMAIL_SMTP_APP_PASSWORD)가 등록되면 초대 메일이 실제 자동 발송됩니다."}
         </p>
       </div>
 
       {/* 신규 회원 승인 및 초대 폼 */}
       <form action={approveMemberEmail.bind(null, locale)} className="flex flex-col gap-4 rounded-xl border border-border bg-background p-6 shadow-sm">
-        <h2 className="text-base font-semibold text-foreground">신규 회원 등록 및 초대장 발송</h2>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <label className="flex flex-col gap-1.5 text-sm font-medium sm:col-span-2">
+        <h2 className="text-base font-semibold text-foreground">신규 회원 등록 및 구성원 연동 초대장 발송</h2>
+        
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <label className="flex flex-col gap-1.5 text-sm font-medium">
+            이름 (실명)
+            <input
+              name="name"
+              type="text"
+              required
+              maxLength={80}
+              placeholder="예: 박정민"
+              className="rounded-lg border border-border px-3 py-2 font-normal focus:border-primary focus:outline-none"
+            />
+          </label>
+
+          <label className="flex flex-col gap-1.5 text-sm font-medium">
+            기수
+            <input
+              name="cohort"
+              type="text"
+              maxLength={40}
+              placeholder="예: 14기"
+              defaultValue="15기"
+              className="rounded-lg border border-border px-3 py-2 font-normal focus:border-primary focus:outline-none"
+            />
+          </label>
+
+          <label className="flex flex-col gap-1.5 text-sm font-medium sm:col-span-2 lg:col-span-2">
             이메일 주소
             <input
               name="email"
@@ -64,29 +89,33 @@ export default async function MemberAdminPage({ params }: Props) {
               className="rounded-lg border border-border px-3 py-2 font-normal focus:border-primary focus:outline-none"
             />
           </label>
-          <label className="flex flex-col gap-1.5 text-sm font-medium">
-            부여할 권한
-            <select
-              name="role"
-              defaultValue="member"
-              className="rounded-lg border border-border px-3 py-2 font-normal focus:border-primary focus:outline-none"
-            >
-              <option value="member">일반 회원</option>
-              <option value="admin">운영진</option>
-            </select>
-          </label>
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <label className="flex items-center gap-2 text-sm text-foreground">
-            <input
-              name="sendInvite"
-              type="checkbox"
-              defaultChecked={true}
-              className="h-4 w-4 rounded border-border text-primary"
-            />
-            등록 즉시 가입 초대 메일 발송하기
-          </label>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-t border-border pt-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <label className="flex items-center gap-2 text-sm font-medium">
+              권한
+              <select
+                name="role"
+                defaultValue="member"
+                className="rounded-lg border border-border px-3 py-1.5 font-normal focus:border-primary focus:outline-none"
+              >
+                <option value="member">일반 회원</option>
+                <option value="admin">운영진</option>
+              </select>
+            </label>
+
+            <label className="flex items-center gap-2 text-sm text-foreground">
+              <input
+                name="sendInvite"
+                type="checkbox"
+                defaultChecked={true}
+                className="h-4 w-4 rounded border-border text-primary"
+              />
+              등록 즉시 가입 초대 메일 발송하기
+            </label>
+          </div>
+
           <button
             type="submit"
             className="w-fit rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 transition"
@@ -109,14 +138,22 @@ export default async function MemberAdminPage({ params }: Props) {
               <div key={approved.id} className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-foreground">{approved.email}</span>
+                    <span className="font-semibold text-foreground">
+                      {approved.registeredName || "미가입"}
+                    </span>
+                    {approved.registeredCohort && (
+                      <span className="rounded bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                        {approved.registeredCohort}
+                      </span>
+                    )}
+                    <span className="text-sm text-muted">({approved.email})</span>
                     <span className={`rounded px-2 py-0.5 text-xs font-medium ${approved.role === "admin" ? "bg-amber-100 text-amber-900" : "bg-surface text-muted"}`}>
                       {approved.role === "admin" ? "운영진" : "일반 회원"}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-muted">
                     {approved.isRegistered ? (
-                      <span className="text-emerald-700 font-medium">✓ 가입 완료 ({approved.registeredName ?? "이름 없음"})</span>
+                      <span className="text-emerald-700 font-medium">✓ 가입 완료 (프로필 연동됨)</span>
                     ) : (
                       <span className="text-amber-700 font-medium">⏳ 가입 대기 중 (초대 발송됨)</span>
                     )}
@@ -128,7 +165,7 @@ export default async function MemberAdminPage({ params }: Props) {
                     <button
                       type="submit"
                       disabled={!emailConfigured}
-                      className="rounded border border-border px-3 py-1.5 text-xs font-medium hover:bg-surface disabled:opacity-40 transition"
+                      className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-surface disabled:opacity-40 transition"
                     >
                       초대장 재발송
                     </button>
@@ -137,7 +174,7 @@ export default async function MemberAdminPage({ params }: Props) {
                     <form action={removeMemberAccess.bind(null, locale, approved.email)}>
                       <button
                         type="submit"
-                        className="rounded border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition"
+                        className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition"
                       >
                         삭제
                       </button>

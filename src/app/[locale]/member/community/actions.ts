@@ -11,6 +11,7 @@ import {
   memberActivityLogs,
   memberAccess,
   memberComments,
+  memberPostDislikes,
   memberPostLikes,
   memberPosts,
   memberProfiles,
@@ -144,7 +145,34 @@ export async function togglePostLike(locale: string, postId: string) {
   if (existingLike) {
     await db.delete(memberPostLikes).where(eq(memberPostLikes.id, existingLike.id));
   } else {
+    // 좋아요를 누를 때 기존 싫어요가 있다면 취소한다.
+    await db
+      .delete(memberPostDislikes)
+      .where(and(eq(memberPostDislikes.postId, postId), eq(memberPostDislikes.userId, member.user.id)));
     await db.insert(memberPostLikes).values({ postId, userId: member.user.id });
+  }
+
+  revalidatePath(`/${locale}/member/community`);
+  revalidatePath(`/${locale}/member/community/${postId}`);
+}
+
+export async function togglePostDislike(locale: string, postId: string) {
+  const member = await requireMember(locale);
+  const [existingDislike] = await db
+    .select({ id: memberPostDislikes.id })
+    .from(memberPostDislikes)
+    .where(and(eq(memberPostDislikes.postId, postId), eq(memberPostDislikes.userId, member.user.id)))
+    .limit(1);
+
+  // 이미 싫어요를 눌렀으면 삭제해 취소하고, 없으면 새로 만든다.
+  if (existingDislike) {
+    await db.delete(memberPostDislikes).where(eq(memberPostDislikes.id, existingDislike.id));
+  } else {
+    // 싫어요를 누를 때 기존 좋아요가 있다면 취소한다.
+    await db
+      .delete(memberPostLikes)
+      .where(and(eq(memberPostLikes.postId, postId), eq(memberPostLikes.userId, member.user.id)));
+    await db.insert(memberPostDislikes).values({ postId, userId: member.user.id });
   }
 
   revalidatePath(`/${locale}/member/community`);

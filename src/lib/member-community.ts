@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import {
   authUsers,
   memberComments,
+  memberPostDislikes,
   memberPostLikes,
   memberPosts,
   memberAccess,
@@ -14,8 +15,7 @@ import {
 // 기존 공개 소식은 기존 posts 테이블이 담당한다.
 // 이 파일의 member_* 테이블은 로그인한 GLEAP 회원만 사용하는 커뮤니티 데이터다.
 
-// 목록 화면에서 댓글·좋아요 수를 함께 가져온다.
-// 두 테이블을 동시에 연결하므로 count(distinct ...)로 실제 개수만 센다.
+// 목록 화면에서 댓글·좋아요·싫어요 수를 함께 가져온다.
 export async function getMemberPosts() {
   return db
     .select({
@@ -28,11 +28,13 @@ export async function getMemberPosts() {
       createdAt: memberPosts.createdAt,
       commentCount: sql<number>`count(distinct ${memberComments.id})::int`,
       likeCount: sql<number>`count(distinct ${memberPostLikes.id})::int`,
+      dislikeCount: sql<number>`count(distinct ${memberPostDislikes.id})::int`,
     })
     .from(memberPosts)
     .innerJoin(authUsers, eq(memberPosts.authorId, authUsers.id))
     .leftJoin(memberComments, eq(memberComments.postId, memberPosts.id))
     .leftJoin(memberPostLikes, eq(memberPostLikes.postId, memberPosts.id))
+    .leftJoin(memberPostDislikes, eq(memberPostDislikes.postId, memberPosts.id))
     .groupBy(memberPosts.id, authUsers.id)
     .orderBy(desc(memberPosts.createdAt));
 }
@@ -61,10 +63,12 @@ export async function getMemberPost(postId: string) {
     .select({
       commentCount: sql<number>`count(distinct ${memberComments.id})::int`,
       likeCount: sql<number>`count(distinct ${memberPostLikes.id})::int`,
+      dislikeCount: sql<number>`count(distinct ${memberPostDislikes.id})::int`,
     })
     .from(memberPosts)
     .leftJoin(memberComments, eq(memberComments.postId, memberPosts.id))
     .leftJoin(memberPostLikes, eq(memberPostLikes.postId, memberPosts.id))
+    .leftJoin(memberPostDislikes, eq(memberPostDislikes.postId, memberPosts.id))
     .where(eq(memberPosts.id, postId));
 
   const comments = await db

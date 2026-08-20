@@ -196,6 +196,25 @@ export const memberPostLikes = pgTable(
   ],
 );
 
+// 한 회원은 하나의 글에 싫어요를 한 번만 남길 수 있다.
+export const memberPostDislikes = pgTable(
+  "member_post_dislikes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    postId: uuid("post_id")
+      .notNull()
+      .references(() => memberPosts.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => authUsers.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("member_post_dislikes_post_user_unique").on(table.postId, table.userId),
+    index("member_post_dislikes_post_id_idx").on(table.postId),
+  ],
+);
+
 // 운영상 필요한 최소 활동 기록. 비밀번호·접속 IP 같은 민감 정보는 기록하지 않는다.
 export const memberActivityLogs = pgTable(
   "member_activity_logs",

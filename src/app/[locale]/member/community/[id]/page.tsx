@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
+import { MemberCommentForm } from "@/components/member/MemberCommentForm";
 import { createComment, deleteComment, deletePost, togglePostDislike, togglePostLike } from "../actions";
 import { requireMember } from "@/lib/member-auth";
 import { getMemberPost } from "@/lib/member-community";
@@ -123,29 +124,8 @@ export default async function MemberPostPage({ params }: Props) {
           )}
         </div>
 
-        {/* 2. 댓글 작성 란 (댓글 목록 아래 위치) */}
-        <form
-          action={createComment.bind(null, locale, post.id)}
-          className="flex flex-col gap-3 rounded-xl border border-border bg-background p-4 sm:p-5 shadow-sm"
-        >
-          <label className="text-xs font-semibold text-muted">댓글 작성하기</label>
-          <textarea
-            name="content"
-            required
-            maxLength={2000}
-            rows={3}
-            placeholder="댓글을 입력해 주세요..."
-            className="w-full rounded-lg border border-border p-3 text-sm focus:border-primary focus:outline-none"
-          />
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition"
-            >
-              댓글 등록
-            </button>
-          </div>
-        </form>
+        {/* 2. 댓글 작성 란 (확인 팝업이 포함된 클라이언트 컴포넌트) */}
+        <MemberCommentForm action={createComment.bind(null, locale, post.id)} />
       </section>
     </main>
   );

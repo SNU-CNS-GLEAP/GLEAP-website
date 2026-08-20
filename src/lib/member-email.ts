@@ -21,6 +21,7 @@ export function isMemberEmailConfigured(): boolean {
 }
 
 const CRLF = String.fromCharCode(13, 10);
+const LF = String.fromCharCode(10);
 
 /**
  * Node.js 내장 TLS 모듈을 사용하여 외부 패키지 없이 Gmail SMTP(포트 465)로 메일을 직접 발송한다.
@@ -206,8 +207,7 @@ export async function sendMemberInvitationEmail({
     "※ 본인이 요청하지 않았거나 관련이 없다면 이 메일을 무시해 주세요.",
     "",
     "- 서울대학교 자연과학대학 GLEAP 운영진 드림",
-  ].join("
-");
+  ].join(LF);
 
   await dispatchEmail({ to: email, subject, text });
 }
@@ -229,8 +229,7 @@ export async function sendMemberVerificationEmail({
     "※ 본인이 요청하지 않았다면 이 이메일을 무시해 주세요.",
     "",
     "- 서울대학교 자연과학대학 GLEAP",
-  ].join("
-");
+  ].join(LF);
 
   await dispatchEmail({ to: email, subject, text });
 }

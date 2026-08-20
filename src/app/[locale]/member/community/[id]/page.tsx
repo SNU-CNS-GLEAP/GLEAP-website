@@ -13,6 +13,8 @@ export default async function MemberPostPage({ params }: Props) {
   if (!post) notFound();
 
   const isAuthor = post.authorId === member.user.id;
+  const isAdmin = member.role === "admin";
+  const canDeletePost = isAuthor || isAdmin;
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-12">
@@ -51,24 +53,26 @@ export default async function MemberPostPage({ params }: Props) {
             <span className="text-muted">댓글 {post.commentCount}개</span>
           </div>
 
-          {isAuthor && (
-            <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            {isAuthor && (
               <Link
                 href={`/member/community/${post.id}/edit`}
                 className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-surface transition"
               >
                 수정
               </Link>
+            )}
+            {canDeletePost && (
               <form action={deletePost.bind(null, locale, post.id)}>
                 <button
                   type="submit"
                   className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition"
                 >
-                  삭제
+                  {isAuthor ? "삭제" : "삭제 (운영진)"}
                 </button>
               </form>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </article>
 
@@ -86,10 +90,10 @@ export default async function MemberPostPage({ params }: Props) {
                   <span>·</span>
                   <span>{comment.createdAt.toLocaleDateString("ko-KR")}</span>
                 </div>
-                {comment.authorId === member.user.id && (
+                {(comment.authorId === member.user.id || isAdmin) && (
                   <form action={deleteComment.bind(null, locale, post.id, comment.id)}>
                     <button type="submit" className="text-xs text-red-600 hover:underline">
-                      삭제
+                      {comment.authorId === member.user.id ? "삭제" : "삭제 (운영진)"}
                     </button>
                   </form>
                 )}

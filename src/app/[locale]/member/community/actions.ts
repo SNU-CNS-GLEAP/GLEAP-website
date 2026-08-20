@@ -121,8 +121,10 @@ export async function deletePost(locale: string, postId: string) {
     .where(eq(memberPosts.id, postId))
     .limit(1);
 
-  // 삭제도 수정과 동일하게 본인 글만 가능하다.
-  if (!post || post.authorId !== member.user.id) throw new Error("삭제 권한이 없습니다.");
+  // 작성자 본인 또는 운영진(admin) 권한으로 삭제 가능
+  const isAuthor = post && post.authorId === member.user.id;
+  const isAdmin = member.role === "admin";
+  if (!post || (!isAuthor && !isAdmin)) throw new Error("삭제 권한이 없습니다.");
 
   await db.delete(memberPosts).where(eq(memberPosts.id, postId));
   await writeActivity(member.user.id, "delete", "member_post", postId);
@@ -176,8 +178,10 @@ export async function deleteComment(locale: string, postId: string, commentId: s
     .where(eq(memberComments.id, commentId))
     .limit(1);
 
-  // 댓글 ID만 알아도 남의 댓글을 지울 수 없도록 작성자와 게시글 연결을 함께 확인한다.
-  if (!comment || comment.authorId !== member.user.id || comment.postId !== postId) {
+  // 작성자 본인 또는 운영진(admin) 권한으로 댓글 삭제 가능
+  const isAuthor = comment && comment.authorId === member.user.id;
+  const isAdmin = member.role === "admin";
+  if (!comment || (!isAuthor && !isAdmin) || comment.postId !== postId) {
     throw new Error("삭제 권한이 없습니다.");
   }
 

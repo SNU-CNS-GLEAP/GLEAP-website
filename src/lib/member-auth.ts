@@ -92,15 +92,11 @@ export const memberAuth = betterAuth({
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
-    // 이메일 소유를 확인하기 전에는 로그인 세션을 만들지 않는다.
-    requireEmailVerification: true,
+    requireEmailVerification: false,
   },
   emailVerification: {
-    // 가입 직후 이메일 주소의 실제 소유 여부를 확인한다.
-    sendOnSignUp: true,
-    // 인증 전 로그인 시에도 새 인증 링크를 다시 보낸다.
-    sendOnSignIn: true,
-    // 인증 완료 후 바로 로그인 세션을 발급하지 않고, 사용자가 설정한 비밀번호로 직접 로그인하도록 한다.
+    sendOnSignUp: false,
+    sendOnSignIn: false,
     autoSignInAfterVerification: false,
     expiresIn: 60 * 60,
     sendVerificationEmail: async ({ user, url }) => {
@@ -142,8 +138,7 @@ export const memberAuth = betterAuth({
 
           if (!approvedMember) return;
 
-          // 관리자가 member_access에 등록한 승인 회원은 초대 링크를 통해 가입 시
-          // 이메일 소유가 사전 확인된 것으로 간주하여 즉시 emailVerified 상태로 갱신한다.
+          // 관리자가 member_access에 등록한 승인 회원은 가입 즉시 emailVerified 상태로 갱신
           await db
             .update(authUsers)
             .set({ emailVerified: true, updatedAt: new Date() })
@@ -190,7 +185,7 @@ export const memberAuth = betterAuth({
   },
 });
 
-/** 현재 로그인 사용자가 이메일 인증을 완료하고 운영진 승인 목록에 남아 있는지 함께 확인한다. */
+/** 현재 로그인 사용자가 운영진 승인 목록에 남아 있는지 확인하고 세션을 반환한다. */
 export async function getCurrentMember() {
   const session = await memberAuth.api.getSession({
     headers: await headers(),
@@ -198,22 +193,31 @@ export async function getCurrentMember() {
 
   if (!session?.user) return null;
 
-  // 이메일 인증이 완료되지 않은 계정은 세션이 존재하더라도 회원 공간 접근을 완전히 차단한다.
-  if (!session.user.emailVerified) return null;
-
   const approvedMember = await findApprovedMember(
     normalizeEmail(session.user.email),
   );
 
+  // 운영진 승인 명단에 없는 이메일이면 접근 차단
   if (!approvedMember) return null;
 
+  // 만약 DB에 emailVerified가 false로 남아있다면, 이미 member_access로 승인된 회원이므로 true로 자동 갱신
+  if (!session.user.emailVerified) {
+    await db
+      .update(authUsers)
+      .set({ emailVerified: true, updatedAt: new Date() })
+      .where(eq(authUsers.id, session.user.id));
+  }
+
   return {
-    user: session.user,
+    user: {
+      ...session.user,
+      emailVerified: true,
+    },
     role: approvedMember.role,
   };
 }
 
-/** 회원 전용 페이지에서 호출한다. 미로그인·미승인·미인증 사용자는 로그인 화면으로 보낸다. */
+/** 회원 전용 페이지에서 호출한다. 미로그인·미승인 사용자는 로그인 화면으로 보낸다. */
 export async function requireMember(locale: string) {
   const member = await getCurrentMember();
 

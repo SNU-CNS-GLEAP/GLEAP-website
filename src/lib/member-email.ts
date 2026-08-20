@@ -20,6 +20,8 @@ export function isMemberEmailConfigured(): boolean {
   return hasGmail || hasResend;
 }
 
+const CRLF = String.fromCharCode(13, 10);
+
 /**
  * Node.js 내장 TLS 모듈을 사용하여 외부 패키지 없이 Gmail SMTP(포트 465)로 메일을 직접 발송한다.
  */
@@ -42,7 +44,7 @@ async function sendViaGmailSmtp({
   const host = "smtp.gmail.com";
   const port = 465;
 
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     const socket = tls.connect(
       {
         host,
@@ -61,20 +63,13 @@ async function sendViaGmailSmtp({
     socket.setEncoding("utf-8");
 
     const commands = [
-      () => `EHLO gleap.snu.ac.kr\r
-`,
-      () => `AUTH LOGIN\r
-`,
-      () => `${Buffer.from(user).toString("base64")}\r
-`,
-      () => `${Buffer.from(cleanPass).toString("base64")}\r
-`,
-      () => `MAIL FROM:<${user}>\r
-`,
-      () => `RCPT TO:<${to}>\r
-`,
-      () => `DATA\r
-`,
+      () => `EHLO gleap.snu.ac.kr${CRLF}`,
+      () => `AUTH LOGIN${CRLF}`,
+      () => `${Buffer.from(user).toString("base64")}${CRLF}`,
+      () => `${Buffer.from(cleanPass).toString("base64")}${CRLF}`,
+      () => `MAIL FROM:<${user}>${CRLF}`,
+      () => `RCPT TO:<${to}>${CRLF}`,
+      () => `DATA${CRLF}`,
     ];
 
     function sendNext() {
@@ -93,22 +88,19 @@ async function sendViaGmailSmtp({
           `Content-Transfer-Encoding: base64`,
           ``,
           Buffer.from(text).toString("base64"),
-          `\r
-.\r
-`,
-        ].join("\r
-");
+          ``,
+          `.`,
+          ``,
+        ].join(CRLF);
         socket.write(headers);
       } else {
-        socket.write("QUIT\r
-");
+        socket.write(`QUIT${CRLF}`);
       }
     }
 
     socket.on("data", (chunk: string) => {
       buffer += chunk;
-      const lines = buffer.split("\r
-");
+      const lines = buffer.split(CRLF);
       const lastLine = lines[lines.length - 2] || lines[lines.length - 1];
       const statusCode = parseInt(lastLine?.slice(0, 3) || "0", 10);
 

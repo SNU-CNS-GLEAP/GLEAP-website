@@ -67,17 +67,28 @@ export const memberAuth = betterAuth({
   }),
   secret: env.betterAuthSecret,
   baseURL: authBaseUrl,
-  // 대표 사이트, Vercel Preview/Production 전체 도메인 및 로컬호스트를 모두 신뢰된 Origin으로 등록
-  trustedOrigins: [
-    "https://gleap-website.vercel.app",
-    "https://www.gleap-website.vercel.app",
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "http://127.0.0.1:3000",
-    /^https:\/\/.*\.vercel\.app$/,
-    authBaseUrl,
-    env.betterAuthUrl,
-  ].filter(Boolean),
+  // 대표 사이트, 모든 Vercel Preview/Production 도메인 및 로컬호스트를 동적으로 허용
+  trustedOrigins: (request) => {
+    const origin = request?.headers.get("origin");
+    const origins: string[] = [
+      "https://gleap-website.vercel.app",
+      "https://www.gleap-website.vercel.app",
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "http://127.0.0.1:3000",
+    ];
+
+    if (authBaseUrl) origins.push(authBaseUrl);
+    if (env.betterAuthUrl) origins.push(env.betterAuthUrl);
+
+    if (origin) {
+      if (origin.endsWith(".vercel.app") || origin.includes("localhost") || origin.includes("127.0.0.1")) {
+        origins.push(origin);
+      }
+    }
+
+    return origins;
+  },
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,

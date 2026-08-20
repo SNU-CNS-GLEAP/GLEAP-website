@@ -123,7 +123,7 @@ export async function getMemberProfiles() {
     .orderBy(memberProfiles.name);
 }
 
-/** 운영진 화면에서만 쓰는 승인 이메일 목록이다. */
+/** 운영진 화면에서 쓰는 승인 이메일 목록 (가입 완료 여부 및 등록 이름 연동). */
 export async function getMemberAccessList() {
   return db
     .select({
@@ -131,7 +131,10 @@ export async function getMemberAccessList() {
       email: memberAccess.email,
       role: memberAccess.role,
       createdAt: memberAccess.createdAt,
+      registeredName: authUsers.name,
+      isRegistered: sql<boolean>`${authUsers.id} is not null`,
     })
     .from(memberAccess)
-    .orderBy(memberAccess.createdAt);
+    .leftJoin(authUsers, eq(memberAccess.email, authUsers.email))
+    .orderBy(desc(memberAccess.createdAt));
 }

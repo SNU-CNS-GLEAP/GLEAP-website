@@ -30,7 +30,7 @@ function normalizeEmail(value: unknown): string {
  * Vercel Preview는 배포마다 별도의 주소를 사용한다. Preview 환경에서는
  * Vercel이 제공하는 현재 배포 주소를 사용해 로그인 쿠키와 CORS를 맞춘다.
  */
-function getAuthBaseUrl() {
+export function getAuthBaseUrl() {
   if (process.env.VERCEL_ENV === "preview" && process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
   }
@@ -42,7 +42,7 @@ const authBaseUrl = getAuthBaseUrl();
 
 // Neon Auth 베타에서는 공개 회원가입을 완전히 끄는 기능이 없으므로,
 // member_access 테이블을 실제 동아리 회원 명단(허용 목록)으로 사용한다.
-async function findApprovedMember(email: string) {
+export async function findApprovedMember(email: string) {
   const [member] = await db
     .select({ email: memberAccess.email, role: memberAccess.role })
     .from(memberAccess)
@@ -79,7 +79,8 @@ export const memberAuth = betterAuth({
     sendOnSignUp: true,
     // 인증 전 로그인 시에도 새 인증 링크를 다시 보낸다.
     sendOnSignIn: true,
-    autoSignInAfterVerification: true,
+    // 인증 완료 후 바로 로그인 세션을 발급하지 않고, 사용자가 설정한 비밀번호로 직접 로그인하도록 한다.
+    autoSignInAfterVerification: false,
     expiresIn: 60 * 60,
     sendVerificationEmail: async ({ user, url }) => {
       await sendMemberVerificationEmail({
@@ -109,7 +110,7 @@ export const memberAuth = betterAuth({
       }
     }),
   },
-  // 가입이 완료되면 빈 프로필을 자동 생성한다. 화면에서 이후 회원이 직접 채운다.
+  // 가입이 완료되면 DB 후크로 인증 완료 처리 및 빈 프로필을 자동 생성한다.
   databaseHooks: {
     user: {
       create: {
@@ -119,6 +120,13 @@ export const memberAuth = betterAuth({
           );
 
           if (!approvedMember) return;
+
+          // 관리자가 member_access에 등록한 승인 회원은 초대 링크를 통해 가입 시
+          // 이메일 소유가 사전 확인된 것으로 간주하여 즉시 emailVerified 상태로 갱신한다.
+          await db
+            .update(authUsers)
+            .set({ emailVerified: true, updatedAt: new Date() })
+            .where(eq(authUsers.id, user.id));
 
           await db
             .insert(memberProfiles)
@@ -134,13 +142,16 @@ export const memberAuth = betterAuth({
   },
 });
 
-/** 현재 로그인 사용자가 운영진 승인 목록에 남아 있는지 함께 확인한다. */
+/** 현재 로그인 사용자가 이메일 인증을 완료하고 운영진 승인 목록에 남아 있는지 함께 확인한다. */
 export async function getCurrentMember() {
   const session = await memberAuth.api.getSession({
     headers: await headers(),
   });
 
   if (!session?.user) return null;
+
+  // 이메일 인증이 완료되지 않은 계정은 세션이 존재하더라도 회원 공간 접근을 완전히 차단한다.
+  if (!session.user.emailVerified) return null;
 
   const approvedMember = await findApprovedMember(
     normalizeEmail(session.user.email),
@@ -154,7 +165,7 @@ export async function getCurrentMember() {
   };
 }
 
-/** 회원 전용 페이지에서 호출한다. 미로그인·미승인 사용자는 로그인 화면으로 보낸다. */
+/** 회원 전용 페이지에서 호출한다. 미로그인·미승인·미인증 사용자는 로그인 화면으로 보낸다. */
 export async function requireMember(locale: string) {
   const member = await getCurrentMember();
 

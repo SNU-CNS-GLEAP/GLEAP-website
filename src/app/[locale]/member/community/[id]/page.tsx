@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
-import { createComment, deleteComment, deletePost, togglePostLike } from "../actions";
+import { createComment, deleteComment, deletePost, togglePostDislike, togglePostLike } from "../actions";
 import { requireMember } from "@/lib/member-auth";
 import { getMemberPost } from "@/lib/member-community";
 
@@ -40,17 +40,29 @@ export default async function MemberPostPage({ params }: Props) {
         <p className="mt-6 whitespace-pre-wrap leading-relaxed text-foreground/90">{post.content}</p>
 
         <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4 text-sm">
-          <div className="flex items-center gap-3">
+          {/* 반응 버튼 (좋아요 / 싫어요 / 댓글 수) */}
+          <div className="flex flex-wrap items-center gap-3">
             <form action={togglePostLike.bind(null, locale, post.id)}>
               <button
                 type="submit"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3.5 py-1.5 text-sm font-medium hover:bg-surface transition"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3.5 py-1.5 text-sm font-medium hover:bg-surface transition shadow-sm"
               >
                 <span>❤️ 좋아요</span>
                 <span className="font-semibold text-primary">{post.likeCount}</span>
               </button>
             </form>
-            <span className="text-muted">댓글 {post.commentCount}개</span>
+
+            <form action={togglePostDislike.bind(null, locale, post.id)}>
+              <button
+                type="submit"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3.5 py-1.5 text-sm font-medium hover:bg-surface transition shadow-sm"
+              >
+                <span>💔 싫어요</span>
+                <span className="font-semibold text-muted">{post.dislikeCount}</span>
+              </button>
+            </form>
+
+            <span className="text-sm text-muted">댓글 {post.commentCount}개</span>
           </div>
 
           <div className="flex items-center gap-2">

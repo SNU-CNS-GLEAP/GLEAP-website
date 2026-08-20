@@ -15,6 +15,7 @@ export const env = {
   adminPasswordHash: required("ADMIN_PASSWORD_HASH"),
   sessionSecret: required("SESSION_SECRET"),
   databaseUrl: required("DATABASE_URL"),
+  blobReadWriteToken: optional("BLOB_READ_WRITE_TOKEN") || "",
   betterAuthSecret: required("BETTER_AUTH_SECRET"),
   betterAuthUrl: required("BETTER_AUTH_URL"),
   // Gmail SMTP 발송 설정

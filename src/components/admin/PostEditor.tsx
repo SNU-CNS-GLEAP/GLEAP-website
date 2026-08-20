@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import { StarterKit } from "@tiptap/starter-kit";
 import { Image as TiptapImage } from "@tiptap/extension-image";
@@ -66,6 +66,9 @@ export function PostEditor({ name, defaultValue = "", placeholder = "내용을 �
 }
 
 function Toolbar({ editor }: { editor: Editor }) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
   function promptLink() {
     const previousUrl = editor.getAttributes("link").href as string | undefined;
     const url = window.prompt("링크 URL", previousUrl ?? "https://");
@@ -77,10 +80,28 @@ function Toolbar({ editor }: { editor: Editor }) {
     editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
   }
 
-  function promptImage() {
-    const url = window.prompt("이미지 URL");
-    if (!url) return;
-    editor.chain().focus().setImage({ src: url }).run();
+  async function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
+      if (!res.ok) {
+        const { error } = await res.json().catch(() => ({ error: "업로드 실패" }));
+        window.alert(`이미지 업로드 실패: ${error ?? res.statusText}`);
+        return;
+      }
+      const { url } = (await res.json()) as { url: string };
+      editor.chain().focus().setImage({ src: url }).run();
+    } catch {
+      window.alert("이미지 업로드 실패: 네트워크 오류");
+    } finally {
+      setUploading(false);
+    }
   }
 
   return (
@@ -115,7 +136,16 @@ function Toolbar({ editor }: { editor: Editor }) {
       <ToolbarButton active={editor.isActive("link")} onClick={promptLink}>
         링크
       </ToolbarButton>
-      <ToolbarButton onClick={promptImage}>이미지</ToolbarButton>
+      <ToolbarButton onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+        {uploading ? "업로드 중..." : "이미지"}
+      </ToolbarButton>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileSelected}
+      />
     </div>
   );
 }
@@ -124,16 +154,19 @@ function ToolbarButton({
   children,
   onClick,
   active,
+  disabled,
 }: {
   children: React.ReactNode;
   onClick: () => void;
   active?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`rounded px-2 py-1 text-xs font-medium ${
+      disabled={disabled}
+      className={`rounded px-2 py-1 text-xs font-medium disabled:opacity-50 ${
         active ? "bg-primary text-white" : "text-foreground hover:bg-background"
       }`}
     >

@@ -58,6 +58,13 @@ Claude Code 세션 컨텍스트 겸 인수인계 문서. **결정된 사항과 �
   지연(약 70~100ms, 대부분 정적 페이지라 체감 적음)보다 "매년 담당자 바뀌는" 이 프로젝트엔 더 치명적이라
   판단. Neon 무료 티어는 비활성 시 컴퓨트가 0으로 스케일되지만 다음 요청에 자동으로 깨어남(수동 조치 불필요)
 
+> **2026-08-21 갱신**: 위 migration이 실제로 진행됨 — 회원 로그인·프로필·게시판이
+> Better Auth + Neon으로 옮겨갔다. 자세한 구조는 [회원 인증 (Better Auth + Neon)](#회원-인증-better-auth--neon)
+> 절 참고. 다만 **`/community/*`(옛 Supabase 경로)가 정리되지 않고 그대로 남아있어서 지금 500
+> 에러 상태**다 — 실제 로그인 흐름은 전부 `/member/*`로 이동했는데 `/community/*`는 여전히
+> `src/lib/member.ts`(Supabase 버전)를 참조해서, 아무도 로그인시키지 않는 죽은 코드가 됐다.
+> 정리(삭제 또는 `/member/community`로 리다이렉트) 필요 — [진행 상황] 참고.
+
 ---
 
 ## 소유권 / 계정 구조
@@ -254,7 +261,9 @@ npm run dev
 - Footer 우측 끝에 `/admin`으로 가는 작은 링크(`Footer.admin`) 배치 — 로그인 안 된 상태면
   `requireAdmin`이 알아서 로그인 페이지로 보냄
 
-> 회원 운영진 권한은 이 단일 관리자 비밀번호와 다르다. 회원 기능에서는 `public.profiles.is_admin`을 사용하고 Supabase RLS가 공지 작성 권한을 제한한다. 두 권한 체계의 통합은 기존 관리자 기능을 Supabase로 옮길 때만 수행한다.
+> 회원 운영진 권한은 이 단일 관리자 비밀번호와 완전히 다른, 별도 체계다. 회원 기능은
+> `memberAccess.role`(Better Auth + Neon)로 권한을 판단한다. 두 시스템은 쿠키도 세션 저장소도
+> 다르고 서로 전혀 모른다 — 자세한 내용은 아래 [회원 인증 (Better Auth + Neon)](#회원-인증-better-auth--neon) 절 참고.
 
 ### 공개 페이지에서의 수정 진입점 (설계 방향, 게시판 구현 시 적용)
 
@@ -274,6 +283,62 @@ DB 기반 콘텐츠(소식 게시판)를 관리자가 볼 때는 그 페이지�
   이동시킬 뿐, 수정 폼/로직을 공개 페이지 쪽에 중복 구현하지 않음
 - 아직 게시판 스키마가 없어([진행 상황] 미완료 항목) 구현 대상은 없음.
   Neon 연결 + 게시물 스키마 작업 시 이 패턴을 그대로 적용할 것
+
+---
+
+## 회원 인증 (Better Auth + Neon)
+
+`feature/member-neon-auth` 브랜치에서 만들어져 2026-08-21에 main에 merge됨. 관리자 로그인
+(iron-session, 위 절)과는 **완전히 독립된 별도 시스템** — 계정도, 쿠키도, 세션 저장소도 다르다.
+정식 인증 라이브러리(`better-auth`)를 Neon/Drizzle 위에 얹은 구조로, 회원가입은 공개 가입이
+아니라 **사전 승인된 이메일만 가입 가능**(초대 기반, [프로젝트 성격] 원칙과 동일).
+
+### 파일 구조
+
+| 경로 | 역할 |
+|---|---|
+| `src/lib/member-auth.ts` | 핵심. `betterAuth()` 인스턴스(`memberAuth`) 생성 + 세션 체크 함수(`getCurrentMember`, `requireMember`) |
+| `src/lib/member-auth-client.ts` | 브라우저용(`"use client"`) 클라이언트 — 로그인/가입 폼이 여기로 sign-in/sign-up 호출 |
+| `src/lib/member-community.ts` | 회원 게시판(글/댓글/좋아요) Drizzle 쿼리 |
+| `src/lib/member-email.ts` | 인증·초대 메일 발송. **별도 패키지 없이** 직접 구현 — Gmail은 Node `tls` 모듈로 SMTP 직접 통신, 또는 Resend는 `fetch`로 API 직접 호출 |
+| `src/lib/schema.ts` | 기존 `posts` 테이블과 같은 파일에 Better Auth/회원 테이블도 함께 정의 |
+| `src/app/api/auth/[...all]/route.ts` | Better Auth의 모든 엔드포인트(로그인/로그아웃/세션/이메일인증 등)를 받는 catch-all 라우트 한 개 (`toNextJsHandler`) |
+| `src/app/[locale]/member/*` | 페이지 전체 — `login`, `signup`, 대시보드, `community`(글 목록/작성/상세/수정), `profile`, `members`(명단), `admin`(초대·권한 관리) |
+| `src/components/member/*` | `MemberAuthForm`, `MemberLogoutButton`, `MemberCommentForm`, `MemberPostForm`, `MemberProfileForm` |
+
+### 스키마 (전부 `src/lib/schema.ts`)
+
+- Better Auth 표준 테이블 4개: `user`, `session`, `account`, `verification` — 라이브러리가
+  요구하는 고정 구조. `betterAuth()`의 `drizzleAdapter(db, { schema: {...} })`로 연결
+- 동아리 자체 테이블: `memberAccess`(가입 허용 이메일+역할 — Better Auth엔 초대 전용 가입
+  기능이 없어서 직접 만든 allowlist), `memberProfiles`(기수·자기소개·SNS 링크), `memberPosts`/
+  `memberComments`/좋아요·싫어요, `memberActivityLogs`
+
+### 호출 패턴
+
+```ts
+export const memberAuth = betterAuth({
+  database: drizzleAdapter(db, { provider: "pg", schema: { user, session, account, verification } }),
+  emailAndPassword: { enabled: true, minPasswordLength: 8, requireEmailVerification: false },
+  hooks: { before: createAuthMiddleware(async (ctx) => {
+    // 가입 요청 이메일이 memberAccess에 없으면 여기서 막음 (초대 전용 가입의 실제 구현부)
+  }) },
+});
+```
+
+페이지·Server Action은 전부 맨 앞에 `await requireMember(locale)`을 호출한다 — 세션 없으면
+로그인 페이지로 redirect, 있으면 `{ user, role }` 반환. **매 호출마다 `memberAccess`도 다시
+조회**하므로, 운영진이 `/member/admin`에서 권한을 회수하면 이미 로그인된 세션이라도 다음
+요청부터 즉시 막힌다.
+
+### 알려진 문제: `/community/*`(옛 Supabase 경로) 정리 필요
+
+이번 migration은 로그인·게시판을 `/member/*`로 새로 만들었을 뿐, **옛 `/community/*` 페이지와
+`src/lib/member.ts`(Supabase 버전)를 지우지 않고 남겨뒀다.** 실제 로그인은 전부 Better Auth로
+가는데 `/community/*`는 여전히 `NEXT_PUBLIC_SUPABASE_URL` 등 이제 `.env.example`에도 없는
+변수를 요구해서, 지금 접속하면 500 에러가 난다. 정리 방법은 팀과 상의해서 결정할 것 —
+후보는 (a) `/community/*` 라우트·`member.ts`·`src/lib/supabase/*` 통째로 삭제, 또는
+(b) `/community` → `/member/community`로 redirect만 걸어 옛 링크 호환성 유지.
 
 ---
 

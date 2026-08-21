@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useEditor, EditorContent, type Editor } from "@tiptap/react";
+import { useEditor, useEditorState, EditorContent, type Editor } from "@tiptap/react";
 import { StarterKit } from "@tiptap/starter-kit";
 import { Image as TiptapImage } from "@tiptap/extension-image";
 import { Placeholder } from "@tiptap/extension-placeholder";
@@ -111,6 +111,27 @@ function Toolbar({ editor }: { editor: Editor }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
+  // isActive()/getAttributes()는 그 순간의 스냅샷이라, 여기서 직접 읽으면 "커서 이동/이미지
+  // 선택"처럼 문서 내용은 안 바뀌고 선택 상태만 바뀌는 경우엔 리렌더가 안 일어나 버튼이
+  // 갱신되지 않는다(예: 이미지를 다시 클릭해도 폭 % 버튼이 안 뜨던 버그). useEditorState는
+  // 선택 변경을 포함한 모든 트랜잭션을 구독해서 값이 바뀔 때만 리렌더시켜준다.
+  const toolbarState = useEditorState({
+    editor,
+    selector: ({ editor }) => ({
+      isHeading2: editor.isActive("heading", { level: 2 }),
+      isHeading3: editor.isActive("heading", { level: 3 }),
+      isHeading4: editor.isActive("heading", { level: 4 }),
+      isBold: editor.isActive("bold"),
+      isItalic: editor.isActive("italic"),
+      isBulletList: editor.isActive("bulletList"),
+      isOrderedList: editor.isActive("orderedList"),
+      isBlockquote: editor.isActive("blockquote"),
+      isLink: editor.isActive("link"),
+      isImage: editor.isActive("image"),
+      imageWidthPercent: (editor.getAttributes("image").widthPercent as number | null) ?? 100,
+    }),
+  });
+
   function promptLink() {
     const previousUrl = editor.getAttributes("link").href as string | undefined;
     const url = window.prompt("링크 URL", previousUrl ?? "https://");
@@ -148,34 +169,34 @@ function Toolbar({ editor }: { editor: Editor }) {
 
   return (
     <div className="flex flex-wrap gap-1 rounded-t border border-border bg-surface p-1">
-      <ToolbarButton active={editor.isActive("heading", { level: 2 })} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>
+      <ToolbarButton active={toolbarState.isHeading2} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>
         제목1
       </ToolbarButton>
-      <ToolbarButton active={editor.isActive("heading", { level: 3 })} onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}>
+      <ToolbarButton active={toolbarState.isHeading3} onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}>
         제목2
       </ToolbarButton>
-      <ToolbarButton active={editor.isActive("heading", { level: 4 })} onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()}>
+      <ToolbarButton active={toolbarState.isHeading4} onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()}>
         제목3
       </ToolbarButton>
       <Divider />
-      <ToolbarButton active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()}>
+      <ToolbarButton active={toolbarState.isBold} onClick={() => editor.chain().focus().toggleBold().run()}>
         굵게
       </ToolbarButton>
-      <ToolbarButton active={editor.isActive("italic")} onClick={() => editor.chain().focus().toggleItalic().run()}>
+      <ToolbarButton active={toolbarState.isItalic} onClick={() => editor.chain().focus().toggleItalic().run()}>
         기울임
       </ToolbarButton>
       <Divider />
-      <ToolbarButton active={editor.isActive("bulletList")} onClick={() => editor.chain().focus().toggleBulletList().run()}>
+      <ToolbarButton active={toolbarState.isBulletList} onClick={() => editor.chain().focus().toggleBulletList().run()}>
         목록
       </ToolbarButton>
-      <ToolbarButton active={editor.isActive("orderedList")} onClick={() => editor.chain().focus().toggleOrderedList().run()}>
+      <ToolbarButton active={toolbarState.isOrderedList} onClick={() => editor.chain().focus().toggleOrderedList().run()}>
         번호 목록
       </ToolbarButton>
-      <ToolbarButton active={editor.isActive("blockquote")} onClick={() => editor.chain().focus().toggleBlockquote().run()}>
+      <ToolbarButton active={toolbarState.isBlockquote} onClick={() => editor.chain().focus().toggleBlockquote().run()}>
         인용문
       </ToolbarButton>
       <Divider />
-      <ToolbarButton active={editor.isActive("link")} onClick={promptLink}>
+      <ToolbarButton active={toolbarState.isLink} onClick={promptLink}>
         링크
       </ToolbarButton>
       <ToolbarButton onClick={() => fileInputRef.current?.click()} disabled={uploading}>
@@ -188,14 +209,14 @@ function Toolbar({ editor }: { editor: Editor }) {
         className="hidden"
         onChange={handleFileSelected}
       />
-      {editor.isActive("image") && (
+      {toolbarState.isImage && (
         <>
           <Divider />
           <span className="self-center px-1 text-xs text-muted">선택한 이미지 폭</span>
           {[25, 50, 75, 100].map((pct) => (
             <ToolbarButton
               key={pct}
-              active={(editor.getAttributes("image").widthPercent ?? 100) === pct}
+              active={toolbarState.imageWidthPercent === pct}
               onClick={() =>
                 editor
                   .chain()

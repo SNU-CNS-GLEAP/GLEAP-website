@@ -393,7 +393,7 @@ export async function resendMemberInvitation(locale: string, email: string) {
 }
 
 /**
- * 운영진이 승인 명단에서 회원을 삭제(접근 권한 회수)한다.
+ * 운영진이 승인 명단에서 회원을 삭제(접근 권한 회수 및 계정 정리)한다.
  */
 export async function removeMemberAccess(locale: string, email: string) {
   const member = await requireMember(locale);
@@ -403,7 +403,10 @@ export async function removeMemberAccess(locale: string, email: string) {
     throw new Error("기본 관리자 계정은 삭제할 수 없습니다.");
   }
 
+  // 승인 목록에서 삭제하고, 가입된 계정이 있다면 user 테이블에서 삭제 (member_profiles 등 자동 연쇄 삭제)
+  await db.delete(authUsers).where(eq(authUsers.email, email));
   await db.delete(memberAccess).where(eq(memberAccess.email, email));
   await writeActivity(member.user.id, "revoke", "member_access", email);
   revalidatePath(`/${locale}/member/admin`);
+  revalidatePath(`/${locale}/member/members`);
 }

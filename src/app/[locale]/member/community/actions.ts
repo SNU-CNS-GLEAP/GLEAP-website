@@ -232,38 +232,63 @@ export async function deleteComment(locale: string, postId: string, commentId: s
 
 export async function updateMyProfile(locale: string, formData: FormData) {
   const member = await requireMember(locale);
-  const interests = String(formData.get("interests") ?? "")
+
+  const name = requiredText(formData, "name", 80);
+  const cohort = String(formData.get("cohort") ?? "").trim().slice(0, 40) || null;
+  const position = String(formData.get("position") ?? "").trim().slice(0, 80);
+  const bioText = String(formData.get("bio") ?? "").trim().slice(0, 500);
+
+  // 직책과 한 줄 소개 결합: [직책] 소개글
+  const bio = position
+    ? bioText
+      ? `[${position}] ${bioText}`
+      : `[${position}]`
+    : bioText || null;
+
+  // 학술/전공 관심 분야
+  const academicInterests = String(formData.get("interests") ?? "")
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean)
     .slice(0, 10);
 
-  const instagramUrl = cleanInstagramUsername(formData.get("instagramUrl"));
+  // 취미 및 개인 관심사
+  const hobbies = String(formData.get("hobbies") ?? "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, 10);
 
-  // 가입 직후 빈 프로필이 있어도, 과거 데이터 등으로 없을 수 있으므로
-  // 최초 저장은 생성하고 이후 저장은 본인 행만 갱신한다.
+  const interests = [
+    ...academicInterests,
+    ...hobbies.map((h) => `취미: ${h}`),
+  ].slice(0, 20);
+
+  const instagramUrl = cleanInstagramUsername(formData.get("instagramUrl"));
+  const githubUrl = optionalUrl(formData, "githubUrl");
+
   await db
     .insert(memberProfiles)
     .values({
       userId: member.user.id,
-      name: requiredText(formData, "name", 80),
-      cohort: String(formData.get("cohort") ?? "").trim().slice(0, 40) || null,
-      bio: String(formData.get("bio") ?? "").trim().slice(0, 500) || null,
+      name,
+      cohort,
+      bio,
       interests,
       instagramUrl,
-      githubUrl: optionalUrl(formData, "githubUrl"),
+      githubUrl,
       role: member.role,
       updatedAt: new Date(),
     })
     .onConflictDoUpdate({
       target: memberProfiles.userId,
       set: {
-        name: requiredText(formData, "name", 80),
-        cohort: String(formData.get("cohort") ?? "").trim().slice(0, 40) || null,
-        bio: String(formData.get("bio") ?? "").trim().slice(0, 500) || null,
+        name,
+        cohort,
+        bio,
         interests,
         instagramUrl,
-        githubUrl: optionalUrl(formData, "githubUrl"),
+        githubUrl,
         updatedAt: new Date(),
       },
     });

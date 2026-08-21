@@ -52,11 +52,11 @@ function parseBioAndPosition(rawBio?: string | null): {
   bio: string;
 } {
   if (!rawBio) return { position: "", bio: "" };
-  const match = rawBio.match(/^\[(.*?)\]\s*(.*)$/s);
-  if (match) {
+  if (rawBio.startsWith("[") && rawBio.includes("]")) {
+    const closeIdx = rawBio.indexOf("]");
     return {
-      position: match[1].trim(),
-      bio: match[2].trim(),
+      position: rawBio.slice(1, closeIdx).trim(),
+      bio: rawBio.slice(closeIdx + 1).trim(),
     };
   }
   return { position: "", bio: rawBio.trim() };

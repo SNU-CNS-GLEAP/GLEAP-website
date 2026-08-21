@@ -16,14 +16,14 @@ type Props = {
   action: (formData: FormData) => Promise<void>;
 };
 
-// bio 문자열에서 [직책]과 한 줄 소개를 파싱
+// bio 문자열에서 [직책]과 한 줄 소개를 파싱 (정규식 플래그 오류 없이 안전하게 파싱)
 function parseBioAndPosition(rawBio?: string | null): { position: string; bio: string } {
   if (!rawBio) return { position: "", bio: "" };
-  const match = rawBio.match(/^\[(.*?)\]\s*(.*)$/s);
-  if (match) {
+  if (rawBio.startsWith("[") && rawBio.includes("]")) {
+    const closeIdx = rawBio.indexOf("]");
     return {
-      position: match[1].trim(),
-      bio: match[2].trim(),
+      position: rawBio.slice(1, closeIdx).trim(),
+      bio: rawBio.slice(closeIdx + 1).trim(),
     };
   }
   return { position: "", bio: rawBio.trim() };

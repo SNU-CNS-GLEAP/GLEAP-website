@@ -29,6 +29,10 @@ export async function POST(request: Request) {
 
   const original = Buffer.from(await file.arrayBuffer());
   const optimized = await sharp(original)
+    .rotate() // EXIF Orientation대로 실제 픽셀을 회전시키고 태그는 제거 — 카카오톡 등에서
+    // 내려받은 사진은 원본 픽셀은 안 돌아간 채 EXIF만 "90도 돌려서 보여줘"로 표시되는데,
+    // 이 호출 없이 리사이즈/WebP 변환하면 sharp가 EXIF를 버리면서 회전 정보도 같이 사라져
+    // 돌아간 채로 굳어버림
     .resize({ width: MAX_WIDTH, withoutEnlargement: true })
     .webp({ quality: 82 })
     .toBuffer();

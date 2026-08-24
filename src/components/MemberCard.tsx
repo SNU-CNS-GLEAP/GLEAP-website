@@ -32,8 +32,8 @@ export function MemberCard({ member, locale, labels }: Props) {
         <Image
           src={member.photo}
           alt={name.text}
-          width={112}
-          height={112}
+          width={480}
+          height={480}
           className="h-28 w-28 rounded-full object-cover"
         />
       ) : (

@@ -202,6 +202,14 @@ npm run dev
 - **구성원 사진**: `public/members/` 아래에 `{기수id}{실명}.jpg` 이름으로 커밋 (예: `/members/15문현호.jpg`).
   이름이 어차피 화면에 그대로 노출되므로 파일명도 실명 기반으로 통일 — 별도 식별자(학번 등)를 새로 만들지 않음.
   카드 렌더링은 `src/components/MemberCard.tsx` 하나를 `/members`, `/members/alumni` 양쪽에서 공유
+  - **사진은 반드시 1:1(정사각형) 비율로 미리 잘라서 커밋할 것.** `MemberCard.tsx`는 카드에서
+    사진을 원형(`rounded-full object-cover`)으로 자르는데, Next.js `<Image>`는 리사이즈 시
+    `width` 값 하나만 기준으로 축소하고 `height`는 보지 않는다. 그래서 가로로 긴 원본 사진을
+    그대로 넣으면 실제로 필요한 세로 해상도보다 훨씬 작게 리사이즈된 상태로 화면에 늘어나서
+    흐릿하게 보인다(예: 3040×1748 사진에 `width=120` 요청 시 실제로는 120×69로 줄어듦 — 세로
+    112px가 필요한데 69px만 받아 늘어남). 코드 쪽에도 여유 해상도를 요청하는 안전장치
+    (`width={480}`)를 넣어뒀지만 이는 완화책일 뿐이라, 원본을 처음부터 정사각형으로 잘라
+    넣는 쪽이 원천적으로 더 확실하다.
 - **Alumni 기준**: 별도 배열이 아니라 `cohorts` 하나에서 파생됨. `members.ts`의 `cohorts`는 1기부터
   최신 기수까지 전부 담고, `CURRENT_COHORT_COUNT`(현재 2)로 지정한 최신 N개 기수만 `currentCohorts`
   (`/members`에 표시), 그 이전 전부가 `alumniCohorts`(`/members/alumni`)로 자동 계산됨. 매년 신입

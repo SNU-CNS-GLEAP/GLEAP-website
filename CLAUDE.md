@@ -185,7 +185,7 @@ npm run dev
 
 ### 정적 페이지 콘텐츠 (소개 / 구성원 / 활동)
 
-**DB에 넣지 않고 코드에 데이터 파일로 둔다.** `src/content/*.ts` (about.ts, members.ts, activities.ts).
+**DB에 넣지 않고 코드에 데이터 파일로 둔다.** `src/content/*.ts` (about.ts, members/, activities.ts).
 
 - 이유: 1년에 몇 번 안 바뀌는 콘텐츠에 DB 스키마 + 관리자 편집 UI까지 만드는 건 과함.
   대신 "배열 항목 고치고 `git push`"로 끝나게 해서 유지보수 비용을 낮춘다.
@@ -199,6 +199,19 @@ npm run dev
 - **구성원 프로필 필드**: `Member` 타입에 `email?`, `links?`(blog/instagram/github/linkedin, 전부 선택)를 추가.
   **학번은 넣지 않기로 함** — 레포가 public이라 커밋 즉시 영구 공개되는데, 학번을 사이트에
   노출할 이유가 딱히 없어서 (기수 정보는 이미 `role`/`department` 문구나 소속 `Cohort`로 충분히 드러남)
+- **`src/content/members/` 파일 구조**: 기수가 15개까지 늘어나면서(그리고 앞으로 매년 추가되면서)
+  단일 `members.ts` 하나에 다 넣으면 파일이 계속 커져서 특정 기수 명단을 찾고 고치기 번거로워짐.
+  그래서 파일 하나가 아니라 디렉터리로 바꿈:
+  - `types.ts` — `Member`/`Cohort` 타입 정의
+  - `cohorts/01.ts` ~ `cohorts/15.ts` — 기수 하나당 파일 하나, 각자 `Cohort` 객체 하나를 `cohort`로 export
+  - `index.ts` — 15개 파일을 import해서 `cohorts` 배열로 합치고, `currentCohorts`/`alumniCohorts`/
+    `DEFAULT_ALUMNI_COHORT_ID` 파생 로직([Alumni 기준] 참고)을 그대로 유지
+  - 바깥에서 보는 인터페이스(`import { cohorts } from "@/content/members"` 등 named export)는 이전과
+    동일 — `members.ts` 파일이 `members/index.ts`로 바뀐 것뿐이라 호출부(`MemberCard.tsx`,
+    `AlumniCohortBrowser.tsx`, `/members`, `/members/alumni`, `member-auth.ts`) 수정 불필요
+  - 새 기수를 추가할 때: `cohorts/16.ts` 파일을 만들고 `index.ts`의 import 목록과 `cohorts` 배열에
+    한 줄씩 추가. Next.js/webpack이 정적으로 분석 가능해야 해서 `fs.readdirSync` 같은 자동 스캔 대신
+    명시적 import 나열 방식을 씀 — 파일 하나 깜빡하면 그 기수만 안 보이는 정도라 실수해도 눈에 잘 띔
 - **구성원 사진**: `public/members/` 아래에 `{기수id}{실명}.jpg` 이름으로 커밋 (예: `/members/15문현호.jpg`).
   이름이 어차피 화면에 그대로 노출되므로 파일명도 실명 기반으로 통일 — 별도 식별자(학번 등)를 새로 만들지 않음.
   카드 렌더링은 `src/components/MemberCard.tsx` 하나를 `/members`, `/members/alumni` 양쪽에서 공유

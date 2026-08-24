@@ -37,7 +37,6 @@ export default async function MembersPage({ params }: Props) {
                     email: labels("email"),
                     tistory: labels("tistory"),
                     naverblog: labels("naverblog"),
-                    brunch: labels("brunch"),
                     instagram: labels("instagram"),
                     github: labels("github"),
                     linkedin: labels("linkedin"),

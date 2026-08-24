@@ -23,7 +23,8 @@ export default async function AlumniPage({ params }: Props) {
         emptyLabel={t("empty")}
         labels={{
           email: labels("email"),
-          blog: labels("blog"),
+          tistory: labels("tistory"),
+          naverblog: labels("naverblog"),
           instagram: labels("instagram"),
           github: labels("github"),
           linkedin: labels("linkedin"),

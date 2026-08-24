@@ -7,7 +7,8 @@ import { MemberCard } from "@/components/MemberCard";
 
 type Labels = {
   email: string;
-  blog: string;
+  tistory: string;
+  naverblog: string;
   instagram: string;
   github: string;
   linkedin: string;

@@ -29,7 +29,8 @@
   },
   "MemberCard": {
     "email": "Email",
-    "blog": "Blog",
+    "tistory": "Tistory",
+    "naverblog": "Naver Blog",
     "instagram": "Instagram",
     "github": "GitHub",
     "linkedin": "LinkedIn"

@@ -35,7 +35,9 @@ export default async function MembersPage({ params }: Props) {
                   locale={locale}
                   labels={{
                     email: labels("email"),
-                    blog: labels("blog"),
+                    tistory: labels("tistory"),
+                    naverblog: labels("naverblog"),
+                    brunch: labels("brunch"),
                     instagram: labels("instagram"),
                     github: labels("github"),
                     linkedin: labels("linkedin"),

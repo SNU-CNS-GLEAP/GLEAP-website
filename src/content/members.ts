@@ -12,7 +12,8 @@ export type Member = {
   email?: string;
   // 전부 선택 입력. 비워두면 해당 아이콘/버튼이 자동으로 숨겨짐.
   links?: {
-    blog?: string; // 네이버 블로그든 티스토리든 URL만
+    tistory?: string;
+    naverblog?: string;
     instagram?: string;
     github?: string;
     linkedin?: string;
@@ -26,13 +27,6 @@ export type Cohort = {
   members: Member[];
 };
 
-// Alumni는 더 이상 별도 배열이 아니라 cohorts 기반으로 계산됨(아래 [Alumni 기준] 참고).
-// 기존 Wix 사이트("13기 & 14기 구성원" / "Alumni" 페이지, 2026-08 스냅샷)에서 옮겨 옴.
-// 13기 10명은 Wix "13th members" 목록에 기수가 명시돼 있었고, 나머지 16명(당시 기수 미확인)은
-// Wix Alumni 페이지의 기수 드롭다운(SSR로 내려오는 JSON, 8~12기 옵션 중 11·12기에만 실제 인원이
-// 있었음)을 다시 확인해 11기 6명 / 12기 10명으로 정확히 배정함 — 8·9·10기는 드롭다운 옵션만
-// 있고 원본에도 등록된 인원이 없어 우리 쪽도 그대로 빈 자리표시자로 둠.
-// 영문 이름은 전부 추정 로마자 표기 — 본인 확인 후 실제 선호 표기로 교정 필요.
 
 // 항목 하나가 회원 한 명. 채우는 예시 (전부 선택 필드 — 없는 항목은 그냥 생략):
 // {
@@ -41,7 +35,7 @@ export type Cohort = {
 //   department: { ko: "생명과학부" },
 //   photo: "/members/15문현호.jpg",
 //   email: "example@snu.ac.kr",
-//   links: { blog: "https://...", instagram: "https://instagram.com/...", github: "https://github.com/..." },
+//   links: { tistory: "https://...", naverblog: "https://...", instagram: "https://instagram.com/...", github: "https://github.com/..." },
 // }
 // [Alumni 기준] 매년 최신 2개 기수(현재 활동 중인 junior/senior)만 "구성원"이고 나머지는
 // 전부 "Alumni"다. 아래 CURRENT_COHORT_COUNT만 바꾸면 기준이 조정됨 — cohorts에 새 기수가
@@ -173,54 +167,62 @@ export const cohorts: Cohort[] = [
     // 회장/부회장 외 나머지 인원의 실제 담당 직책은 아직 미확인이라 학과만 채움.
     members: [
       {
-        name: { ko: "용현정", en: "Yong Hyun-jung" },
+        name: { ko: "용현정", en: "Yong Hyunjung" },
         role: { ko: "회장", en: "President" },
         department: { ko: "화학부", en: "Dept of Chemistry" },
         photo: "/members/14용현정.jpg",
       },
       {
-        name: { ko: "원동현", en: "Won Dong-hyun" },
+        name: { ko: "원동현", en: "Won Donghyun" },
         role: { ko: "부회장", en: "Vice President" },
         department: { ko: "생명과학부", en: "Dept of Life Sciences" },
         photo: "/members/14원동현.jpg",
       },
       {
-        name: { ko: "김희주", en: "Kim Hee-ju" },
+        name: { ko: "김희주", en: "Kim Heeju" },
+        role: { ko: "사회공헌팀장", en: "Social Contribution Team Leader" },
         department: { ko: "물리천문학부", en: "Dept of Physics and Astronomy" },
         photo: "/members/14김희주.jpg",
       },
       {
-        name: { ko: "박정민", en: "Park Jung-min" },
+        name: { ko: "박정민", en: "Park Jungmin" },
+        role: { ko: "사회공헌팀장", en: "Social Contribution Team Leader" },
         department: { ko: "생명과학부", en: "Dept of Life Sciences" },
         photo: "/members/14박정민.jpg",
       },
       {
-        name: { ko: "박준형", en: "Park Jun-hyung" },
+        name: { ko: "박준형", en: "Park Junhyung" },
+        role: { ko: "학술팀장", en: "Academic Team Leader" },
         department: { ko: "지구환경과학부", en: "Dept of Earth and Environmental Sciences" },
         photo: "/members/14박준형.jpg",
       },
       {
-        name: { ko: "배영주", en: "Bae Young-ju" },
+        name: { ko: "배영주", en: "Bae Youngju" },
+        role: { ko: "교류팀장", en: "Exchange Team Leader" },
         department: { ko: "물리천문학부", en: "Dept of Physics and Astronomy" },
         photo: "/members/14배영주.jpg",
       },
       {
-        name: { ko: "민현기", en: "Min Hyun-ki" },
+        name: { ko: "민현기", en: "Min Hyunki" },
+        role: { ko: "학술팀장", en: "Academic Team Leader" },
         department: { ko: "생명과학부", en: "Dept of Life Sciences" },
         photo: "/members/14민현기.jpg",
       },
       {
-        name: { ko: "신재훈", en: "Shin Jae-hoon" },
+        name: { ko: "신재훈", en: "Shin Jaehoon" },
+        role: { ko: "교류팀장", en: "Exchange Team Leader" },
         department: { ko: "수리과학부", en: "Dept of Mathematical Sciences" },
         photo: "/members/14신재훈.jpg",
       },
       {
-        name: { ko: "양정윤", en: "Yang Jung-yoon" },
+        name: { ko: "양정윤", en: "Yang Jungyoon" },
+        role: { ko: "학술팀장", en: "Academic Team Leader" },
         department: { ko: "지구환경과학부", en: "Dept of Earth and Environmental Sciences" },
         photo: "/members/14양정윤.jpg",
       },
       {
-        name: { ko: "오석훈", en: "Oh Seok-hoon" },
+        name: { ko: "오석훈", en: "Oh Seokhoon" },
+        role: { ko: "사회공헌팀장", en: "Social Contribution Team Leader" },
         department: { ko: "물리천문학부", en: "Dept of Physics and Astronomy" },
         photo: "/members/14오석훈.jpg",
       },
@@ -260,9 +262,9 @@ export const cohorts: Cohort[] = [
         photo: "/members/15문현호.jpg",
         email: "octahedron00@gmail.com",
         links: {
-          blog: "https://octahedron00.tistory.com",
+          tistory: "https://octahedron00.tistory.com",
           github: "https://github.com/octahedron00",
-          linkedin: "https://www.linkedin.com/in/%ED%98%84%ED%98%B8-%EB%AC%B8-687a44214/",
+          instagram: "https://instagram.com/octo.moon_",
         },
       },
       {

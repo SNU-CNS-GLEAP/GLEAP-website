@@ -29,7 +29,8 @@
   },
   "MemberCard": {
     "email": "이메일",
-    "blog": "블로그",
+    "tistory": "티스토리",
+    "naverblog": "네이버 블로그",
     "instagram": "인스타그램",
     "github": "GitHub",
     "linkedin": "LinkedIn"

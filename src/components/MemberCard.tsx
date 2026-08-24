@@ -4,7 +4,8 @@ import { localize } from "@/lib/localized-text";
 
 type Labels = {
   email: string;
-  blog: string;
+  tistory: string;
+  naverblog: string;
   instagram: string;
   github: string;
   linkedin: string;
@@ -16,7 +17,18 @@ type Props = {
   labels: Labels;
 };
 
-const linkOrder = ["blog", "instagram", "github", "linkedin"] as const;
+
+const logos: Record<string, string> = {
+  tistory: "/icons/tistory.svg",
+  naverblog: "/icons/naverblog.svg",
+  instagram: "/icons/instagram.svg",
+  github: "/icons/github.svg",
+  linkedin: "/icons/linkedin.svg",
+};
+
+// 링크 이미지가 표기되는 순서. members.ts 안에 적은 순서와 무관하게 이 순서로 표기됨. 
+// 선택 과정: "가장 Formal한 것부터"
+const linkOrder = ["linkedin", "github", "tistory", "naverblog", "instagram"] as const;
 
 export function MemberCard({ member, locale, labels }: Props) {
   const name = localize(member.name, locale);
@@ -49,26 +61,30 @@ export function MemberCard({ member, locale, labels }: Props) {
       )}
       <span className="text-xs text-muted" lang={department.lang}>
         {department.text}
+        
+        {links.length > 0 && (
+          <>
+          <span> |</span>
+          <div className="inline gap-x-2 gap-y-1">
+            {links.map(({ key, href }) => (
+              <a
+                key={key}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-1 py-0.5 text-muted"
+              >
+              <Image src={logos[key]} alt={labels[key]} width={12} height={12} className="inline-block" />
+              </a>
+            ))}
+          </div>
+          </>
+        )}
       </span>
       {member.email && (
         <a href={`mailto:${member.email}`} className="text-xs text-muted hover:text-primary hover:underline">
           {member.email}
         </a>
-      )}
-      {links.length > 0 && (
-        <div className="flex flex-wrap justify-center gap-x-2 gap-y-1">
-          {links.map(({ key, href }) => (
-            <a
-              key={key}
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-full border border-border px-2 py-0.5 text-[11px] text-muted hover:border-primary hover:text-primary"
-            >
-              {labels[key]}
-            </a>
-          ))}
-        </div>
       )}
     </li>
   );

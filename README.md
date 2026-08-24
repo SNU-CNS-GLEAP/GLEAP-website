@@ -15,6 +15,7 @@
 
 - **Next.js** (App Router, TypeScript, Tailwind CSS) — [next-memo.md](next-memo.md)에 설명 정리 중
 - **Neon Postgres** — 게시판 데이터 저장, [Drizzle ORM](https://orm.drizzle.team/)으로 스키마 관리
+- **Vercel Blob** — 게시글 에디터에서 업로드하는 이미지 저장 (Hobby 무료 티어: 1GB 저장 / 10GB 전송)
 - **Vercel** — 호스팅. `git push`가 곧 배포
 - *next-intl* — 다국어(i18n)
 - *iron-session* — 관리자 로그인
@@ -79,8 +80,20 @@ drizzle/              DB 마이그레이션 파일 (자동 생성, 직접 수정
 
 ## 자주 하는 작업
 
-**구성원/활동 소개 내용 수정** — TXT 수정만 하면 됩니다! `src/content/members.ts`,
-`src/content/activities.ts`, `src/content/about.ts`를 고치고 `git push`하면 끝.
+**활동/소개 내용 수정** — TXT 수정만 하면 됩니다! `src/content/activities.ts`,
+`src/content/about.ts`를 고치고 `git push`하면 끝.
+
+**구성원 추가/수정** — `src/content/members/` 안이 기수별로 파일이 나뉘어 있습니다.
+
+- 기존 기수에 회원 추가/수정: 해당 기수 파일(`src/content/members/cohorts/15.ts`처럼
+  2자리 번호.ts)을 열어서 `members` 배열에 항목을 추가하거나 고치면 됩니다.
+- 새 기수(예: 16기) 통째로 추가: `src/content/members/cohorts/16.ts` 파일을 새로 만들고
+  (기존 파일 아무거나 복사해서 내용만 바꾸는 게 제일 빠름), `src/content/members/index.ts`
+  맨 위 import 목록과 `cohorts` 배열에 한 줄씩 추가하세요. 이 등록을 빼먹으면 그 기수가
+  화면에 안 보입니다.
+- 사진은 `public/members/` 안에 `{기수번호}{실명}.jpg`로 커밋하고(예: `/members/16김철수.jpg`),
+  **반드시 1:1(정사각형)로 미리 잘라서** 넣어주세요 — 가로/세로 비율이 안 맞으면 화면에서
+  자동으로 잘리거나 화질이 흐려집니다.
 
 **관리자 비밀번호 변경** — bcrypt 해시를 새로 만들어 Vercel의 `ADMIN_PASSWORD_HASH`
 환경변수를 교체하고 Redeploy.

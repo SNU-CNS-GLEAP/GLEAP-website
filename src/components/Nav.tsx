@@ -146,9 +146,11 @@ export function Nav() {
 
         <div className="hidden items-center gap-3 text-sm text-muted md:flex">
           {routing.locales.map((l) => (
-            <Link key={l} href={pathname} locale={l} className="hover:text-primary">
-              {localeLabels[l]}
-            </Link>
+            l !== locale && (
+              <Link key={l} href={pathname} locale={l} className="hover:text-primary">
+                {localeLabels[l]}
+              </Link>
+            )
           ))}
           {isAdminMode && (
             <form action={logout.bind(null, locale)}>

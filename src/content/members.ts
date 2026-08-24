@@ -233,7 +233,6 @@ export const cohorts: Cohort[] = [
       ko: "GLEAP 회원은 처음 1년 동안 junior로서 GLEAP 활동에 기여하며 배워나갑니다.",
       en: "For their first year, GLEAP members contribute and learn as juniors.",
     },
-    // TODO: 15기는 Wix 사이트보다 나중에 들어온 기수라 문현호 외 나머지 명단은 다른 부원들에게 확인 필요.
     members: [
       {
         name: { ko: "고주형", en: "Ko Juhyeong" },
@@ -256,13 +255,14 @@ export const cohorts: Cohort[] = [
         photo: "/members/15김성민.jpg",
       },
       {
-        name: { ko: "문현호", en: "Moon Hyun-ho" },
+        name: { ko: "문현호", en: "Moon Hyunho" },
         department: { ko: "생명과학부", en: "Dept of Life Sciences" },
         photo: "/members/15문현호.jpg",
+        email: "octahedron00@gmail.com",
         links: {
           blog: "https://octahedron00.tistory.com",
           github: "https://github.com/octahedron00",
-          linkedin: "https://www.linkedin.com/in/moon-hyunho-9a0b4b1a6/",
+          linkedin: "https://www.linkedin.com/in/%ED%98%84%ED%98%B8-%EB%AC%B8-687a44214/",
         },
       },
       {

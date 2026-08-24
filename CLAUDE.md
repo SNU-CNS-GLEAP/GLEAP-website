@@ -60,10 +60,14 @@ Claude Code 세션 컨텍스트 겸 인수인계 문서. **결정된 사항과 �
 
 > **2026-08-21 갱신**: 위 migration이 실제로 진행됨 — 회원 로그인·프로필·게시판이
 > Better Auth + Neon으로 옮겨갔다. 자세한 구조는 [회원 인증 (Better Auth + Neon)](#회원-인증-better-auth--neon)
-> 절 참고. 다만 **`/community/*`(옛 Supabase 경로)가 정리되지 않고 그대로 남아있어서 지금 500
-> 에러 상태**다 — 실제 로그인 흐름은 전부 `/member/*`로 이동했는데 `/community/*`는 여전히
-> `src/lib/member.ts`(Supabase 버전)를 참조해서, 아무도 로그인시키지 않는 죽은 코드가 됐다.
-> 정리(삭제 또는 `/member/community`로 리다이렉트) 필요 — [진행 상황] 참고.
+> 절 참고.
+>
+> **2026-08-24 갱신**: 옛 `/community/*`(Supabase 경로) 정리 완료. `/community/*` 라우트,
+> `/[locale]/login`, `/[locale]/auth/callback`, `src/lib/member.ts`, `src/lib/supabase/*`와
+> 이들만 참조하던 컴포넌트(`NewPostForm`, `NewNoticePostForm`, `EditPostForm`, `PostInteractions`,
+> `ProfileEditor`, `MemberLoginForm`)를 통째로 삭제했다. `@supabase/ssr`, `@supabase/supabase-js`
+> 의존성 및 `proxy.ts`의 Supabase 세션 갱신 코드도 제거 — 이제 이 프로젝트에 Supabase 코드는
+> 전혀 남아있지 않다. 회원 로그인·게시판은 전적으로 `/member/*`(Better Auth + Neon)만 사용한다.
 
 ---
 
@@ -90,8 +94,8 @@ DATABASE_URL_UNPOOLED=
 BLOB_READ_WRITE_TOKEN=
 ADMIN_PASSWORD_HASH=
 SESSION_SECRET=
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+BETTER_AUTH_SECRET=
+BETTER_AUTH_URL=
 ```
 
 - Vercel의 Neon 연동은 `vercel env pull` 시 `PGHOST`/`POSTGRES_URL`/`POSTGRES_PRISMA_URL` 등
@@ -100,7 +104,6 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
   문제없지만, 파일이 짧아야 후임이 "이게 다 뭐지" 안 하게 됨
 - `src/lib/env.ts`에서 진입 시 존재 여부를 검증하고 없으면 즉시 throw
 - **`NEXT_PUBLIC_` 접두사는 브라우저 번들에 노출됨.** public 레포이므로 비밀값에 절대 사용 금지
-- Supabase URL과 **publishable key**는 공개되어도 되는 프로젝트 식별·접속 값이며 `NEXT_PUBLIC_` 접두사를 사용한다. `service_role` / secret key는 브라우저와 이 레포에 절대 넣지 않는다.
 - `.env.local` 수정 후에는 dev 서버 재시작 필요
 - Vercel 대시보드에서 값 변경 시 Redeploy 해야 반영됨
 - **`ADMIN_PASSWORD_HASH`처럼 `$`로 시작하는 bcrypt 해시를 `.env.local`에 넣을 때는 각 `$`를 `\$`로 이스케이프할 것.**
@@ -331,14 +334,8 @@ export const memberAuth = betterAuth({
 조회**하므로, 운영진이 `/member/admin`에서 권한을 회수하면 이미 로그인된 세션이라도 다음
 요청부터 즉시 막힌다.
 
-### 알려진 문제: `/community/*`(옛 Supabase 경로) 정리 필요
-
-이번 migration은 로그인·게시판을 `/member/*`로 새로 만들었을 뿐, **옛 `/community/*` 페이지와
-`src/lib/member.ts`(Supabase 버전)를 지우지 않고 남겨뒀다.** 실제 로그인은 전부 Better Auth로
-가는데 `/community/*`는 여전히 `NEXT_PUBLIC_SUPABASE_URL` 등 이제 `.env.example`에도 없는
-변수를 요구해서, 지금 접속하면 500 에러가 난다. 정리 방법은 팀과 상의해서 결정할 것 —
-후보는 (a) `/community/*` 라우트·`member.ts`·`src/lib/supabase/*` 통째로 삭제, 또는
-(b) `/community` → `/member/community`로 redirect만 걸어 옛 링크 호환성 유지.
+> 옛 `/community/*`(Supabase 버전) 페이지는 2026-08-24에 삭제 완료 — 위
+> [2026-08-24 갱신] 참고. 회원 로그인·게시판은 이제 `/member/*` 하나뿐이다.
 
 ---
 
@@ -440,8 +437,8 @@ Private 스토어는 서명된 URL이 일정 시간 후 만료되므로, 저장�
 개별 URL을 아는 사람만 접근 가능한 unlisted 구조다 (노션·워드프레스 등 대부분의 CMS가
 이미지에 쓰는 방식과 동일). 단, **이 스토어에는 원래 공개될 콘텐츠(게시글·구성원·갤러리
 사진)만 넣는다** — 회원 전용 게시판 이미지도 URL만 있으면 로그인 없이 열람 가능하다는
-뜻이므로, 정말 민감한 자료(개인정보 문서 등)는 애초에 이 Blob 스토어가 아니라 Supabase
-Storage + RLS 쪽으로 가야 한다.
+뜻이므로, 정말 민감한 자료(개인정보 문서 등)는 애초에 이 Blob 스토어에 넣지 말고 접근 제어가
+가능한 별도 저장소로 가야 한다.
 
 #### Wallet-busting(비용 폭탄) 방어
 

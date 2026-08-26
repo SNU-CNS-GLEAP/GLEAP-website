@@ -24,8 +24,11 @@
   },
   "AlumniPage": {
     "title": "Alumni",
-    "selectCohort": "기수 선택",
-    "empty": "아직 등록된 명단이 없습니다."
+    "viewCohort": "명단 보기",
+    "empty": "아직 등록된 명단이 없습니다.",
+    "backToAll": "← 전체 기수 보기",
+    "otherCohorts": "기수 선택",
+    "contactMessage": "정보 수정이 필요하시면 snucnsgleap@gmail.com 으로 요청해 주세요."
   },
   "MemberCard": {
     "email": "이메일",

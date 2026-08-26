@@ -91,7 +91,7 @@ export const memberAuth = betterAuth({
     if (env.betterAuthUrl) origins.push(env.betterAuthUrl);
 
     if (origin) {
-      if (origin.endsWith(".vercel.app") || origin.includes("localhost") || origin.includes("127.0.0.1")) {
+      if (origin.endsWith(".vercel.app") || origin.endsWith(".snu.ac.kr") || origin.includes("localhost") || origin.includes("127.0.0.1")) {
         origins.push(origin);
       }
     }
@@ -168,7 +168,7 @@ export const memberAuth = betterAuth({
 
           for (const c of cohorts) {
             const found = c.members.find(
-              (m) => m.name.ko === user.name || m.name.en === user.name,
+              (m) => (m.surname.ko + m.givenName.ko) === user.name || (m.givenName.en + " " + m.surname.en) === user.name,
             );
             if (found) {
               matchedCohort = `${c.id}기`;

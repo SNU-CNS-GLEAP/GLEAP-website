@@ -1,4 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
+import { TurnstileWidget } from "@/components/TurnstileWidget";
+import { env } from "@/lib/env";
 import { login } from "./actions";
 
 type Props = {
@@ -23,6 +25,7 @@ export default async function AdminLoginPage({ params, searchParams }: Props) {
           autoFocus
           className="rounded border border-border px-3 py-2"
         />
+        <TurnstileWidget siteKey={env.turnstileSiteKey} language={locale} />
         <button
           type="submit"
           className="rounded bg-primary px-3 py-2 text-white"
@@ -31,7 +34,11 @@ export default async function AdminLoginPage({ params, searchParams }: Props) {
         </button>
       </form>
       {error && (
-        <p className="text-sm text-red-600">비밀번호가 올바르지 않습니다.</p>
+        <p className="text-sm text-red-600">
+          {error === "turnstile"
+            ? "보안 확인에 실패했습니다. 다시 시도해 주세요."
+            : "비밀번호가 올바르지 않습니다."}
+        </p>
       )}
     </main>
   );

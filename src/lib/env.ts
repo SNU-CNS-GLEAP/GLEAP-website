@@ -18,6 +18,9 @@ export const env = {
   blobReadWriteToken: optional("BLOB_READ_WRITE_TOKEN") || "",
   betterAuthSecret: required("BETTER_AUTH_SECRET"),
   betterAuthUrl: required("BETTER_AUTH_URL"),
+  // Turnstile 사이트 키는 서버 컴포넌트가 위젯에 전달하고, 비밀 키는 서버 검증에만 사용한다.
+  turnstileSiteKey: required("TURNSTILE_SITE_KEY"),
+  turnstileSecretKey: required("TURNSTILE_SECRET_KEY"),
   // Gmail SMTP 발송 설정
   gmailSmtpUser: optional("GMAIL_SMTP_USER"),
   gmailSmtpAppPassword: optional("GMAIL_SMTP_APP_PASSWORD"),

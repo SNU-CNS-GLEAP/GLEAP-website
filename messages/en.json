@@ -24,8 +24,11 @@
   },
   "AlumniPage": {
     "title": "Alumni",
-    "selectCohort": "Select Generation",
-    "empty": "No roster has been added yet."
+    "viewCohort": "View roster",
+    "empty": "No roster has been added yet.",
+    "backToAll": "← Back to Alumni",
+    "otherCohorts": "Generations",
+    "contactMessage": "If you need to update your information, please contact us at snucnsgleap@gmail.com"
   },
   "MemberCard": {
     "email": "Email",

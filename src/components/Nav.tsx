@@ -9,6 +9,7 @@ import { activityCategories } from "@/content/activities";
 import { localize } from "@/lib/localized-text";
 import { MobileNav } from "@/components/MobileNav";
 import { logout } from "@/app/[locale]/admin/(dashboard)/actions";
+import { DEFAULT_ALUMNI_COHORT_ID } from "@/content/members";
 
 const localeLabels: Record<string, string> = {
   ko: "한국어",
@@ -125,7 +126,7 @@ export function Nav() {
             href="/members"
             items={[
               { href: "/members", label: t("membersCurrent") },
-              { href: "/members/alumni", label: t("membersAlumni") },
+              { href: `/members/alumni/${DEFAULT_ALUMNI_COHORT_ID}`, label: t("membersAlumni") },
             ]}
           />
           <Dropdown

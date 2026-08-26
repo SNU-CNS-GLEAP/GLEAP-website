@@ -11,7 +11,6 @@ export default async function MembersPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("MembersPage");
-  const labels = await getTranslations("MemberCard");
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-12 px-6 py-16">

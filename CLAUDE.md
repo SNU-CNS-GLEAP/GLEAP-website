@@ -208,7 +208,7 @@ npm run dev
     `DEFAULT_ALUMNI_COHORT_ID` 파생 로직([Alumni 기준] 참고)을 그대로 유지
   - 바깥에서 보는 인터페이스(`import { cohorts } from "@/content/members"` 등 named export)는 이전과
     동일 — `members.ts` 파일이 `members/index.ts`로 바뀐 것뿐이라 호출부(`MemberCard.tsx`,
-    `AlumniCohortBrowser.tsx`, `/members`, `/members/alumni`, `member-auth.ts`) 수정 불필요
+    `/members`, `/members/alumni`, `member-auth.ts`) 수정 불필요
   - 새 기수를 추가할 때: `cohorts/16.ts` 파일을 만들고 `index.ts`의 import 목록과 `cohorts` 배열에
     한 줄씩 추가. Next.js/webpack이 정적으로 분석 가능해야 해서 `fs.readdirSync` 같은 자동 스캔 대신
     명시적 import 나열 방식을 씀 — 파일 하나 깜빡하면 그 기수만 안 보이는 정도라 실수해도 눈에 잘 띔
@@ -231,10 +231,25 @@ npm run dev
   members" 목록, 11·12기는 Wix Alumni 페이지의 기수 드롭다운이 SSR로 내려주는 JSON을 직접
   파싱해 확인). 1~10기는 Wix 쪽에도 드롭다운 옵션(8~12기)만 있고 실제 등록된 인원이 없어
   그대로 빈 자리표시자(`members: []`)로 남겨둠 — 나중에 명단이 확인되면 채울 것
-- **Alumni 페이지 UI**: `/members/alumni`는 서버 컴포넌트(SSG 유지)가 `alumniCohorts` 전체를
-  클라이언트 컴포넌트 `AlumniCohortBrowser`에 넘기고, 그 안의 `<select>`로 기수를 골라 클라이언트에서
-  필터링한다. 기본 선택값은 `DEFAULT_ALUMNI_COHORT_ID`(최신 기수 - `CURRENT_COHORT_COUNT`, 지금은
-  13기). API 호출 없이 이미 전달받은 데이터 안에서만 걸러내는 방식이라 정적 렌더링에 영향 없음
+- **Alumni 페이지 UI (2026-08-27 갱신)**: 드롭다운으로 클라이언트에서 필터링하던 기존 방식
+  (`AlumniCohortBrowser`, 클라이언트 컴포넌트)을 버리고 `/activities`·`/activities/[category]`와
+  똑같은 패턴으로 재구성함 — 기수별로 실제 URL을 갖는 정적 페이지가 외부 링크 공유·북마크에
+  유리하다는 판단.
+  - `/members/alumni` — 전체 기수를 최신순으로 나열하고 각 기수로 가는 링크만 보여주는 서버
+    컴포넌트 (`activities/page.tsx`와 동일 구조)
+  - `/members/alumni/[id]` — 기수 하나의 명단을 보여주는 서버 컴포넌트. `generateStaticParams()`가
+    `alumniCohorts`의 모든 id를 미리 생성하고, 존재하지 않는 id는 `notFound()`로 404 처리
+    (`activities/[category]/page.tsx`와 동일 구조)
+  - 기수 전환 UI는 예전 드롭다운 감성을 그대로 살리되, 관리자 화면의 "떠 있는 수정 버튼" 패턴과
+    같은 방식으로 아주 작은 클라이언트 컴포넌트(`AlumniCohortSelect`) 하나만 페이지 상단에
+    "섬"처럼 얹었다. 페이지 자체는 여전히 서버 컴포넌트라 `generateStaticParams`/`notFound`가
+    그대로 적용되고, 이 컴포넌트만 하이드레이션 후 `<select>`의 `onChange`에서
+    `useRouter()`(최상위에서 호출, 콜백 안에서 호출하면 Hooks 규칙 위반)로 `/members/alumni/{id}`로
+    `push`한다 — URL이 실제로 바뀌므로 새로고침·공유·북마크 모두 그 기수 그대로 유지됨
+  - 서버 컴포넌트가 클라이언트 컴포넌트를 자식으로 렌더링하는 것 자체는 정적 생성에 영향을 주지
+    않으므로, 두 라우트 모두 `npm run build` 출력에서 `●`(SSG)로 찍힘 —
+    `Nav.tsx`/`MobileNav.tsx`의 "Alumni" 메뉴는 `DEFAULT_ALUMNI_COHORT_ID`를 이용해 최신 alumni
+    기수 페이지로 바로 연결(기존 그대로 유지)
 - 영문 작성 시 [서울대 자연대 공식 GLEAP 소개 페이지](https://science.snu.ac.kr/en/campus-life/activity/gleap)를
   톤·용어 참고용으로 사용 (활동 3분류를 Academic / Social Contribution / Exchange로 표기).
   `about.ts`는 이미 이 페이지를 참고해 실제 영문으로 채워둔 예시임 — 그대로 복사하지 말고 참고만 할 것

@@ -7,6 +7,7 @@ import { routing } from "@/i18n/routing";
 import { activityCategories } from "@/content/activities";
 import { localize } from "@/lib/localized-text";
 import { logout } from "@/app/[locale]/admin/(dashboard)/actions";
+import { DEFAULT_ALUMNI_COHORT_ID } from "@/content/members";
 
 const localeLabels: Record<string, string> = {
   ko: "한국어",
@@ -62,7 +63,7 @@ export function MobileNav({ locale, isAdminMode }: { locale: string; isAdminMode
           <Link href="/members" onClick={closeNav} className="py-2 pl-4 text-base text-muted hover:text-primary">
             {t("membersCurrent")}
           </Link>
-          <Link href="/members/alumni" onClick={closeNav} className="py-2 pl-4 text-base text-muted hover:text-primary">
+          <Link href={`/members/alumni/${DEFAULT_ALUMNI_COHORT_ID}`} onClick={closeNav} className="py-2 pl-4 text-base text-muted hover:text-primary">
             {t("membersAlumni")}
           </Link>
 

@@ -1,5 +1,6 @@
 import { Link } from "@/i18n/navigation";
 import { MemberAuthForm } from "@/components/member/MemberAuthForm";
+import { env } from "@/lib/env";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -25,6 +26,7 @@ export default async function MemberSignupPage({ params, searchParams }: Props) 
       <MemberAuthForm
         locale={locale}
         mode="sign-up"
+        turnstileSiteKey={env.turnstileSiteKey}
         initialEmail={email ?? ""}
         initialName={name ?? ""}
         initialCohort={cohort ?? ""}

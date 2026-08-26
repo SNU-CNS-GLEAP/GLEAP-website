@@ -3,6 +3,7 @@ import "server-only";
 import { eq } from "drizzle-orm";
 import { betterAuth } from "better-auth";
 import { APIError, createAuthMiddleware } from "better-auth/api";
+import { captcha } from "better-auth/plugins";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -114,6 +115,13 @@ export const memberAuth = betterAuth({
       });
     },
   },
+  plugins: [
+    captcha({
+      provider: "cloudflare-turnstile",
+      secretKey: env.turnstileSecretKey,
+      endpoints: ["/sign-up/email", "/sign-in/email"],
+    }),
+  ],
   // 회원가입 요청은 DB에 실제 계정이 생기기 전에 승인 목록과 대조한다.
   hooks: {
     before: createAuthMiddleware(async (ctx) => {

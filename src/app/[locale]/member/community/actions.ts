@@ -4,7 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { getAuthBaseUrl, requireMember } from "@/lib/member-auth";
+import { getMemberInvitationBaseUrl, requireMember } from "@/lib/member-auth";
 import { isMemberEmailConfigured, sendMemberInvitationEmail } from "@/lib/member-email";
 import {
   authUsers,
@@ -362,7 +362,7 @@ export async function approveMemberEmail(locale: string, formData: FormData) {
     if (name) params.set("name", name);
     if (cohort) params.set("cohort", cohort);
 
-    const inviteUrl = `${getAuthBaseUrl()}/${locale}/member/signup?${params.toString()}`;
+    const inviteUrl = `${getMemberInvitationBaseUrl()}/${locale}/member/signup?${params.toString()}`;
     try {
       await sendMemberInvitationEmail({ email, inviteUrl, name, cohort, role });
       await writeActivity(member.user.id, "send_invite_email", "member_access", email);
@@ -405,7 +405,7 @@ export async function resendMemberInvitation(locale: string, email: string) {
   if (approved.name) params.set("name", approved.name);
   if (approved.cohort) params.set("cohort", approved.cohort);
 
-  const inviteUrl = `${getAuthBaseUrl()}/${locale}/member/signup?${params.toString()}`;
+  const inviteUrl = `${getMemberInvitationBaseUrl()}/${locale}/member/signup?${params.toString()}`;
   await sendMemberInvitationEmail({
     email,
     inviteUrl,

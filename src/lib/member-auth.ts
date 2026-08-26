@@ -39,6 +39,14 @@ export function getAuthBaseUrl() {
   return env.betterAuthUrl || "https://gleap-website.vercel.app";
 }
 
+/**
+ * 초대 메일은 Vercel Preview 주소가 아니라 항상 공개 운영 도메인을 사용한다.
+ * Preview Deployment Protection 때문에 수신자에게 Vercel 로그인이 요구되는 것을 막는다.
+ */
+export function getMemberInvitationBaseUrl() {
+  return env.betterAuthUrl || "https://gleap-website.vercel.app";
+}
+
 const authBaseUrl = getAuthBaseUrl();
 
 // Neon Auth 베타에서는 공개 회원가입을 완전히 끄는 기능이 없으므로,

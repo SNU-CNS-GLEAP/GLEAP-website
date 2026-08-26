@@ -1,11 +1,17 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { memberAuthClient } from "@/lib/member-auth-client";
+import {
+  TurnstileWidget,
+  type TurnstileWidgetHandle,
+} from "@/components/TurnstileWidget";
 
 type Props = {
   locale: string;
   mode: "sign-in" | "sign-up";
+  turnstileSiteKey: string;
   initialEmail?: string;
   initialName?: string;
   initialCohort?: string;
@@ -14,10 +20,12 @@ type Props = {
 export function MemberAuthForm({
   locale,
   mode,
+  turnstileSiteKey,
   initialEmail = "",
   initialName = "",
   initialCohort = "",
 }: Props) {
+  const router = useRouter();
   const [name, setName] = useState(initialName);
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
@@ -27,6 +35,8 @@ export function MemberAuthForm({
     tone: "error" | "success";
   } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileWidgetHandle>(null);
 
   const isSignup = mode === "sign-up";
 
@@ -42,6 +52,16 @@ export function MemberAuthForm({
       return;
     }
 
+    if (!turnstileToken) {
+      setMessage({
+        tone: "error",
+        text: locale === "ko"
+          ? "보안 확인을 완료해 주세요."
+          : "Please complete the security check.",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     const callbackURL = `/${locale}/member`;
 
@@ -51,15 +71,22 @@ export function MemberAuthForm({
           email: email.trim().toLowerCase(),
           password,
           callbackURL,
+          fetchOptions: {
+            headers: { "x-captcha-response": turnstileToken },
+          },
         })
       : await memberAuthClient.signIn.email({
           email: email.trim().toLowerCase(),
           password,
           callbackURL,
+          fetchOptions: {
+            headers: { "x-captcha-response": turnstileToken },
+          },
         });
 
     if (result.error) {
       setIsSubmitting(false);
+      turnstileRef.current?.reset();
       setMessage({
         tone: "error",
         text: result.error.message ?? "입력 내용을 다시 확인해 주세요.",
@@ -67,29 +94,10 @@ export function MemberAuthForm({
       return;
     }
 
-    if (isSignup) {
-      // 가입 성공 후 방금 설정한 비밀번호로 즉시 로그인 처리
-      const loginResult = await memberAuthClient.signIn.email({
-        email: email.trim().toLowerCase(),
-        password,
-        callbackURL,
-      });
-
-      if (loginResult.error) {
-        setIsSubmitting(false);
-        setMessage({
-          tone: "success",
-          text: "회원가입이 완료되었습니다. 로그인 화면으로 이동합니다.",
-        });
-        setTimeout(() => {
-          window.location.href = `/${locale}/member/login`;
-        }, 1000);
-        return;
-      }
-    }
-
-    // 세션 쿠키가 온전히 전달되도록 전체 새로고침 이동을 수행한다.
-    window.location.href = callbackURL;
+    // Better Auth의 회원가입 응답도 세션을 설정하므로 단회용 토큰으로
+    // 별도의 로그인 요청을 반복하지 않고 곧바로 회원 영역으로 이동한다.
+    router.replace(callbackURL);
+    router.refresh();
   }
 
   return (
@@ -172,6 +180,21 @@ export function MemberAuthForm({
           {message.text}
         </p>
       )}
+
+      <TurnstileWidget
+        ref={turnstileRef}
+        siteKey={turnstileSiteKey}
+        language={locale}
+        onTokenChange={setTurnstileToken}
+        onError={() => {
+          setMessage({
+            tone: "error",
+            text: locale === "ko"
+              ? "보안 확인을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요."
+              : "The security check could not be loaded. Please try again shortly.",
+          });
+        }}
+      />
 
       <button
         type="submit"

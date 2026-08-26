@@ -1,37 +1,26 @@
 import Image from "next/image";
 import type { Member } from "@/content/members";
 import { localize } from "@/lib/localized-text";
-
-type Labels = {
-  email: string;
-  tistory: string;
-  naverblog: string;
-  instagram: string;
-  github: string;
-  linkedin: string;
-};
+import { SNSLinksOrder } from "@/content/members/types";
 
 type Props = {
   member: Member;
   locale: string;
-  labels: Labels;
 };
 
 
-const logos: Record<string, string> = {
-  tistory: "/icons/tistory.svg",
-  naverblog: "/icons/naverblog.svg",
-  instagram: "/icons/instagram.svg",
-  github: "/icons/github.svg",
-  linkedin: "/icons/linkedin.svg",
-};
+// SNS 아이콘 및 정보 수정은, 모두 content/members/types.ts 안에서 수정하기!!!
+const SNSLogos: Record<string, string> = SNSLinksOrder.reduce((acc, key) => {
+  acc[key] = `/icons/${key}.svg`;
+  return acc;
+}, {} as Record<string, string>);
 
-// 링크 이미지가 표기되는 순서. members.ts 안에 적은 순서와 무관하게 이 순서로 표기됨. 
-// 선택 과정: "가장 Formal한 것부터"
-const linkOrder = ["linkedin", "github", "tistory", "naverblog", "instagram"] as const;
+const linkOrder = SNSLinksOrder; 
 
-export function MemberCard({ member, locale, labels }: Props) {
-  const name = localize(member.name, locale);
+export function MemberCard({ member, locale }: Props) {
+  const surname = localize(member.surname, locale);
+  const givenName = localize(member.givenName, locale);
+  const name = locale === "ko" ? { text: `${surname.text}${givenName.text}`, lang: surname.lang } : { text: `${givenName.text} ${surname.text}`, lang: surname.lang };
   const department = localize(member.department, locale);
   const role = member.role ? localize(member.role, locale) : null;
   const links = linkOrder
@@ -74,7 +63,7 @@ export function MemberCard({ member, locale, labels }: Props) {
                 rel="noopener noreferrer"
                 className="px-1 py-0.5 text-muted"
               >
-              <Image src={logos[key]} alt={labels[key]} width={12} height={12} className="inline-block" />
+              <Image src={SNSLogos[key]} alt={key} width={12} height={12} className="inline-block" />
               </a>
             ))}
           </div>

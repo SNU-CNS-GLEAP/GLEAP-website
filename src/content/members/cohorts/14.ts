@@ -43,16 +43,20 @@ export const cohort: Cohort = {
     {
       surname: { ko: "박", en: "Park" },
       givenName: { ko: "준형", en: "Junhyung" },
-      role: { ko: "학술팀장", en: "Academic Team Leader" },
+      role: { ko: "홍보팀장", en: "Publicity Team Leader" },
       department: { ko: "지구환경과학부", en: "Dept of Earth and Environmental Sciences" },
       photo: "/members/14박준형.jpg",
     },
     {
       surname: { ko: "배", en: "Bae" },
-      givenName: { ko: "영주", en: "Youngju" },
+      givenName: { ko: "영주", en: "Youngjoo" },
       role: { ko: "교류팀장", en: "Exchange Team Leader" },
       department: { ko: "물리천문학부", en: "Dept of Physics and Astronomy" },
       photo: "/members/14배영주.jpg",
+      email: "rtyo12@snu.ac.kr",
+      links: {
+        linkedin: "https://www.linkedin.com/in/youngjoo-bae-265978424/"
+      }
     },
     {
       surname: { ko: "민", en: "Min" },
@@ -71,7 +75,7 @@ export const cohort: Cohort = {
     {
       surname: { ko: "양", en: "Yang" },
       givenName: { ko: "정윤", en: "Jungyoon" },
-      role: { ko: "학술팀장", en: "Academic Team Leader" },
+      role: { ko: "홍보팀장", en: "Publicity Team Leader" },
       department: { ko: "지구환경과학부", en: "Dept of Earth and Environmental Sciences" },
       photo: "/members/14양정윤.jpg",
     },

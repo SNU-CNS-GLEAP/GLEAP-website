@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { currentCohorts } from "@/content/members";
 import { localize } from "@/lib/localized-text";
 import { MemberCard } from "@/components/MemberCard";
+import { EasterEggTitle } from "@/components/EasterEggTitle";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -13,13 +14,13 @@ export default async function MembersPage({ params }: Props) {
   const t = await getTranslations("MembersPage");
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-12 px-6 py-16">
-      <h1 className="text-3xl font-semibold tracking-tight">{t("title")}</h1>
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-16">
+      <EasterEggTitle locale={locale}>{t("title")}</EasterEggTitle>
       {currentCohorts.map((cohort) => {
         const label = localize(cohort.label, locale);
         const description = localize(cohort.description, locale);
         return (
-          <section key={cohort.id} className="flex flex-col gap-4">
+          <section key={cohort.id} className="flex flex-col gap-4 pb-4">
             <h2 className="text-xl font-semibold" lang={label.lang}>
               {label.text}
             </h2>

@@ -2,9 +2,9 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { alumniCohorts } from "@/content/members";
 import { localize } from "@/lib/localized-text";
-import { Link } from "@/i18n/navigation";
 import { MemberCard } from "@/components/MemberCard";
 import { AlumniCohortSelect } from "@/components/AlumniCohortSelect";
+
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;

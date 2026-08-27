@@ -7,10 +7,14 @@ export const cohort: Cohort = {
   members: [
     {
       surname: { ko: "용", en: "Yong" },
-      givenName: { ko: "현정", en: "Hyunjung" },
+      givenName: { ko: "현정", en: "Hyunjeong" },
       role: { ko: "회장", en: "President" },
       department: { ko: "화학부", en: "Dept of Chemistry" },
       photo: "/members/14용현정.jpg",
+      email: "dydguswjd62@snu.ac.kr",
+      links: {
+        linkedin: "https://kr.linkedin.com/in/%EC%9A%A9%ED%98%84%EC%A0%95-%ED%95%99%EC%83%9D-%ED%99%94%ED%95%99%EB%B6%80-bb0a89369",
+      }
     },
     {
       surname: { ko: "원", en: "Won" },
@@ -28,6 +32,10 @@ export const cohort: Cohort = {
       role: { ko: "사회공헌팀장", en: "Social Contribution Team Leader" },
       department: { ko: "물리천문학부", en: "Dept of Physics and Astronomy" },
       photo: "/members/14김희주.jpg",
+      links: {
+        linkedin: "https://www.linkedin.com/in/huiju-kim-084ba93aa?utm_source=share_via&utm_content=profile"
+      },
+      email: "clover5091@snu.ac.kr"
     },
     {
       surname: { ko: "박", en: "Park" },
@@ -36,9 +44,9 @@ export const cohort: Cohort = {
       department: { ko: "생명과학부", en: "Dept of Biological Sciences" },
       photo: "/members/14박정민.jpg",
       links: {
-        github: "https://github.com/minhub1204"
+        linkedin: "https://www.linkedin.com/in/jeongmin-park"
       },
-      email: "aaa13017@snu.ac.kr"
+      email: "jeongmin03199@gmail.com"
     },
     {
       surname: { ko: "박", en: "Park" },
@@ -46,6 +54,7 @@ export const cohort: Cohort = {
       role: { ko: "홍보팀장", en: "Publicity Team Leader" },
       department: { ko: "지구환경과학부", en: "Dept of Earth and Environmental Sciences" },
       photo: "/members/14박준형.jpg",
+      email: "nicejune999@gmail.com"
     },
     {
       surname: { ko: "배", en: "Bae" },
@@ -78,6 +87,7 @@ export const cohort: Cohort = {
       role: { ko: "홍보팀장", en: "Publicity Team Leader" },
       department: { ko: "지구환경과학부", en: "Dept of Earth and Environmental Sciences" },
       photo: "/members/14양정윤.jpg",
+      email: "yjannie2@naver.com",
     },
     {
       surname: { ko: "오", en: "Oh" },
@@ -86,8 +96,10 @@ export const cohort: Cohort = {
       department: { ko: "물리천문학부", en: "Dept of Physics and Astronomy" },
       photo: "/members/14오석훈.jpg",
       links: {
-        github: "https://github.com/Seokhun-Oh"
+        linkedin: "https://www.linkedin.com/in/seokhunoh/"
       },
+      email: "dhtjrgns1@gmail.com"
+
     },
   ],
 };

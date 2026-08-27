@@ -70,8 +70,9 @@ export const cohort: Cohort = {
       department: { ko: "생명과학부", en: "Dept of Biological Sciences" },
       photo: "/members/15정지혜.jpg",
       links: {
-        github: "https://github.com/jungjh06",
+        instagram: "https://instagram.com/stopthesun_",
       },
+      email: "jungjh2949@gmail.com",
     },
     {
       surname: { ko: "차", en: "Cha" },

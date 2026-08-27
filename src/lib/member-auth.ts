@@ -15,6 +15,8 @@ import {
   isMemberEmailConfigured,
   sendMemberVerificationEmail,
 } from "@/lib/member-email";
+import { readCsrfCookieFromHeader } from "@/lib/csrf";
+import { CSRF_HEADER_NAME } from "@/lib/csrf-shared";
 import {
   authAccounts,
   authSessions,
@@ -125,6 +127,19 @@ export const memberAuth = betterAuth({
   // 회원가입 요청은 DB에 실제 계정이 생기기 전에 승인 목록과 대조한다.
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
+      // 로그인/가입 폼은 Server Action이 아니라 클라이언트 fetch로 제출되므로
+      // (MemberAuthForm), CSRF 더블 서브밋 토큰을 여기서 검증한다 — 폼의 hidden
+      // 필드 값이 onSubmit에서 x-csrf-token 헤더로 실려온다 (src/lib/csrf.ts 참고).
+      if (ctx.path === "/sign-up/email" || ctx.path === "/sign-in/email") {
+        const cookieToken = readCsrfCookieFromHeader(ctx.headers?.get("cookie"));
+        const headerToken = ctx.headers?.get(CSRF_HEADER_NAME);
+        if (!cookieToken || !headerToken || cookieToken !== headerToken) {
+          throw new APIError("BAD_REQUEST", {
+            message: "보안 토큰이 유효하지 않습니다. 페이지를 새로고침한 뒤 다시 시도해 주세요.",
+          });
+        }
+      }
+
       if (ctx.path !== "/sign-up/email") return;
 
       if (!isMemberEmailConfigured()) {

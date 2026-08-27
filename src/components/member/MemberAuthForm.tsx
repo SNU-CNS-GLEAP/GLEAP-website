@@ -1,12 +1,13 @@
 "use client";
 
-import { FormEvent, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { memberAuthClient } from "@/lib/member-auth-client";
 import {
   TurnstileWidget,
   type TurnstileWidgetHandle,
 } from "@/components/TurnstileWidget";
+import { CSRF_FIELD_NAME, CSRF_HEADER_NAME } from "@/lib/csrf-shared";
 
 type Props = {
   locale: string;
@@ -36,9 +37,20 @@ export function MemberAuthForm({
   } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [csrfToken, setCsrfToken] = useState("");
   const turnstileRef = useRef<TurnstileWidgetHandle>(null);
 
   const isSignup = mode === "sign-up";
+
+  useEffect(() => {
+    // 이 페이지(/member/login, /member/signup)는 정적 렌더링(SSG)이라 서버에서 쿠키를
+    // 읽어 폼에 심을 수 없다 — 이미 CSR로 호출 중인 session-status 엔드포인트에 얹힌
+    // 토큰을 재사용한다 (src/lib/csrf.ts, src/app/api/session-status/route.ts 참고).
+    fetch("/api/session-status")
+      .then((res) => res.json())
+      .then((data) => setCsrfToken(typeof data.csrfToken === "string" ? data.csrfToken : ""))
+      .catch(() => {});
+  }, []);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -65,23 +77,24 @@ export function MemberAuthForm({
     setIsSubmitting(true);
     const callbackURL = `/${locale}/member`;
 
+    const authHeaders = {
+      "x-captcha-response": turnstileToken,
+      [CSRF_HEADER_NAME]: csrfToken,
+    };
+
     const result = isSignup
       ? await memberAuthClient.signUp.email({
           name: name.trim(),
           email: email.trim().toLowerCase(),
           password,
           callbackURL,
-          fetchOptions: {
-            headers: { "x-captcha-response": turnstileToken },
-          },
+          fetchOptions: { headers: authHeaders },
         })
       : await memberAuthClient.signIn.email({
           email: email.trim().toLowerCase(),
           password,
           callbackURL,
-          fetchOptions: {
-            headers: { "x-captcha-response": turnstileToken },
-          },
+          fetchOptions: { headers: authHeaders },
         });
 
     if (result.error) {
@@ -102,6 +115,7 @@ export function MemberAuthForm({
 
   return (
     <form onSubmit={onSubmit} className="flex w-full max-w-sm flex-col gap-4 rounded-xl border border-border bg-background p-6 shadow-sm">
+      <input type="hidden" name={CSRF_FIELD_NAME} value={csrfToken} readOnly />
       {isSignup && (
         <label className="flex flex-col gap-1.5 text-sm font-medium">
           이름 (실명)

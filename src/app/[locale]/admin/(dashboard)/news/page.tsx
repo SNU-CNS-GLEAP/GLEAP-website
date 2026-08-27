@@ -2,6 +2,7 @@ import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getPosts } from "@/lib/posts";
 import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
+import { CsrfField } from "@/components/CsrfField";
 import { deletePostAction } from "./actions";
 
 type Props = {
@@ -55,6 +56,7 @@ export default async function AdminNewsListPage({ params, searchParams }: Props)
                   편집
                 </Link>
                 <form action={deletePostAction.bind(null, locale, post.id)}>
+                  <CsrfField />
                   <ConfirmSubmitButton
                     confirmMessage="정말 삭제하시겠습니까? 되돌릴 수 없습니다."
                     className="rounded border border-border px-2 py-1 text-xs text-red-600 hover:border-red-600"

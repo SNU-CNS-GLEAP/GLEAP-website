@@ -19,6 +19,7 @@ export const cohort: Cohort = {
       givenName: { ko: "도현", en: "Dohyun" },
       department: { ko: "통계학과", en: "Dept of Statistics" },
       photo: "/members/15김도현.jpg",
+      email: "kdhyu217@gmail.com",
     },
     {
       surname: { ko: "김", en: "Kim" },
@@ -39,9 +40,9 @@ export const cohort: Cohort = {
       photo: "/members/15문현호.jpg",
       email: "octahedron00@gmail.com",
       links: {
+        linkedin: "https://www.linkedin.com/in/%ED%98%84%ED%98%B8-%EB%AC%B8-687a44214/",
         tistory: "https://octahedron00.tistory.com",
         github: "https://github.com/octahedron00",
-        instagram: "https://instagram.com/octo.moon_",
       },
     },
     {
@@ -49,8 +50,9 @@ export const cohort: Cohort = {
       givenName: { ko: "채원", en: "Chaeone" },
       department: { ko: "화학부", en: "Dept of Chemistry" },
       photo: "/members/15서채원.jpg",
+      email: "cheaone15@gmail.com",
       links: {
-        github: "https://github.com/chaeone15",
+        linkedin: "https://www.linkedin.com/in/chaeone-seo/",
       },
     },
     {
@@ -68,8 +70,9 @@ export const cohort: Cohort = {
       department: { ko: "생명과학부", en: "Dept of Biological Sciences" },
       photo: "/members/15정지혜.jpg",
       links: {
-        github: "https://github.com/jungjh06",
+        instagram: "https://instagram.com/stopthesun_",
       },
+      email: "jungjh2949@gmail.com",
     },
     {
       surname: { ko: "차", en: "Cha" },
@@ -85,6 +88,7 @@ export const cohort: Cohort = {
       givenName: { ko: "수민", en: "Sumin" },
       department: { ko: "물리천문학부", en: "Dept of Physics and Astronomy" },
       photo: "/members/15한수민.jpg",
+      email: "summmin22@gmail.com",
     },
   ],
 };

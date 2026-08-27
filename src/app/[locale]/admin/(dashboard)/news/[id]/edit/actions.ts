@@ -2,8 +2,10 @@
 
 import { redirect } from "next/navigation";
 import { updatePost } from "@/lib/posts";
+import { assertCsrfToken } from "@/lib/csrf";
 
 export async function updatePostAction(locale: string, id: number, formData: FormData) {
+  await assertCsrfToken(formData);
   const type = String(formData.get("type") ?? "").trim();
   const titleKo = String(formData.get("title_ko") ?? "").trim();
   const titleEn = String(formData.get("title_en") ?? "").trim();

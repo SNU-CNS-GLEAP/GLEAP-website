@@ -1,6 +1,7 @@
 import { MemberProfileForm } from "@/components/member/MemberProfileForm";
 import { updateMyProfile } from "../community/actions";
 import { requireMember } from "@/lib/member-auth";
+import { getCsrfToken } from "@/lib/csrf";
 import { getMemberProfile } from "@/lib/member-community";
 
 type Props = { params: Promise<{ locale: string }> };
@@ -9,6 +10,7 @@ export default async function MyMemberProfilePage({ params }: Props) {
   const { locale } = await params;
   const member = await requireMember(locale);
   const profile = await getMemberProfile(member.user.id);
+  const csrfToken = await getCsrfToken();
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-12">
@@ -35,6 +37,7 @@ export default async function MyMemberProfilePage({ params }: Props) {
           githubUrl: profile?.githubUrl ?? "",
         }}
         action={updateMyProfile.bind(null, locale)}
+        csrfToken={csrfToken}
       />
     </main>
   );

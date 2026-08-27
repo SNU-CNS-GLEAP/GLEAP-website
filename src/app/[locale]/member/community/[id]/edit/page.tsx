@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { MemberPostForm } from "@/components/member/MemberPostForm";
 import { updatePost } from "../../actions";
 import { requireMember } from "@/lib/member-auth";
+import { getCsrfToken } from "@/lib/csrf";
 import { getMemberPost } from "@/lib/member-community";
 
 type Props = { params: Promise<{ locale: string; id: string }> };
@@ -11,6 +12,7 @@ export default async function EditMemberPostPage({ params }: Props) {
   const member = await requireMember(locale);
   const post = await getMemberPost(id);
   if (!post || post.authorId !== member.user.id) notFound();
+  const csrfToken = await getCsrfToken();
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-12">
@@ -36,6 +38,7 @@ export default async function EditMemberPostPage({ params }: Props) {
           content: post.content,
         }}
         action={updatePost.bind(null, locale, post.id)}
+        csrfToken={csrfToken}
       />
     </main>
   );

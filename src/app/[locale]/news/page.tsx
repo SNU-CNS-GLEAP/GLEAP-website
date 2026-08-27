@@ -4,6 +4,7 @@ import { localize } from "@/lib/localized-text";
 import { getPosts, getPostTypes } from "@/lib/posts";
 import { excerpt } from "@/lib/text";
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
+import { CsrfField } from "@/components/CsrfField";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -46,6 +47,7 @@ export default async function NewsPage({ params, searchParams }: Props) {
       <h1 className="text-3xl font-semibold tracking-tight">{t("title")}</h1>
 
       <form action={`/${locale}/news`} className="flex flex-wrap gap-2">
+        <CsrfField />
         <select
           name="type"
           defaultValue={type ?? ""}

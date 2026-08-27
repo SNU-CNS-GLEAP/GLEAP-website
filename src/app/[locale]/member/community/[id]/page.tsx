@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { MemberCommentForm } from "@/components/member/MemberCommentForm";
+import { CsrfField } from "@/components/CsrfField";
 import { createComment, deleteComment, deletePost, togglePostDislike, togglePostLike } from "../actions";
 import { requireMember } from "@/lib/member-auth";
+import { getCsrfToken } from "@/lib/csrf";
 import { getMemberPost } from "@/lib/member-community";
 
 type Props = { params: Promise<{ locale: string; id: string }> };
@@ -12,6 +14,7 @@ export default async function MemberPostPage({ params }: Props) {
   const member = await requireMember(locale);
   const post = await getMemberPost(id);
   if (!post) notFound();
+  const csrfToken = await getCsrfToken();
 
   const isAuthor = post.authorId === member.user.id;
   const isAdmin = member.role === "admin";
@@ -44,6 +47,7 @@ export default async function MemberPostPage({ params }: Props) {
           {/* 반응 버튼 (좋아요 / 싫어요 / 댓글 수) */}
           <div className="flex flex-wrap items-center gap-3">
             <form action={togglePostLike.bind(null, locale, post.id)}>
+              <CsrfField />
               <button
                 type="submit"
                 className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3.5 py-1.5 text-sm font-medium hover:bg-surface transition shadow-sm"
@@ -54,6 +58,7 @@ export default async function MemberPostPage({ params }: Props) {
             </form>
 
             <form action={togglePostDislike.bind(null, locale, post.id)}>
+              <CsrfField />
               <button
                 type="submit"
                 className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3.5 py-1.5 text-sm font-medium hover:bg-surface transition shadow-sm"
@@ -77,6 +82,7 @@ export default async function MemberPostPage({ params }: Props) {
             )}
             {canDeletePost && (
               <form action={deletePost.bind(null, locale, post.id)}>
+                <CsrfField />
                 <button
                   type="submit"
                   className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition"
@@ -105,6 +111,7 @@ export default async function MemberPostPage({ params }: Props) {
                 </div>
                 {(comment.authorId === member.user.id || isAdmin) && (
                   <form action={deleteComment.bind(null, locale, post.id, comment.id)}>
+                    <CsrfField />
                     <button type="submit" className="text-xs text-red-600 hover:underline">
                       {comment.authorId === member.user.id ? "삭제" : "삭제 (운영진)"}
                     </button>
@@ -125,7 +132,7 @@ export default async function MemberPostPage({ params }: Props) {
         </div>
 
         {/* 2. 댓글 작성 란 (확인 팝업이 포함된 클라이언트 컴포넌트) */}
-        <MemberCommentForm action={createComment.bind(null, locale, post.id)} />
+        <MemberCommentForm action={createComment.bind(null, locale, post.id)} csrfToken={csrfToken} />
       </section>
     </main>
   );

@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { Link } from "@/i18n/navigation";
+import { CSRF_FIELD_NAME } from "@/lib/csrf-shared";
 
 type Props = {
   locale: string;
@@ -14,6 +15,7 @@ type Props = {
     githubUrl?: string | null;
   };
   action: (formData: FormData) => Promise<void>;
+  csrfToken: string;
 };
 
 // bio 문자열에서 [직책]과 한 줄 소개를 파싱 (정규식 플래그 오류 없이 안전하게 파싱)
@@ -58,7 +60,7 @@ function parseInterestsAndHobbies(rawInterests?: string[] | null): {
   return { academic, hobbies };
 }
 
-export function MemberProfileForm({ locale, defaultValues, action }: Props) {
+export function MemberProfileForm({ locale, defaultValues, action, csrfToken }: Props) {
   const parsed = parseBioAndPosition(defaultValues?.bio);
   const parsedInterests = parseInterestsAndHobbies(defaultValues?.interests);
 
@@ -94,6 +96,7 @@ export function MemberProfileForm({ locale, defaultValues, action }: Props) {
       onSubmit={handleSubmit}
       className="flex flex-col gap-6 rounded-2xl border border-border bg-background p-6 shadow-sm sm:p-8"
     >
+      <input type="hidden" name={CSRF_FIELD_NAME} value={csrfToken} readOnly />
       {/* 1. 기본 정보 (이름, 기수) */}
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">

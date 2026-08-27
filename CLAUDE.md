@@ -510,6 +510,69 @@ next-intl은 기본적으로 요청 헤더에서 locale을 읽기 때문에, 아
 - 확인 방법: `npm run build` 출력에서 admin 제외 전부 `●`(SSG)인지 확인.
   배포 후에는 응답 헤더 `x-vercel-cache: HIT`/`PRERENDER`, `x-vercel-id`에 `iad1`이 없는지 확인
 
+## 보안 헤더
+
+`next.config.ts`의 `headers()`에서 전 경로에 일괄 적용. Sparrow 웹 취약점 점검
+(2026-08-27, `SECURITY_REMEDIATION.md` 참고) 대응으로 추가함.
+
+- `Referrer-Policy`, `X-Content-Type-Options`, `X-Frame-Options: DENY` — 표준값 그대로 적용
+- `X-XSS-Protection: 0` — 폐기된 헤더라 표준 권고는 명시적 비활성화(`0`)다. 스캐너가 구식
+  규칙(`1; mode=block`)을 기대해 재점검에서 다시 뜰 수 있는데, 그건 스캐너가 오래된 관행을
+  따르는 것이지 실제 방어력과 무관 — CSP가 진짜 방어선
+- **CSP는 nonce 없는 정적 버전**. nonce 방식은 매 요청 새 값을 발급해야 해서 전체 페이지를
+  동적 렌더링(`ƒ`)으로 돌려야 하는데(Next.js 공식 문서에 명시된 요구사항), 이 프로젝트는
+  [정적 렌더링](#성능-정적-렌더링)을 최우선으로 삼기로 했으므로(2026-08-27 결정) 정적 버전을
+  택함. 대가로 `script-src`에 `'unsafe-inline'`을 열어둠 — App Router가 하이드레이션 데이터를
+  인라인 스크립트(`self.__next_f.push(...)`)로 내려보내는데 정적 페이지는 nonce를 받을 수
+  없어서 막으면 전 페이지가 깨짐. `frame-ancestors`/`object-src`/`base-uri`/`form-action`/외부
+  오리진 제한(Turnstile 도메인만 허용)은 전부 정상 적용되므로 클릭재킹·폼 하이재킹·임의
+  스크립트 주입 방어는 유지됨
+- CSP를 고칠 때는(외부 리소스 추가 등) `next.config.ts`의 `cspDirectives`만 수정하면 됨.
+  브라우저 콘솔에 CSP 위반 로그가 뜨면 원인 오리진을 해당 지시문에 추가할 것
+
+## CSRF 이중 방어 (더블 서브밋 쿠키)
+
+이 사이트의 모든 폼은 Next.js Server Action(Origin/Host 자체 검증) 또는 Better Auth의
+origin-check 미들웨어로 이미 CSRF에서 안전하다. 그런데도 더블 서브밋 쿠키 토큰을
+2026-08-27에 추가로 얹었다 — 보안 감사 스캐너가 `<form>` 안의 anti-CSRF hidden 필드
+유무만 정적으로 검사해서 이 방어를 인식하지 못하기 때문(`SECURITY_REMEDIATION.md` CSRF
+11건 항목). 실질적으로는 이중 방어(defense in depth)이지, 눈속임이 아니다 — 토큰은
+실제로 서버에서 검증된다.
+
+- **발급**: `src/proxy.ts`가 매 페이지 요청마다 `gleap_csrf` 쿠키(httpOnly, 32바이트
+  랜덤 hex)가 없으면 새로 만든다. next-intl의 `createMiddleware`가 내부적으로
+  `new Headers(request.headers)`로 복사해 넘기는 걸 이용해, 쿠키를 만드는 바로 그 요청의
+  `cookie` 헤더에도 즉시 반영해 둔다 — 그렇지 않으면 첫 방문(쿠키가 아직 없는 요청) 때
+  폼에 빈 토큰이 찍혀서 그 요청의 첫 제출이 항상 실패하는 문제가 생긴다
+- **서버 렌더링 폼** (`admin/*`, `member/*` 등 이미 동적 렌더링인 페이지):
+  `src/components/CsrfField.tsx`(`getCsrfToken()`으로 쿠키를 읽어 hidden input 렌더)를
+  `<form>` 안에 넣는다. 클라이언트 컴포넌트가 폼을 감싸는 경우(`MemberPostForm`,
+  `MemberCommentForm`, `MemberProfileForm`)는 페이지(서버 컴포넌트)에서 토큰을 읽어
+  `csrfToken` prop으로 내려주고, 컴포넌트가 직접 hidden input을 그린다
+- **정적 페이지에 얹힌 클라이언트 폼** (Nav/MobileNav의 로그아웃, `MemberAuthForm`의
+  로그인/가입): 이 페이지들은 `cookies()`를 읽으면 안 되므로(읽는 순간 SSG가 깨짐),
+  대신 이미 CSR로 호출 중인 `/api/session-status`가 `csrfToken`도 함께 내려주도록
+  확장해 재사용한다. `MemberAuthForm`은 fetch 기반 제출이라 hidden input 값을
+  `x-csrf-token` 헤더로도 같이 보낸다
+- **검증**: Server Action은 맨 앞에서 `assertCsrfToken(formData)`(`src/lib/csrf.ts`)를
+  호출 — 폼의 hidden 필드 값이 쿠키와 다르면(timing-safe 비교) 예외를 던진다.
+  `MemberAuthForm`이 쓰는 better-auth 경로(`/sign-in/email`, `/sign-up/email`)는
+  `src/lib/member-auth.ts`의 `hooks.before`에서 `x-csrf-token` 헤더와 쿠키를 직접
+  비교한다 — better-auth의 `ctx.headers`는 `next/headers`의 `cookies()`를 못 써서
+  raw `Cookie` 헤더 문자열을 직접 파싱함(`readCsrfCookieFromHeader`)
+- **새 mutating 폼을 추가할 때**: Server Action 맨 앞에 `assertCsrfToken(formData)` 호출을
+  넣고, 폼에는 상황에 맞게 `<CsrfField />`(서버 렌더링) 또는 `csrfToken` prop(클라이언트
+  컴포넌트)을 넣을 것. 상수(`CSRF_FIELD_NAME` 등)는 클라이언트/서버 양쪽에서 쓰므로
+  `src/lib/csrf-shared.ts`에 있다 — `src/lib/csrf.ts`는 `"server-only"`라 클라이언트
+  컴포넌트에서 직접 import할 수 없음
+- **의도적으로 손대지 않은 것**: `NEXT_LOCALE` 쿠키의 HttpOnly 누락(7건)과 `/admin`의
+  200 응답(1건)은 스캐너 오탐이 맞고, 여기에 "보이는 변화"를 억지로 만들면 오히려
+  기능이 깨진다 — 전자는 next-intl이 언어 전환 시 `document.cookie`로 클라이언트에서
+  직접 쓰는 쿠키라 HttpOnly를 걸면 그 동기화가 조용히 실패하고, 후자는 `requireAdmin()`의
+  로그인 페이지 리다이렉트 자체가 이미 정상 동작(스캐너가 리다이렉트를 따라가서 최종
+  200을 기록한 것)이라 고칠 대상이 없다. CSRF는 진짜로 몇 겹 더 방어를 얹을 수 있어서
+  했지만, 이 둘은 "고치는 척"이 곧 회귀이므로 사용자와 상의 후 그대로 둠(2026-08-27)
+
 ## 개발 시 주의
 
 - **DB**: Neon 브랜치를 따로 만들어 로컬에서 사용. 운영 연결 문자열을 `.env.local`에 두지 않는다. 스키마 변경이 잦으므로 필수

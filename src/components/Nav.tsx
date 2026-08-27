@@ -10,6 +10,7 @@ import { localize } from "@/lib/localized-text";
 import { MobileNav } from "@/components/MobileNav";
 import { logout } from "@/app/[locale]/admin/(dashboard)/actions";
 import { DEFAULT_ALUMNI_COHORT_ID } from "@/content/members";
+import { CSRF_FIELD_NAME } from "@/lib/csrf-shared";
 
 const localeLabels: Record<string, string> = {
   ko: "한국어",
@@ -82,11 +83,15 @@ export function Nav() {
   const locale = useLocale();
   const pathname = usePathname();
   const [isAdminSession, setIsAdminSession] = useState(false);
+  const [csrfToken, setCsrfToken] = useState("");
 
   useEffect(() => {
     fetch("/api/session-status")
       .then((res) => res.json())
-      .then((data) => setIsAdminSession(Boolean(data.isAdmin)))
+      .then((data) => {
+        setIsAdminSession(Boolean(data.isAdmin));
+        setCsrfToken(typeof data.csrfToken === "string" ? data.csrfToken : "");
+      })
       .catch(() => {});
     // pathname을 deps에 넣는 이유: 이 컴포넌트는 루트 레이아웃에 있어 클라이언트 전환 시
     // 리마운트되지 않는다. deps가 []면 로그인/로그아웃(둘 다 redirect로 경로가 바뀜) 이후에도
@@ -155,6 +160,7 @@ export function Nav() {
           ))}
           {isAdminMode && (
             <form action={logout.bind(null, locale)}>
+              <input type="hidden" name={CSRF_FIELD_NAME} value={csrfToken} readOnly />
               <button type="submit" className="text-admin hover:underline">
                 로그아웃
               </button>
@@ -162,7 +168,7 @@ export function Nav() {
           )}
         </div>
 
-        <MobileNav locale={locale} isAdminMode={isAdminMode} />
+        <MobileNav locale={locale} isAdminMode={isAdminMode} csrfToken={csrfToken} />
       </nav>
     </header>
   );

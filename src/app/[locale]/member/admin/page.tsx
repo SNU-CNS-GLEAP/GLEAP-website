@@ -1,5 +1,6 @@
 import { approveMemberEmail, removeMemberAccess, resendMemberInvitation } from "../community/actions";
 import { Link } from "@/i18n/navigation";
+import { CsrfField } from "@/components/CsrfField";
 import { requireMember } from "@/lib/member-auth";
 import { getMemberAccessList } from "@/lib/member-community";
 import { isMemberEmailConfigured } from "@/lib/member-email";
@@ -51,8 +52,9 @@ export default async function MemberAdminPage({ params }: Props) {
 
       {/* 신규 회원 승인 및 초대 폼 */}
       <form action={approveMemberEmail.bind(null, locale)} className="flex flex-col gap-4 rounded-xl border border-border bg-background p-6 shadow-sm">
+        <CsrfField />
         <h2 className="text-base font-semibold text-foreground">신규 회원 등록 및 구성원 연동 초대장 발송</h2>
-        
+
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <label className="flex flex-col gap-1.5 text-sm font-medium">
             이름 (실명)
@@ -162,6 +164,7 @@ export default async function MemberAdminPage({ params }: Props) {
 
                 <div className="flex items-center gap-2">
                   <form action={resendMemberInvitation.bind(null, locale, approved.email)}>
+                    <CsrfField />
                     <button
                       type="submit"
                       disabled={!emailConfigured}
@@ -172,6 +175,7 @@ export default async function MemberAdminPage({ params }: Props) {
                   </form>
                   {approved.email !== "snucnsgleap@gmail.com" && (
                     <form action={removeMemberAccess.bind(null, locale, approved.email)}>
+                      <CsrfField />
                       <button
                         type="submit"
                         className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition"

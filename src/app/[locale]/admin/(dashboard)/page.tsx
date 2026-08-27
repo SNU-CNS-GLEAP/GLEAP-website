@@ -1,5 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { CsrfField } from "@/components/CsrfField";
 import { logout } from "./actions";
 
 type Props = {
@@ -29,6 +30,7 @@ export default async function AdminDashboardPage({ params }: Props) {
         </Link>
       </div>
       <form action={logout.bind(null, locale)}>
+        <CsrfField />
         <button
           type="submit"
           className="w-fit rounded border border-border px-3 py-2 text-sm"

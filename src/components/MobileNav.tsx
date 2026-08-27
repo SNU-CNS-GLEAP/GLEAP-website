@@ -8,13 +8,22 @@ import { activityCategories } from "@/content/activities";
 import { localize } from "@/lib/localized-text";
 import { logout } from "@/app/[locale]/admin/(dashboard)/actions";
 import { DEFAULT_ALUMNI_COHORT_ID } from "@/content/members";
+import { CSRF_FIELD_NAME } from "@/lib/csrf-shared";
 
 const localeLabels: Record<string, string> = {
   ko: "한국어",
   en: "English",
 };
 
-export function MobileNav({ locale, isAdminMode }: { locale: string; isAdminMode: boolean }) {
+export function MobileNav({
+  locale,
+  isAdminMode,
+  csrfToken,
+}: {
+  locale: string;
+  isAdminMode: boolean;
+  csrfToken: string;
+}) {
   const t = useTranslations("Nav");
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -99,6 +108,7 @@ export function MobileNav({ locale, isAdminMode }: { locale: string; isAdminMode
           ))}
           {isAdminMode && (
             <form action={logout.bind(null, locale)} className="ml-auto">
+              <input type="hidden" name={CSRF_FIELD_NAME} value={csrfToken} readOnly />
               <button type="submit" className="text-admin hover:underline">
                 로그아웃
               </button>

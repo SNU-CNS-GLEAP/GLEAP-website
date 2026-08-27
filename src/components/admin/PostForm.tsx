@@ -1,4 +1,5 @@
 import { PostEditor } from "./PostEditor";
+import { CsrfField } from "@/components/CsrfField";
 
 type Props = {
   action: (formData: FormData) => void;
@@ -25,6 +26,7 @@ export function PostForm({ action, types, submitLabel, errorMessage, defaultValu
     <>
       {errorMessage && <p className="text-sm text-red-600">{errorMessage}</p>}
       <form action={action} className="flex flex-col gap-6">
+        <CsrfField />
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium" htmlFor="type">
             분류

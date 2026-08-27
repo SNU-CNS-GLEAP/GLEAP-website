@@ -45,6 +45,7 @@
   },
   "NewsPage": {
     "title": "소식",
+    "sectionAll": "전체",
     "filterAll": "전체",
     "searchPlaceholder": "제목 검색",
     "search": "검색",

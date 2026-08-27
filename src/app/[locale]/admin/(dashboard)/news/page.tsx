@@ -1,6 +1,7 @@
 import { setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getPosts } from "@/lib/posts";
+import { POST_SECTION_LABELS, type PostSection } from "@/lib/post-sections";
 import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
 import { CsrfField } from "@/components/CsrfField";
 import { deletePostAction } from "./actions";
@@ -43,6 +44,9 @@ export default async function AdminNewsListPage({ params, searchParams }: Props)
             <li key={post.id} className="flex items-center justify-between gap-4 py-4">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-2 text-xs text-muted">
+                  <span className="rounded-full border border-primary px-2 py-0.5 text-primary">
+                    {POST_SECTION_LABELS[post.section as PostSection].ko}
+                  </span>
                   <span className="rounded-full border border-border px-2 py-0.5">{post.type}</span>
                   <span>{dateFormatter.format(post.publishedAt)}</span>
                 </div>

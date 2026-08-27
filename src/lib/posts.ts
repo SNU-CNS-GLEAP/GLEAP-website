@@ -1,6 +1,7 @@
 import { and, desc, eq, ilike, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { posts } from "@/lib/schema";
+import type { PostSection } from "@/lib/post-sections";
 
 export const PAGE_SIZE = 15;
 
@@ -8,6 +9,7 @@ type PostListParams = {
   page: number;
   q?: string;
   type?: string;
+  section?: PostSection;
 };
 
 export async function getPostTypes() {
@@ -15,13 +17,16 @@ export async function getPostTypes() {
   return rows.map((row) => row.type);
 }
 
-export async function getPosts({ page, q, type }: PostListParams) {
+export async function getPosts({ page, q, type, section }: PostListParams) {
   const conditions = [];
   if (q) {
     conditions.push(or(ilike(posts.titleKo, `%${q}%`), ilike(posts.titleEn, `%${q}%`)));
   }
   if (type) {
     conditions.push(eq(posts.type, type));
+  }
+  if (section) {
+    conditions.push(eq(posts.section, section));
   }
   const where = conditions.length > 0 ? and(...conditions) : undefined;
 
@@ -51,6 +56,7 @@ export async function getPost(id: number) {
 
 type PostInput = {
   type: string;
+  section: PostSection;
   titleKo: string;
   titleEn: string | null;
   bodyKo: string;
@@ -64,6 +70,7 @@ export async function createPost(input: PostInput) {
     .insert(posts)
     .values({
       type: input.type,
+      section: input.section,
       titleKo: input.titleKo,
       titleEn: input.titleEn,
       bodyKo: input.bodyKo,
@@ -80,6 +87,7 @@ export async function updatePost(id: number, input: PostInput) {
     .update(posts)
     .set({
       type: input.type,
+      section: input.section,
       titleKo: input.titleKo,
       titleEn: input.titleEn,
       bodyKo: input.bodyKo,

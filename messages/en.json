@@ -45,6 +45,7 @@
   },
   "NewsPage": {
     "title": "News",
+    "sectionAll": "All",
     "filterAll": "All",
     "searchPlaceholder": "Search by title",
     "search": "Search",

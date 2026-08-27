@@ -5,6 +5,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { localize } from "@/lib/localized-text";
 import { getPost } from "@/lib/posts";
+import { POST_SECTION_LABELS, type PostSection } from "@/lib/post-sections";
 import { parseImageSrc } from "@/lib/image-width";
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
 
@@ -71,6 +72,11 @@ export default async function NewsDetailPage({ params }: Props) {
 
       <div className="flex flex-col gap-2">
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
+          <span className="rounded-full border border-primary px-2 py-0.5 text-primary">
+            {locale === "ko"
+              ? POST_SECTION_LABELS[post.section as PostSection].ko
+              : POST_SECTION_LABELS[post.section as PostSection].en}
+          </span>
           <span className="rounded-full border border-border px-2 py-0.5">{post.type}</span>
           <span>{dateFormatter.format(post.publishedAt)}</span>
           {post.authorName && <span>· {post.authorName}</span>}

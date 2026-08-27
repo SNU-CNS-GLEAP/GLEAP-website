@@ -161,7 +161,8 @@ npm run dev
   `drizzle-orm/neon-http`로 만든 클라이언트를 내보냄. 규모(게시물 CRUD 하나)에 Prisma는
   무겁다고 판단 — Drizzle은 스키마가 TS 파일 하나라 읽기 쉽고 마이그레이션도 가벼움
 - 컬럼: `type`(자유 문자열 — 월간 글립/저널 클럽/행사/공지사항 등. enum이 아닌 이유는
-  분류가 늘어날 수 있는데 enum이면 늘 때마다 마이그레이션이 필요해서), `title_ko`/`body_ko`(필수),
+  분류가 늘어날 수 있는데 enum이면 늘 때마다 마이그레이션이 필요해서), `section`(공지/학술
+  소식/활동 소식 3분류 고정 — 아래 "소식 3분류(section)" 절 참고), `title_ko`/`body_ko`(필수),
   `title_en`/`body_en`(선택 — 비어있으면 `localize()`가 한국어로 폴백, 아래 번역 절과 동일 규칙),
   `author_name`(선택, 작성자가 직접 입력하는 크레딧 표기용 — 계정이 1개뿐이라 로그인과 무관),
   `created_at`/`updated_at`
@@ -171,8 +172,50 @@ npm run dev
 - 마이그레이션: `schema.ts` 수정 → `npm run db:generate`(diff SQL 생성) → `npm run db:migrate`
   (현재 `.env.local`의 `DATABASE_URL_UNPOOLED`가 가리키는 DB에 적용). `drizzle.config.ts`가
   마이그레이션 전용으로 unpooled 연결을 쓰도록 지정돼 있음
+  > **2026-08-28 갱신 — `npm run db:migrate`가 당장은 깨져 있음.** dev 브랜치 DB를 직접
+  > 조회해보니 0003~0006 구간(`member_activity_logs` 등 회원 테이블, `published_at`,
+  > `member_post_dislikes`)이 이미 실제 스키마에 반영돼 있는데, `drizzle.__drizzle_migrations`
+  > 추적 테이블에는 처음 3개(0000~0002)만 기록돼 있었다 — 즉 누군가 그 구간을
+  > `db:migrate` 경로가 아니라 다른 방법(Neon 콘솔 SQL 편집기 등)으로 직접 적용한 것으로
+  > 보임. 이 상태에서 `db:migrate`를 그대로 돌리면 0003의 `CREATE TABLE`(IF NOT EXISTS
+  > 없음)이 "이미 존재함" 에러로 실패한다. `section` 컬럼 추가 건은 이 문제를 피하려고
+  > `drizzle/0006_flaky_ser_duncan.sql`을 실제로 새로 필요한 두 문장(`ADD COLUMN IF NOT
+  > EXISTS` + `DO $$ ... EXCEPTION WHEN duplicate_object`로 감싼 제약 추가, 0005/기존
+  > 0006 파일과 같은 방어적 스타일)만 남기도록 손으로 고친 뒤, `db:migrate`가 아니라
+  > 스크립트로 그 SQL만 dev DB에 직접 실행해서 반영했다. **운영 DB에 이 마이그레이션을
+  > 적용할 때도 `db:migrate`를 그냥 돌리지 말고, 운영 DB의 `drizzle.__drizzle_migrations`에
+  > 몇 번까지 기록돼 있는지 먼저 확인할 것** — 기록이 여기 dev 브랜치와 같은 지점에서
+  > 끊겨 있다면 마찬가지로 실패한다. 이 추적 테이블 자체를 정상화(0003~0006 구간을
+  > "이미 적용됨"으로 수동 등록)하는 작업은 이번 범위에서 하지 않았음 — 별도로 처리할 것.
 - "자동 번역됨" 배지, 활동 카테고리 태그 필드는 아직 스키마에 없음 — 번역 API 연동이랑
   `/activities/[category]` 연계 기능을 실제로 붙일 때 마이그레이션 추가할 것
+
+### 소식 3분류(section)
+
+`type`(자유 문자열, 분류가 계속 늘어날 수 있는 태그)과 별개로, "공지 / 학술 소식 / 활동
+소식" 3분류를 위한 `section` 컬럼을 추가했다(2026-08-28). `type`과 달리 **이 3개 외의
+값은 절대 늘어나지 않는다는 전제**라서 접근을 반대로 뒤집었다:
+
+- 고정 목록은 `src/lib/post-sections.ts`의 `POST_SECTIONS`(`"notice" | "academic" |
+  "activity"`) 하나에서 관리하고, 한국어/영어 라벨(`POST_SECTION_LABELS`)과 타입 가드
+  (`isPostSection`)도 같은 파일에 둔다 — 값을 추가/변경할 때 여기 하나만 고치면 됨
+- **DB 쪽도 이중으로 고정한다.** `schema.ts`의 `posts` 테이블에 `check("posts_section_check",
+  sql`section in ('notice', 'academic', 'activity')`)` 제약을 걸어서, 서버 코드의 검증을
+  우회해 직접 INSERT/UPDATE를 날려도 저 3개 값 외에는 DB 레벨에서 거부된다
+  (`member_posts.category`의 `check` 제약과 같은 패턴). **이 문자열 목록을 바꾸면
+  `post-sections.ts`의 `POST_SECTIONS`도 반드시 같이 갱신할 것** — 두 군데가 어긋나면
+  서버 액션 통과 후 DB insert에서 조용히 막히게 됨
+- 관리자 글쓰기/수정 폼(`PostForm.tsx`)에서는 `type`처럼 자유 입력(`datalist`)이 아니라
+  `<select>`로 `POST_SECTIONS` 값만 옵션으로 제공 — 애초에 다른 값을 입력할 수 없게
+  UI에서부터 막음. Server Action(`new/actions.ts`, `[id]/edit/actions.ts`)에서도
+  `isPostSection()`으로 한 번 더 검증(폼을 우회한 요청 대비)
+- 공개 `/news` 목록 페이지는 기존 `type` 드롭다운 필터와 별개로, `section` 값 3개 + "전체"를
+  탭 형태 링크(`?section=notice` 등)로 얹었다 — "각각을 읽을 수 있게"라는 요구를
+  쿼리 파라미터 필터로 구현. 검색 폼 제출 시 현재 선택된 `section`을 잃지 않도록
+  hidden input으로 같이 전달함
+- 기존 게시물은 마이그레이션에서 `section` 기본값을 `'notice'`(공지)로 채웠다 — 실제로는
+  학술/활동 소식에 해당하는 글도 섞여 있을 수 있으므로, 운영진이 관리자 편집 화면에서
+  실제 분류에 맞게 하나씩 재지정해야 함
 
 ### 게시물 번역
 

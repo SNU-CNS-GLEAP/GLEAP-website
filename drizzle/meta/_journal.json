@@ -43,6 +43,13 @@
       "when": 1787143200000,
       "tag": "0005_merge_main_posts_published_at",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1787844259413,
+      "tag": "0006_flaky_ser_duncan",
+      "breakpoints": true
     }
   ]
 }

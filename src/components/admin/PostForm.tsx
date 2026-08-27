@@ -1,5 +1,6 @@
 import { PostEditor } from "./PostEditor";
 import { CsrfField } from "@/components/CsrfField";
+import { POST_SECTIONS, POST_SECTION_LABELS, type PostSection } from "@/lib/post-sections";
 
 type Props = {
   action: (formData: FormData) => void;
@@ -8,6 +9,7 @@ type Props = {
   errorMessage?: string;
   defaultValues?: {
     type?: string;
+    section?: PostSection;
     titleKo?: string;
     titleEn?: string;
     bodyKo?: string;
@@ -45,6 +47,25 @@ export function PostForm({ action, types, submitLabel, errorMessage, defaultValu
               <option key={t} value={t} />
             ))}
           </datalist>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium" htmlFor="section">
+            구분
+          </label>
+          <select
+            id="section"
+            name="section"
+            required
+            defaultValue={defaultValues.section ?? "notice"}
+            className="w-fit rounded border border-border px-3 py-2 text-sm"
+          >
+            {POST_SECTIONS.map((s) => (
+              <option key={s} value={s}>
+                {POST_SECTION_LABELS[s].ko}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="flex flex-col gap-1">

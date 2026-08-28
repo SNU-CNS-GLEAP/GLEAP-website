@@ -31,7 +31,10 @@ const cspDirectives = [
   `default-src 'self'`,
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://challenges.cloudflare.com`,
   `style-src 'self' 'unsafe-inline'`,
-  `img-src 'self' blob: data:`,
+  // 소식 게시물 사진(에디터 업로드)이 저장되는 Vercel Blob public 도메인. 이게 없으면
+  // 업로드 자체는 성공해도 브라우저가 CSP img-src 위반으로 표시를 차단한다(2026-08-28 발견) —
+  // images.remotePatterns에 등록된 호스트 패턴과 동일하게 맞춰둘 것.
+  `img-src 'self' blob: data: https://*.public.blob.vercel-storage.com`,
   `font-src 'self'`,
   `connect-src 'self' https://challenges.cloudflare.com`,
   `frame-src https://challenges.cloudflare.com`,

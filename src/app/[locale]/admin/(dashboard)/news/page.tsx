@@ -1,4 +1,5 @@
 import { setRequestLocale } from "next-intl/server";
+import NextLink from "next/link";
 import { Link } from "@/i18n/navigation";
 import { getPosts } from "@/lib/posts";
 import { POST_SECTION_LABELS, type PostSection } from "@/lib/post-sections";
@@ -28,12 +29,23 @@ export default async function AdminNewsListPage({ params, searchParams }: Props)
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-16">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">게시물 관리</h1>
-        <Link
-          href="/admin/news/new"
-          className="rounded bg-primary px-3 py-2 text-sm font-medium text-white hover:opacity-90"
-        >
-          새 글 쓰기
-        </Link>
+        <div className="flex gap-2">
+          {/* 페이지가 아니라 파일 다운로드 응답을 주는 API 라우트라 prefetch를 꺼둠 —
+              켜두면 마우스 호버만으로도 엑셀 파일이 매번 새로 생성됨(hover-prefetch) */}
+          <NextLink
+            href="/api/admin/posts-export"
+            prefetch={false}
+            className="rounded border border-border px-3 py-2 text-sm font-medium hover:border-primary hover:text-primary"
+          >
+            엑셀 백업 다운로드
+          </NextLink>
+          <Link
+            href="/admin/news/new"
+            className="rounded bg-primary px-3 py-2 text-sm font-medium text-white hover:opacity-90"
+          >
+            새 글 쓰기
+          </Link>
+        </div>
       </div>
 
       {posts.length === 0 ? (

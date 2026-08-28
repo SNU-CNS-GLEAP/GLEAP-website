@@ -54,6 +54,11 @@ export async function getPost(id: number) {
   return rows[0];
 }
 
+// 엑셀 백업 등 "전체 백업"용 — 페이지네이션 없이 전 칼럼을 그대로 반환한다.
+export async function getAllPostsForExport() {
+  return db.select().from(posts).orderBy(desc(posts.publishedAt), desc(posts.id));
+}
+
 type PostInput = {
   type: string;
   section: PostSection;

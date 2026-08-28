@@ -243,6 +243,25 @@ Neon이 소식 게시물의 유일한 저장소라, 실수로 지우거나 DB �
   로직을 두 곳에서 따로 관리하지 않기 위함. `member-email.ts`는 이제 이 공유 모듈을 감싸는
   얇은 래퍼(회원 초대/인증 메일 문구만 담당)로 남음
 
+### 게시물 엑셀 백업 다운로드 (2026-08-28)
+
+이메일 백업(위 절)이 "글 하나하나의 시점별 스냅샷"이라면, 이건 "지금 이 순간 DB 전체"를
+한 번에 뽑는 백업. `/admin/news`의 "엑셀 백업 다운로드" 버튼을 누르면 그 순간 `posts`
+테이블 전 칼럼(id/section/type/제목·본문 한영/photo/작성자/게시일/생성·수정일시)을 `.xlsx`
+한 장으로 즉석 생성해 다운로드시킨다 — 별도 저장소나 배치 작업 없이 요청 시점에만 만들어지는
+방식이라 운영 비용 0원 원칙과 맞음.
+
+- `src/app/api/admin/posts-export/route.ts` (GET). `/admin/upload`와 동일한 패턴으로
+  `getSession()`을 직접 읽어 `session.isAdmin`이 아니면 401 — 상태를 바꾸지 않는 조회
+  요청이라 `requireAdmin()`(리다이렉트 지향)이나 CSRF 토큰은 쓰지 않음
+- 엑셀 생성은 `exceljs`(신규 의존성). 워크북 하나·시트 하나("소식")에 헤더 행 + 전체 행을
+  그대로 씀. `getAllPostsForExport()`(`src/lib/posts.ts`)가 페이지네이션 없이 전체를 조회
+- 관리자 화면(`/admin/news/page.tsx`)의 다운로드 링크는 `@/i18n/navigation`의 `Link`가 아니라
+  `next/link`를 `NextLink`로 바로 import해서 씀 — 이 링크는 페이지 이동이 아니라 파일
+  다운로드 응답을 주는 API 라우트라 `prefetch={false}`가 필요한데, i18n `Link`는 이 prop을
+  그대로 통과시켜주는지 보장이 없어 표준 `next/link`를 직접 쓰는 쪽을 택함.
+  `prefetch`를 꺼두지 않으면 마우스만 올려도 hover-prefetch로 엑셀 파일이 매번 새로 생성됨
+
 ### 게시물 번역
 
 - 스키마는 **언어별 컬럼** 방식 (`title_ko`, `title_en`, `body_ko`, `body_en`). 언어 2개 고정 + 수백 건 규모에서 별도 번역 테이블보다 단순

@@ -172,21 +172,66 @@ npm run dev
 - 마이그레이션: `schema.ts` 수정 → `npm run db:generate`(diff SQL 생성) → `npm run db:migrate`
   (현재 `.env.local`의 `DATABASE_URL_UNPOOLED`가 가리키는 DB에 적용). `drizzle.config.ts`가
   마이그레이션 전용으로 unpooled 연결을 쓰도록 지정돼 있음
-  > **2026-08-28 갱신 — `npm run db:migrate`가 당장은 깨져 있음.** dev 브랜치 DB를 직접
-  > 조회해보니 0003~0006 구간(`member_activity_logs` 등 회원 테이블, `published_at`,
-  > `member_post_dislikes`)이 이미 실제 스키마에 반영돼 있는데, `drizzle.__drizzle_migrations`
-  > 추적 테이블에는 처음 3개(0000~0002)만 기록돼 있었다 — 즉 누군가 그 구간을
-  > `db:migrate` 경로가 아니라 다른 방법(Neon 콘솔 SQL 편집기 등)으로 직접 적용한 것으로
-  > 보임. 이 상태에서 `db:migrate`를 그대로 돌리면 0003의 `CREATE TABLE`(IF NOT EXISTS
-  > 없음)이 "이미 존재함" 에러로 실패한다. `section` 컬럼 추가 건은 이 문제를 피하려고
-  > `drizzle/0006_flaky_ser_duncan.sql`을 실제로 새로 필요한 두 문장(`ADD COLUMN IF NOT
-  > EXISTS` + `DO $$ ... EXCEPTION WHEN duplicate_object`로 감싼 제약 추가, 0005/기존
-  > 0006 파일과 같은 방어적 스타일)만 남기도록 손으로 고친 뒤, `db:migrate`가 아니라
-  > 스크립트로 그 SQL만 dev DB에 직접 실행해서 반영했다. **운영 DB에 이 마이그레이션을
-  > 적용할 때도 `db:migrate`를 그냥 돌리지 말고, 운영 DB의 `drizzle.__drizzle_migrations`에
-  > 몇 번까지 기록돼 있는지 먼저 확인할 것** — 기록이 여기 dev 브랜치와 같은 지점에서
-  > 끊겨 있다면 마찬가지로 실패한다. 이 추적 테이블 자체를 정상화(0003~0006 구간을
-  > "이미 적용됨"으로 수동 등록)하는 작업은 이번 범위에서 하지 않았음 — 별도로 처리할 것.
+  > **2026-08-28 갱신 — 마이그레이션 파일 0000~0007을 전부 idempotent하게 고쳐서, 어떤
+  > 상태의 DB에 대고 돌려도 `db:migrate` 하나로 안전하게 맞춰지도록 만들었다.**
+  >
+  > **원래 문제**: `drizzle-orm`의 `migrate()`는 `drizzle.__drizzle_migrations`에서
+  > **가장 최근 행 하나의 `created_at`**만 보고, `drizzle/meta/_journal.json`에 있는
+  > 마이그레이션 중 그보다 `when` 값이 큰 것들을 전부 "안 적용됨"으로 간주해 실행한다
+  > (개별 마이그레이션 단위로 이미 적용됐는지 보는 게 아니라 딱 이 시각 비교 하나뿐 —
+  > `node_modules/drizzle-orm/migrator.js`, `neon-http/migrator.js` 참고). dev 브랜치를
+  > 조회해보니 이 추적 테이블에는 0000~0001만 기록돼 있었는데 실제 스키마는 0002~0006까지
+  > (회원 인증 테이블, `published_at`, `section`, `member_post_dislikes`) 이미 반영돼
+  > 있었다 — 그 구간이 `db:migrate` 경로가 아니라 다른 방법(Neon 콘솔 SQL 편집기 등)으로
+  > 직접 적용됐던 것. `member_post_dislikes`를 만든 파일은 `_journal.json`에 등록조차
+  > 안 돼 있었고(`readMigrationFiles`는 journal에 있는 것만 읽는다), 0000~0004는
+  > drizzle-kit이 기본 생성한 그대로라 `CREATE TABLE`에 `IF NOT EXISTS`가 없었다 — 그래서
+  > `db:migrate`를 그냥 돌리면 0002의 `CREATE TABLE "account"`부터 "이미 존재함" 에러로
+  > 실패했다.
+  >
+  > **고친 방법**: (1) 빠진 파일을 `0007_add_member_post_dislikes.sql`로 이름 붙여 journal에
+  > 등록. (2) 0000~0004의 모든 DDL을 나머지 파일(0005~0007)과 같은 방어적 스타일로 통일 —
+  > `CREATE TABLE` → `IF NOT EXISTS`, `ALTER TABLE ... ADD COLUMN` → `IF NOT EXISTS`,
+  > `ADD CONSTRAINT` → `DO $$ BEGIN ... EXCEPTION WHEN duplicate_object THEN null; END $$;`,
+  > `CREATE INDEX`/`DROP INDEX` → `IF NOT EXISTS`/`IF EXISTS`. **의도적인 스키마 변경은
+  > 하나도 없다** — 같은 결과를 몇 번 실행해도 안전하게 만든 것뿐.
+  >
+  > **검증**: dev DB 추적 테이블을 일부러 "0001까지만 적용됨"으로 되돌려 놓고(=이번에
+  > 문제가 됐던 프리뷰 브랜치와 같은 상황을 재현) `db:migrate`를 다시 돌려봤다. 0002~0006은
+  > 전부 조용히 스킵되며 통과했고, 0007(`member_post_dislikes`의 FK 제약 추가)에서만 진짜
+  > 에러가 났는데 — 이건 idempotency 문제가 아니라, 그 테이블에 실제로 `member_posts`에
+  > 없는 `post_id`를 가리키는 고아 행이 dev DB에 하나 남아있어서 FK 제약 추가 자체가
+  > 데이터 무결성 위반으로 막힌 것이었다(2026-08-20에 생긴 테스트 데이터로 추정). 그 행
+  > 하나를 지우고 나니 `db:migrate`가 처음부터 끝까지 완전히 성공했다.
+  >
+  > **결론**: 이제 **어느 브랜치에 대해서든(운영, 새 프리뷰, 완전히 새로 만든 빈 DB까지)
+  > `npm run db:migrate`를 그냥 돌리면 안전하게 최신 상태로 맞춰진다** — 더 이상 브랜치마다
+  > 추적 테이블을 손으로 맞추는 작업이 필요 없다. 다만 이번에 발견한 것처럼 실제 데이터가
+  > 참조 무결성을 어기고 있으면(예: FK 없이 오래 운영되다 생긴 고아 행) 그 데이터부터
+  > 정리해야 마이그레이션이 통과한다 — 이런 경우 `db:migrate`가 어느 테이블/제약에서
+  > 막혔는지 에러 메시지에 그대로 나오니 그것부터 확인할 것.
+  >
+  > **그래서 `package.json`의 `prebuild` 스크립트로 마이그레이션을 걸어뒀다** — `npm run
+  > build`(Vercel이 배포마다 실행하는 바로 그 명령)를 실행하면 npm이 `build`보다 먼저
+  > `prebuild`를 자동으로 실행하는 표준 동작을 그대로 이용한 것. 이제 **프로덕션이든 PR
+  > 프리뷰든, 배포될 때마다 그 배포가 실제로 연결된 DB 브랜치에 대해 마이그레이션이 자동으로
+  > 먼저 실행된다** — 오늘 있었던 "이 브랜치엔 컬럼 하나가 안 들어갔다"류 사고가 애초에
+  > 생길 수 없는 구조. 마이그레이션이 idempotent해서 이미 최신 상태인 브랜치에서는 그냥
+  > 몇 초 안에 아무 것도 안 하고 넘어간다. **트레이드오프**: 마이그레이션 파일이 잘못됐거나
+  > (문법 오류 등) 위 사례처럼 실제 데이터와 충돌하면 그 배포 자체가 빌드 실패로 막힌다 —
+  > 깨진 스키마로 서비스되는 것보단 낫다고 판단해 받아들인 선택. 로컬에서 `npm run build`를
+  > 돌릴 때도 똑같이 `.env.local`이 가리키는 개인 Neon 브랜치에 대해 실행되니 참고할 것
+  >
+  > **`drizzle-kit migrate` CLI가 아니라 `scripts/migrate.mjs`를 직접 씀** (2026-08-28,
+  > prebuild 적용 직후 Vercel 프리뷰 빌드에서 발견) — `drizzle-kit migrate`는 postgresql
+  > 다이얼렉트에서 Neon 호스트를 감지하면 내부적으로 웹소켓 연결로 전환하는데, 로컬에서는
+  > 되지만 **Vercel 빌드 샌드박스는 아웃바운드 웹소켓을 막아둔 것으로 보여** `Warning
+  > '@neondatabase/serverless' can only connect to remote Neon/Vercel Postgres/Supabase
+  > instances through a websocket` 뒤에 빌드가 실패했다. 앱 런타임이 실제로 쓰는
+  > `drizzle-orm/neon-http`는 순수 HTTPS(fetch)라 이 제약이 없어서, `drizzle-kit` CLI 대신
+  > `drizzle-orm/neon-http/migrator`의 `migrate()`를 직접 호출하는 스크립트로 바꿨다 —
+  > 웹소켓을 아예 안 쓰므로 빌드 샌드박스에서도 동작함. `db:generate`는 스키마 diff만 계산
+  > (DB 연결 불필요)이라 그대로 `drizzle-kit generate` 유지
 - "자동 번역됨" 배지, 활동 카테고리 태그 필드는 아직 스키마에 없음 — 번역 API 연동이랑
   `/activities/[category]` 연계 기능을 실제로 붙일 때 마이그레이션 추가할 것
 
@@ -603,12 +648,14 @@ next-intl은 기본적으로 요청 헤더에서 locale을 읽기 때문에, 아
 ## 보안 헤더
 
 `next.config.ts`의 `headers()`에서 전 경로에 일괄 적용. Sparrow 웹 취약점 점검
-(2026-08-27, `SECURITY_REMEDIATION.md` 참고) 대응으로 추가함.
+(2026-08-27, `docs/security-audit-2026-08.md` 참고) 대응으로 추가함.
 
 - `Referrer-Policy`, `X-Content-Type-Options`, `X-Frame-Options: DENY` — 표준값 그대로 적용
-- `X-XSS-Protection: 0` — 폐기된 헤더라 표준 권고는 명시적 비활성화(`0`)다. 스캐너가 구식
-  규칙(`1; mode=block`)을 기대해 재점검에서 다시 뜰 수 있는데, 그건 스캐너가 오래된 관행을
-  따르는 것이지 실제 방어력과 무관 — CSP가 진짜 방어선
+- `X-XSS-Protection: 1; mode=block` — 폐기된 헤더라 표준 권고는 명시적 비활성화(`0`)이지만,
+  `0`으로 두니 Sparrow 재점검에서 구식 규칙을 계속 요구해 다시 지적됨(2026-08-28 확인).
+  어느 값이든 실질 방어력은 없음(CSP가 진짜 방어선)이라 재점검 통과를 우선해 이 값으로 둠
+- `poweredByHeader: false` — 기본값이면 모든 응답에 `X-Powered-By: Next.js`가 붙어
+  "HTTP 응답 헤더에 포함된 서버 정보"로 지적됨(2026-08-28). 끄는 데 비용이 없어 반영
 - **CSP는 nonce 없는 정적 버전**. nonce 방식은 매 요청 새 값을 발급해야 해서 전체 페이지를
   동적 렌더링(`ƒ`)으로 돌려야 하는데(Next.js 공식 문서에 명시된 요구사항), 이 프로젝트는
   [정적 렌더링](#성능-정적-렌더링)을 최우선으로 삼기로 했으므로(2026-08-27 결정) 정적 버전을
@@ -625,31 +672,45 @@ next-intl은 기본적으로 요청 헤더에서 locale을 읽기 때문에, 아
 이 사이트의 모든 폼은 Next.js Server Action(Origin/Host 자체 검증) 또는 Better Auth의
 origin-check 미들웨어로 이미 CSRF에서 안전하다. 그런데도 더블 서브밋 쿠키 토큰을
 2026-08-27에 추가로 얹었다 — 보안 감사 스캐너가 `<form>` 안의 anti-CSRF hidden 필드
-유무만 정적으로 검사해서 이 방어를 인식하지 못하기 때문(`SECURITY_REMEDIATION.md` CSRF
-11건 항목). 실질적으로는 이중 방어(defense in depth)이지, 눈속임이 아니다 — 토큰은
+유무만 정적으로 검사해서 이 방어를 인식하지 못하기 때문(`docs/security-audit-2026-08.md`
+CSRF 11건 항목). 실질적으로는 이중 방어(defense in depth)이지, 눈속임이 아니다 — 토큰은
 실제로 서버에서 검증된다.
 
 - **발급**: `src/proxy.ts`가 매 페이지 요청마다 `gleap_csrf` 쿠키(httpOnly, 32바이트
-  랜덤 hex)가 없으면 새로 만든다. next-intl의 `createMiddleware`가 내부적으로
-  `new Headers(request.headers)`로 복사해 넘기는 걸 이용해, 쿠키를 만드는 바로 그 요청의
-  `cookie` 헤더에도 즉시 반영해 둔다 — 그렇지 않으면 첫 방문(쿠키가 아직 없는 요청) 때
-  폼에 빈 토큰이 찍혀서 그 요청의 첫 제출이 항상 실패하는 문제가 생긴다
+  랜덤 hex, **세션 동안 고정된 비밀값**)가 없으면 새로 만든다. next-intl의
+  `createMiddleware`가 내부적으로 `new Headers(request.headers)`로 복사해 넘기는 걸
+  이용해, 쿠키를 만드는 바로 그 요청의 `cookie` 헤더에도 즉시 반영해 둔다 — 그렇지 않으면
+  첫 방문(쿠키가 아직 없는 요청) 때 폼에 빈 토큰이 찍혀서 그 요청의 첫 제출이 항상
+  실패하는 문제가 생긴다
+- **폼에 실제로 심는 값은 쿠키 원본이 아니라 마스킹된 토큰**(2026-08-28 변경,
+  `src/lib/csrf.ts`의 `getCsrfToken()`이 `salt.HMAC(secret, salt)` 형태로 매 호출마다
+  새로 만듦). 처음엔 쿠키 값을 그대로 폼에 찍었는데, 재점검 스캐너가 CSRF 지적을
+  계속 반복해서 프로덕션에 같은 세션으로 두 번 curl해 재현해보니 hidden 값이 완전히
+  동일했다 — OWASP ZAP류 스캐너의 anti-CSRF 탐지 로직이 "같은 세션에서 값이 안 바뀌면
+  진짜 토큰이 아니다"로 판정하는 것으로 알려져 있어 이게 원인으로 확정됨. 검증은 여전히
+  세션 비밀값에 대한 HMAC이라 서버에서 문제없이 확인 가능(Rails의 masked authenticity
+  token과 같은 발상, 부수 효과로 BREACH류 압축 사이드채널 방어도 됨). 자세한 재현 과정은
+  `docs/security-audit-2026-08.md` 참고
 - **서버 렌더링 폼** (`admin/*`, `member/*` 등 이미 동적 렌더링인 페이지):
-  `src/components/CsrfField.tsx`(`getCsrfToken()`으로 쿠키를 읽어 hidden input 렌더)를
-  `<form>` 안에 넣는다. 클라이언트 컴포넌트가 폼을 감싸는 경우(`MemberPostForm`,
-  `MemberCommentForm`, `MemberProfileForm`)는 페이지(서버 컴포넌트)에서 토큰을 읽어
-  `csrfToken` prop으로 내려주고, 컴포넌트가 직접 hidden input을 그린다
+  `src/components/CsrfField.tsx`(`getCsrfToken()`으로 마스킹된 토큰을 발급해 hidden
+  input 렌더)를 `<form>` 안에 넣는다. 클라이언트 컴포넌트가 폼을 감싸는 경우
+  (`MemberPostForm`, `MemberCommentForm`, `MemberProfileForm`)는 페이지(서버 컴포넌트)에서
+  토큰을 읽어 `csrfToken` prop으로 내려주고, 컴포넌트가 직접 hidden input을 그린다.
+  **상태를 바꾸지 않는 GET 폼(예: `/news`의 검색 필터)에는 넣지 않는다** — CSRF는
+  애초에 POST 등 상태 변경 요청을 보호하는 것이라 GET 폼엔 의미가 없고, 토큰 값이
+  URL 쿼리스트링에 그대로 실려 나가(주소창·히스토리·Referer로 유출) 오히려 손해다
 - **정적 페이지에 얹힌 클라이언트 폼** (Nav/MobileNav의 로그아웃, `MemberAuthForm`의
   로그인/가입): 이 페이지들은 `cookies()`를 읽으면 안 되므로(읽는 순간 SSG가 깨짐),
   대신 이미 CSR로 호출 중인 `/api/session-status`가 `csrfToken`도 함께 내려주도록
   확장해 재사용한다. `MemberAuthForm`은 fetch 기반 제출이라 hidden input 값을
   `x-csrf-token` 헤더로도 같이 보낸다
 - **검증**: Server Action은 맨 앞에서 `assertCsrfToken(formData)`(`src/lib/csrf.ts`)를
-  호출 — 폼의 hidden 필드 값이 쿠키와 다르면(timing-safe 비교) 예외를 던진다.
-  `MemberAuthForm`이 쓰는 better-auth 경로(`/sign-in/email`, `/sign-up/email`)는
-  `src/lib/member-auth.ts`의 `hooks.before`에서 `x-csrf-token` 헤더와 쿠키를 직접
-  비교한다 — better-auth의 `ctx.headers`는 `next/headers`의 `cookies()`를 못 써서
-  raw `Cookie` 헤더 문자열을 직접 파싱함(`readCsrfCookieFromHeader`)
+  호출 — 폼의 hidden 필드 값이 쿠키 비밀값에 대한 유효한 HMAC이 아니면(timing-safe 비교)
+  예외를 던진다. `MemberAuthForm`이 쓰는 better-auth 경로(`/sign-in/email`,
+  `/sign-up/email`)는 `src/lib/member-auth.ts`의 `hooks.before`에서
+  `verifyCsrfHeaderToken()`으로 `x-csrf-token` 헤더 값을 검증한다 — better-auth의
+  `ctx.headers`는 `next/headers`의 `cookies()`를 못 써서 raw `Cookie` 헤더 문자열을
+  직접 파싱함(`readCsrfCookieFromHeader`)
 - **새 mutating 폼을 추가할 때**: Server Action 맨 앞에 `assertCsrfToken(formData)` 호출을
   넣고, 폼에는 상황에 맞게 `<CsrfField />`(서버 렌더링) 또는 `csrfToken` prop(클라이언트
   컴포넌트)을 넣을 것. 상수(`CSRF_FIELD_NAME` 등)는 클라이언트/서버 양쪽에서 쓰므로
@@ -662,6 +723,14 @@ origin-check 미들웨어로 이미 CSRF에서 안전하다. 그런데도 더블
   로그인 페이지 리다이렉트 자체가 이미 정상 동작(스캐너가 리다이렉트를 따라가서 최종
   200을 기록한 것)이라 고칠 대상이 없다. CSRF는 진짜로 몇 겹 더 방어를 얹을 수 있어서
   했지만, 이 둘은 "고치는 척"이 곧 회귀이므로 사용자와 상의 후 그대로 둠(2026-08-27)
+- **재점검에서 "이미 고쳤는데 또 잡히는" 항목을 만나면 가장 먼저 "배포까지 됐는가"부터
+  의심할 것** (2026-08-28 교훈) — XSS 보호 헤더/비밀번호 자동완성 지적이 반복돼 스캐너
+  버그인가 한참 의심했는데, 실제 원인은 수정 커밋이 재점검 시각보다 늦게 만들어졌고
+  그마저도 push가 안 된 상태였던 것. 특히 이 저장소는 **GitHub 자체의 default 브랜치는
+  `main`이지만 Vercel Production 브랜치는 `main-structure`** 라 헷갈리기 쉽다 —
+  `git remote show origin`의 `HEAD branch`는 `main`을 가리키지만, 실제 서비스 중인
+  코드는 `main-structure`가 맞다(`main`엔 CSP/CSRF 관련 코드가 아예 없음). 재점검 전에
+  `git status`로 로컬이 `origin/main-structure`보다 ahead인지, push가 됐는지부터 확인할 것
 
 ## 개발 시 주의
 

@@ -25,6 +25,7 @@ export default async function AdminLoginPage({ params, searchParams }: Props) {
           placeholder="비밀번호"
           required
           autoFocus
+          autoComplete="off"
           className="rounded border border-border px-3 py-2"
         />
         <TurnstileWidget siteKey={env.turnstileSiteKey} language={locale} />

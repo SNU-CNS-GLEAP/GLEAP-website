@@ -5,7 +5,6 @@ import { getPosts, getPostTypes } from "@/lib/posts";
 import { POST_SECTIONS, POST_SECTION_LABELS, isPostSection, type PostSection } from "@/lib/post-sections";
 import { excerpt } from "@/lib/text";
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
-import { CsrfField } from "@/components/CsrfField";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -75,7 +74,6 @@ export default async function NewsPage({ params, searchParams }: Props) {
       </nav>
 
       <form action={`/${locale}/news`} className="flex flex-wrap gap-2">
-        <CsrfField />
         {section && <input type="hidden" name="section" value={section} />}
         <select
           name="type"

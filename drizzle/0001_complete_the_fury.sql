@@ -1,1 +1,1 @@
-ALTER TABLE "posts" ADD COLUMN "photo" text;
+ALTER TABLE "posts" ADD COLUMN IF NOT EXISTS "photo" text;

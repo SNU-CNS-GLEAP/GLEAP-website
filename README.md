@@ -130,12 +130,15 @@ Gleap 홈페이지 개발 TF 2기 (2026.08.19 ~ 현재)
 
 대표 15기 [문현호](https://github.com/octahedron00)
 
-14기 [박정민](https://github.com/Minhub1204), 15기 
+14기 [박정민](https://github.com/Minhub1204), 
+[용현정](https://github.com/ooooowl1029),
+[원동현](https://github.com/llZer0ll), 
+15기 
 [고주형](https://github.com/kojuhyeong),
 [정지혜](https://github.com/jungjh06),
 [서채원](https://github.com/chaeone15),
 [차혜린](https://github.com/HRinCha),
-[김민채](https://github.com/),
+[김민채](https://github.com/)
 
 ## 문의하기
 

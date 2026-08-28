@@ -159,7 +159,7 @@ export function MemberAuthForm({
         {isSignup ? "사용할 비밀번호 (8자 이상)" : "비밀번호"}
         <input
           type="password"
-          autoComplete={isSignup ? "new-password" : "current-password"}
+          autoComplete="off"
           minLength={8}
           value={password}
           onChange={(event) => setPassword(event.target.value)}
@@ -174,7 +174,7 @@ export function MemberAuthForm({
           비밀번호 확인
           <input
             type="password"
-            autoComplete="new-password"
+            autoComplete="off"
             minLength={8}
             value={confirmPassword}
             onChange={(event) => setConfirmPassword(event.target.value)}

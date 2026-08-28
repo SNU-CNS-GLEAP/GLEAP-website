@@ -211,17 +211,27 @@ npm run dev
   > 정리해야 마이그레이션이 통과한다 — 이런 경우 `db:migrate`가 어느 테이블/제약에서
   > 막혔는지 에러 메시지에 그대로 나오니 그것부터 확인할 것.
   >
-  > **그래서 `package.json`의 `prebuild` 스크립트로 `drizzle-kit migrate`를 걸어뒀다** —
-  > `npm run build`(Vercel이 배포마다 실행하는 바로 그 명령)를 실행하면 npm이 `build`보다
-  > 먼저 `prebuild`를 자동으로 실행하는 표준 동작을 그대로 이용한 것. 이제 **프로덕션이든
-  > PR 프리뷰든, 배포될 때마다 그 배포가 실제로 연결된 DB 브랜치에 대해 마이그레이션이
-  > 자동으로 먼저 실행된다** — 오늘 있었던 "이 브랜치엔 컬럼 하나가 안 들어갔다"류 사고가
-  > 애초에 생길 수 없는 구조. 마이그레이션이 idempotent해서 이미 최신 상태인 브랜치에서는
-  > 그냥 몇 초 안에 아무 것도 안 하고 넘어간다. **트레이드오프**: 마이그레이션 파일이
-  > 잘못됐거나(문법 오류 등) 위 사례처럼 실제 데이터와 충돌하면 그 배포 자체가 빌드 실패로
-  > 막힌다 — 깨진 스키마로 서비스되는 것보단 낫다고 판단해 받아들인 선택. 로컬에서
-  > `npm run build`를 돌릴 때도 똑같이 `.env.local`이 가리키는 개인 Neon 브랜치에 대해
-  > 실행되니 참고할 것
+  > **그래서 `package.json`의 `prebuild` 스크립트로 마이그레이션을 걸어뒀다** — `npm run
+  > build`(Vercel이 배포마다 실행하는 바로 그 명령)를 실행하면 npm이 `build`보다 먼저
+  > `prebuild`를 자동으로 실행하는 표준 동작을 그대로 이용한 것. 이제 **프로덕션이든 PR
+  > 프리뷰든, 배포될 때마다 그 배포가 실제로 연결된 DB 브랜치에 대해 마이그레이션이 자동으로
+  > 먼저 실행된다** — 오늘 있었던 "이 브랜치엔 컬럼 하나가 안 들어갔다"류 사고가 애초에
+  > 생길 수 없는 구조. 마이그레이션이 idempotent해서 이미 최신 상태인 브랜치에서는 그냥
+  > 몇 초 안에 아무 것도 안 하고 넘어간다. **트레이드오프**: 마이그레이션 파일이 잘못됐거나
+  > (문법 오류 등) 위 사례처럼 실제 데이터와 충돌하면 그 배포 자체가 빌드 실패로 막힌다 —
+  > 깨진 스키마로 서비스되는 것보단 낫다고 판단해 받아들인 선택. 로컬에서 `npm run build`를
+  > 돌릴 때도 똑같이 `.env.local`이 가리키는 개인 Neon 브랜치에 대해 실행되니 참고할 것
+  >
+  > **`drizzle-kit migrate` CLI가 아니라 `scripts/migrate.mjs`를 직접 씀** (2026-08-28,
+  > prebuild 적용 직후 Vercel 프리뷰 빌드에서 발견) — `drizzle-kit migrate`는 postgresql
+  > 다이얼렉트에서 Neon 호스트를 감지하면 내부적으로 웹소켓 연결로 전환하는데, 로컬에서는
+  > 되지만 **Vercel 빌드 샌드박스는 아웃바운드 웹소켓을 막아둔 것으로 보여** `Warning
+  > '@neondatabase/serverless' can only connect to remote Neon/Vercel Postgres/Supabase
+  > instances through a websocket` 뒤에 빌드가 실패했다. 앱 런타임이 실제로 쓰는
+  > `drizzle-orm/neon-http`는 순수 HTTPS(fetch)라 이 제약이 없어서, `drizzle-kit` CLI 대신
+  > `drizzle-orm/neon-http/migrator`의 `migrate()`를 직접 호출하는 스크립트로 바꿨다 —
+  > 웹소켓을 아예 안 쓰므로 빌드 샌드박스에서도 동작함. `db:generate`는 스키마 diff만 계산
+  > (DB 연결 불필요)이라 그대로 `drizzle-kit generate` 유지
 - "자동 번역됨" 배지, 활동 카테고리 태그 필드는 아직 스키마에 없음 — 번역 API 연동이랑
   `/activities/[category]` 연계 기능을 실제로 붙일 때 마이그레이션 추가할 것
 

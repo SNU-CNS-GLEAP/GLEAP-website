@@ -54,7 +54,8 @@
     "prev": "Previous",
     "next": "Next",
     "pageOf": "{page} / {totalPages}",
-    "backToList": "← Back to list"
+    "backToList": "← Back to list",
+    "noEnglishNotice": "This post hasn't been translated into English yet. Showing the original Korean version below."
   },
   "Footer": {
     "rights": "© {year} GLEAP. All rights reserved.",

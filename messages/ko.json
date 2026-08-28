@@ -54,7 +54,8 @@
     "prev": "이전",
     "next": "다음",
     "pageOf": "{page} / {totalPages}",
-    "backToList": "← 목록으로"
+    "backToList": "← 목록으로",
+    "noEnglishNotice": "이 글은 아직 영어로 번역되지 않았습니다. 한국어 원문을 보여드립니다."
   },
   "Footer": {
     "rights": "© {year} GLEAP. All rights reserved.",

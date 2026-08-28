@@ -172,21 +172,56 @@ npm run dev
 - 마이그레이션: `schema.ts` 수정 → `npm run db:generate`(diff SQL 생성) → `npm run db:migrate`
   (현재 `.env.local`의 `DATABASE_URL_UNPOOLED`가 가리키는 DB에 적용). `drizzle.config.ts`가
   마이그레이션 전용으로 unpooled 연결을 쓰도록 지정돼 있음
-  > **2026-08-28 갱신 — `npm run db:migrate`가 당장은 깨져 있음.** dev 브랜치 DB를 직접
-  > 조회해보니 0003~0006 구간(`member_activity_logs` 등 회원 테이블, `published_at`,
-  > `member_post_dislikes`)이 이미 실제 스키마에 반영돼 있는데, `drizzle.__drizzle_migrations`
-  > 추적 테이블에는 처음 3개(0000~0002)만 기록돼 있었다 — 즉 누군가 그 구간을
-  > `db:migrate` 경로가 아니라 다른 방법(Neon 콘솔 SQL 편집기 등)으로 직접 적용한 것으로
-  > 보임. 이 상태에서 `db:migrate`를 그대로 돌리면 0003의 `CREATE TABLE`(IF NOT EXISTS
-  > 없음)이 "이미 존재함" 에러로 실패한다. `section` 컬럼 추가 건은 이 문제를 피하려고
-  > `drizzle/0006_flaky_ser_duncan.sql`을 실제로 새로 필요한 두 문장(`ADD COLUMN IF NOT
-  > EXISTS` + `DO $$ ... EXCEPTION WHEN duplicate_object`로 감싼 제약 추가, 0005/기존
-  > 0006 파일과 같은 방어적 스타일)만 남기도록 손으로 고친 뒤, `db:migrate`가 아니라
-  > 스크립트로 그 SQL만 dev DB에 직접 실행해서 반영했다. **운영 DB에 이 마이그레이션을
-  > 적용할 때도 `db:migrate`를 그냥 돌리지 말고, 운영 DB의 `drizzle.__drizzle_migrations`에
-  > 몇 번까지 기록돼 있는지 먼저 확인할 것** — 기록이 여기 dev 브랜치와 같은 지점에서
-  > 끊겨 있다면 마찬가지로 실패한다. 이 추적 테이블 자체를 정상화(0003~0006 구간을
-  > "이미 적용됨"으로 수동 등록)하는 작업은 이번 범위에서 하지 않았음 — 별도로 처리할 것.
+  > **2026-08-28 갱신 — 마이그레이션 파일 0000~0007을 전부 idempotent하게 고쳐서, 어떤
+  > 상태의 DB에 대고 돌려도 `db:migrate` 하나로 안전하게 맞춰지도록 만들었다.**
+  >
+  > **원래 문제**: `drizzle-orm`의 `migrate()`는 `drizzle.__drizzle_migrations`에서
+  > **가장 최근 행 하나의 `created_at`**만 보고, `drizzle/meta/_journal.json`에 있는
+  > 마이그레이션 중 그보다 `when` 값이 큰 것들을 전부 "안 적용됨"으로 간주해 실행한다
+  > (개별 마이그레이션 단위로 이미 적용됐는지 보는 게 아니라 딱 이 시각 비교 하나뿐 —
+  > `node_modules/drizzle-orm/migrator.js`, `neon-http/migrator.js` 참고). dev 브랜치를
+  > 조회해보니 이 추적 테이블에는 0000~0001만 기록돼 있었는데 실제 스키마는 0002~0006까지
+  > (회원 인증 테이블, `published_at`, `section`, `member_post_dislikes`) 이미 반영돼
+  > 있었다 — 그 구간이 `db:migrate` 경로가 아니라 다른 방법(Neon 콘솔 SQL 편집기 등)으로
+  > 직접 적용됐던 것. `member_post_dislikes`를 만든 파일은 `_journal.json`에 등록조차
+  > 안 돼 있었고(`readMigrationFiles`는 journal에 있는 것만 읽는다), 0000~0004는
+  > drizzle-kit이 기본 생성한 그대로라 `CREATE TABLE`에 `IF NOT EXISTS`가 없었다 — 그래서
+  > `db:migrate`를 그냥 돌리면 0002의 `CREATE TABLE "account"`부터 "이미 존재함" 에러로
+  > 실패했다.
+  >
+  > **고친 방법**: (1) 빠진 파일을 `0007_add_member_post_dislikes.sql`로 이름 붙여 journal에
+  > 등록. (2) 0000~0004의 모든 DDL을 나머지 파일(0005~0007)과 같은 방어적 스타일로 통일 —
+  > `CREATE TABLE` → `IF NOT EXISTS`, `ALTER TABLE ... ADD COLUMN` → `IF NOT EXISTS`,
+  > `ADD CONSTRAINT` → `DO $$ BEGIN ... EXCEPTION WHEN duplicate_object THEN null; END $$;`,
+  > `CREATE INDEX`/`DROP INDEX` → `IF NOT EXISTS`/`IF EXISTS`. **의도적인 스키마 변경은
+  > 하나도 없다** — 같은 결과를 몇 번 실행해도 안전하게 만든 것뿐.
+  >
+  > **검증**: dev DB 추적 테이블을 일부러 "0001까지만 적용됨"으로 되돌려 놓고(=이번에
+  > 문제가 됐던 프리뷰 브랜치와 같은 상황을 재현) `db:migrate`를 다시 돌려봤다. 0002~0006은
+  > 전부 조용히 스킵되며 통과했고, 0007(`member_post_dislikes`의 FK 제약 추가)에서만 진짜
+  > 에러가 났는데 — 이건 idempotency 문제가 아니라, 그 테이블에 실제로 `member_posts`에
+  > 없는 `post_id`를 가리키는 고아 행이 dev DB에 하나 남아있어서 FK 제약 추가 자체가
+  > 데이터 무결성 위반으로 막힌 것이었다(2026-08-20에 생긴 테스트 데이터로 추정). 그 행
+  > 하나를 지우고 나니 `db:migrate`가 처음부터 끝까지 완전히 성공했다.
+  >
+  > **결론**: 이제 **어느 브랜치에 대해서든(운영, 새 프리뷰, 완전히 새로 만든 빈 DB까지)
+  > `npm run db:migrate`를 그냥 돌리면 안전하게 최신 상태로 맞춰진다** — 더 이상 브랜치마다
+  > 추적 테이블을 손으로 맞추는 작업이 필요 없다. 다만 이번에 발견한 것처럼 실제 데이터가
+  > 참조 무결성을 어기고 있으면(예: FK 없이 오래 운영되다 생긴 고아 행) 그 데이터부터
+  > 정리해야 마이그레이션이 통과한다 — 이런 경우 `db:migrate`가 어느 테이블/제약에서
+  > 막혔는지 에러 메시지에 그대로 나오니 그것부터 확인할 것.
+  >
+  > **그래서 `package.json`의 `prebuild` 스크립트로 `drizzle-kit migrate`를 걸어뒀다** —
+  > `npm run build`(Vercel이 배포마다 실행하는 바로 그 명령)를 실행하면 npm이 `build`보다
+  > 먼저 `prebuild`를 자동으로 실행하는 표준 동작을 그대로 이용한 것. 이제 **프로덕션이든
+  > PR 프리뷰든, 배포될 때마다 그 배포가 실제로 연결된 DB 브랜치에 대해 마이그레이션이
+  > 자동으로 먼저 실행된다** — 오늘 있었던 "이 브랜치엔 컬럼 하나가 안 들어갔다"류 사고가
+  > 애초에 생길 수 없는 구조. 마이그레이션이 idempotent해서 이미 최신 상태인 브랜치에서는
+  > 그냥 몇 초 안에 아무 것도 안 하고 넘어간다. **트레이드오프**: 마이그레이션 파일이
+  > 잘못됐거나(문법 오류 등) 위 사례처럼 실제 데이터와 충돌하면 그 배포 자체가 빌드 실패로
+  > 막힌다 — 깨진 스키마로 서비스되는 것보단 낫다고 판단해 받아들인 선택. 로컬에서
+  > `npm run build`를 돌릴 때도 똑같이 `.env.local`이 가리키는 개인 Neon 브랜치에 대해
+  > 실행되니 참고할 것
 - "자동 번역됨" 배지, 활동 카테고리 태그 필드는 아직 스키마에 없음 — 번역 API 연동이랑
   `/activities/[category]` 연계 기능을 실제로 붙일 때 마이그레이션 추가할 것
 

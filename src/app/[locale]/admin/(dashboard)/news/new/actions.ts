@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createPost } from "@/lib/posts";
 import { assertCsrfToken } from "@/lib/csrf";
 import { isPostSection } from "@/lib/post-sections";
+import { sendPostBackupEmail } from "@/lib/post-backup-email";
 
 export async function createPostAction(locale: string, formData: FormData) {
   await assertCsrfToken(formData);
@@ -25,6 +26,19 @@ export async function createPostAction(locale: string, formData: FormData) {
     : new Date();
 
   const id = await createPost({
+    type,
+    section: sectionRaw,
+    titleKo,
+    titleEn: titleEn || null,
+    bodyKo,
+    bodyEn: bodyEn || null,
+    authorName: authorName || null,
+    publishedAt,
+  });
+
+  await sendPostBackupEmail({
+    id,
+    action: "created",
     type,
     section: sectionRaw,
     titleKo,

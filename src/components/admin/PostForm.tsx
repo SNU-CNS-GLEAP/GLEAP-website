@@ -29,43 +29,45 @@ export function PostForm({ action, types, submitLabel, errorMessage, defaultValu
       {errorMessage && <p className="text-sm text-red-600">{errorMessage}</p>}
       <form action={action} className="flex flex-col gap-6">
         <CsrfField />
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium" htmlFor="type">
-            분류
-          </label>
-          <input
-            id="type"
-            name="type"
-            list="post-types"
-            required
-            defaultValue={defaultValues.type}
-            placeholder="예: 공지사항"
-            className="w-fit rounded border border-border px-3 py-2 text-sm"
-          />
-          <datalist id="post-types">
-            {types.map((t) => (
-              <option key={t} value={t} />
-            ))}
-          </datalist>
-        </div>
+        <div className="flex flex-row gap-10">
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium" htmlFor="section">
+              구분
+            </label>
+            <select
+              id="section"
+              name="section"
+              required
+              defaultValue={defaultValues.section ?? "notice"}
+              className="w-fit rounded border border-border px-3 py-2 text-sm"
+            >
+              {POST_SECTIONS.map((s) => (
+                <option key={s} value={s}>
+                  {POST_SECTION_LABELS[s].ko}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium" htmlFor="section">
-            구분
-          </label>
-          <select
-            id="section"
-            name="section"
-            required
-            defaultValue={defaultValues.section ?? "notice"}
-            className="w-fit rounded border border-border px-3 py-2 text-sm"
-          >
-            {POST_SECTIONS.map((s) => (
-              <option key={s} value={s}>
-                {POST_SECTION_LABELS[s].ko}
-              </option>
-            ))}
-          </select>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium" htmlFor="type">
+              태그 (자유 입력)
+            </label>
+            <input
+              id="type"
+              name="type"
+              list="post-types"
+              required
+              defaultValue={defaultValues.type}
+              placeholder="예: 월간 글립 등"
+              className="w-fit rounded border border-border px-3 py-2 text-sm"
+            />
+            <datalist id="post-types">
+              {types.map((t) => (
+                <option key={t} value={t} />
+              ))}
+            </datalist>
+          </div>
         </div>
 
         <div className="flex flex-col gap-1">

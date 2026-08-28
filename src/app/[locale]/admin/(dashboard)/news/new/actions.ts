@@ -3,10 +3,13 @@
 import { redirect } from "next/navigation";
 import { createPost } from "@/lib/posts";
 import { assertCsrfToken } from "@/lib/csrf";
+import { isPostSection } from "@/lib/post-sections";
+import { sendPostBackupEmail } from "@/lib/post-backup-email";
 
 export async function createPostAction(locale: string, formData: FormData) {
   await assertCsrfToken(formData);
   const type = String(formData.get("type") ?? "").trim();
+  const sectionRaw = String(formData.get("section") ?? "").trim();
   const titleKo = String(formData.get("title_ko") ?? "").trim();
   const titleEn = String(formData.get("title_en") ?? "").trim();
   const bodyKo = String(formData.get("body_ko") ?? "").trim();
@@ -14,7 +17,7 @@ export async function createPostAction(locale: string, formData: FormData) {
   const authorName = String(formData.get("author_name") ?? "").trim();
   const publishedAtRaw = String(formData.get("published_at") ?? "");
 
-  if (!type || !titleKo || !bodyKo) {
+  if (!type || !isPostSection(sectionRaw) || !titleKo || !bodyKo) {
     redirect(`/${locale}/admin/news/new?error=1`);
   }
 
@@ -24,6 +27,20 @@ export async function createPostAction(locale: string, formData: FormData) {
 
   const id = await createPost({
     type,
+    section: sectionRaw,
+    titleKo,
+    titleEn: titleEn || null,
+    bodyKo,
+    bodyEn: bodyEn || null,
+    authorName: authorName || null,
+    publishedAt,
+  });
+
+  await sendPostBackupEmail({
+    id,
+    action: "created",
+    type,
+    section: sectionRaw,
     titleKo,
     titleEn: titleEn || null,
     bodyKo,

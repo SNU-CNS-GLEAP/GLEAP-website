@@ -5,6 +5,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { localize } from "@/lib/localized-text";
 import { getPost } from "@/lib/posts";
+import { POST_SECTION_LABELS, type PostSection } from "@/lib/post-sections";
 import { parseImageSrc } from "@/lib/image-width";
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
 
@@ -57,6 +58,9 @@ export default async function NewsDetailPage({ params }: Props) {
 
   const title = localize({ ko: post.titleKo, en: post.titleEn ?? undefined }, locale);
   const body = localize({ ko: post.bodyKo, en: post.bodyEn ?? undefined }, locale);
+  // 제목/본문 중 하나라도 en이 비어 localize()가 한국어로 폴백했으면(lang === "ko") 번역이
+  // 없다는 뜻 — /en으로 들어온 방문자에게만 안내 배너를 보여준다(게시물 번역 절의 폴백 규칙과 동일 신호 재사용).
+  const missingEnglish = locale === "en" && (title.lang === "ko" || body.lang === "ko");
   const dateFormatter = new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en-US", {
     year: "numeric",
     month: "long",
@@ -69,8 +73,19 @@ export default async function NewsDetailPage({ params }: Props) {
         {t("backToList")}
       </Link>
 
+      {missingEnglish && (
+        <p className="rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          {t("noEnglishNotice")}
+        </p>
+      )}
+
       <div className="flex flex-col gap-2">
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
+          <span className="rounded-full border border-primary px-2 py-0.5 text-primary">
+            {locale === "ko"
+              ? POST_SECTION_LABELS[post.section as PostSection].ko
+              : POST_SECTION_LABELS[post.section as PostSection].en}
+          </span>
           <span className="rounded-full border border-border px-2 py-0.5">{post.type}</span>
           <span>{dateFormatter.format(post.publishedAt)}</span>
           {post.authorName && <span>· {post.authorName}</span>}

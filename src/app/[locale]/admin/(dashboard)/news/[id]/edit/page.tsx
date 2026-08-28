@@ -4,6 +4,7 @@ import { PostForm } from "@/components/admin/PostForm";
 import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
 import { CsrfField } from "@/components/CsrfField";
 import { getPost, getPostTypes } from "@/lib/posts";
+import type { PostSection } from "@/lib/post-sections";
 import { updatePostAction } from "./actions";
 import { deletePostAction } from "../../actions";
 
@@ -48,6 +49,7 @@ export default async function EditPostPage({ params, searchParams }: Props) {
         errorMessage={error ? "분류·한국어 제목·한국어 본문은 필수입니다." : undefined}
         defaultValues={{
           type: post.type,
+          section: post.section as PostSection,
           titleKo: post.titleKo,
           titleEn: post.titleEn ?? undefined,
           bodyKo: post.bodyKo,

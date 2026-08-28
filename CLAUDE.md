@@ -161,7 +161,8 @@ npm run dev
   `drizzle-orm/neon-http`로 만든 클라이언트를 내보냄. 규모(게시물 CRUD 하나)에 Prisma는
   무겁다고 판단 — Drizzle은 스키마가 TS 파일 하나라 읽기 쉽고 마이그레이션도 가벼움
 - 컬럼: `type`(자유 문자열 — 월간 글립/저널 클럽/행사/공지사항 등. enum이 아닌 이유는
-  분류가 늘어날 수 있는데 enum이면 늘 때마다 마이그레이션이 필요해서), `title_ko`/`body_ko`(필수),
+  분류가 늘어날 수 있는데 enum이면 늘 때마다 마이그레이션이 필요해서), `section`(공지/학술
+  소식/활동 소식 3분류 고정 — 아래 "소식 3분류(section)" 절 참고), `title_ko`/`body_ko`(필수),
   `title_en`/`body_en`(선택 — 비어있으면 `localize()`가 한국어로 폴백, 아래 번역 절과 동일 규칙),
   `author_name`(선택, 작성자가 직접 입력하는 크레딧 표기용 — 계정이 1개뿐이라 로그인과 무관),
   `created_at`/`updated_at`
@@ -171,8 +172,95 @@ npm run dev
 - 마이그레이션: `schema.ts` 수정 → `npm run db:generate`(diff SQL 생성) → `npm run db:migrate`
   (현재 `.env.local`의 `DATABASE_URL_UNPOOLED`가 가리키는 DB에 적용). `drizzle.config.ts`가
   마이그레이션 전용으로 unpooled 연결을 쓰도록 지정돼 있음
+  > **2026-08-28 갱신 — `npm run db:migrate`가 당장은 깨져 있음.** dev 브랜치 DB를 직접
+  > 조회해보니 0003~0006 구간(`member_activity_logs` 등 회원 테이블, `published_at`,
+  > `member_post_dislikes`)이 이미 실제 스키마에 반영돼 있는데, `drizzle.__drizzle_migrations`
+  > 추적 테이블에는 처음 3개(0000~0002)만 기록돼 있었다 — 즉 누군가 그 구간을
+  > `db:migrate` 경로가 아니라 다른 방법(Neon 콘솔 SQL 편집기 등)으로 직접 적용한 것으로
+  > 보임. 이 상태에서 `db:migrate`를 그대로 돌리면 0003의 `CREATE TABLE`(IF NOT EXISTS
+  > 없음)이 "이미 존재함" 에러로 실패한다. `section` 컬럼 추가 건은 이 문제를 피하려고
+  > `drizzle/0006_flaky_ser_duncan.sql`을 실제로 새로 필요한 두 문장(`ADD COLUMN IF NOT
+  > EXISTS` + `DO $$ ... EXCEPTION WHEN duplicate_object`로 감싼 제약 추가, 0005/기존
+  > 0006 파일과 같은 방어적 스타일)만 남기도록 손으로 고친 뒤, `db:migrate`가 아니라
+  > 스크립트로 그 SQL만 dev DB에 직접 실행해서 반영했다. **운영 DB에 이 마이그레이션을
+  > 적용할 때도 `db:migrate`를 그냥 돌리지 말고, 운영 DB의 `drizzle.__drizzle_migrations`에
+  > 몇 번까지 기록돼 있는지 먼저 확인할 것** — 기록이 여기 dev 브랜치와 같은 지점에서
+  > 끊겨 있다면 마찬가지로 실패한다. 이 추적 테이블 자체를 정상화(0003~0006 구간을
+  > "이미 적용됨"으로 수동 등록)하는 작업은 이번 범위에서 하지 않았음 — 별도로 처리할 것.
 - "자동 번역됨" 배지, 활동 카테고리 태그 필드는 아직 스키마에 없음 — 번역 API 연동이랑
   `/activities/[category]` 연계 기능을 실제로 붙일 때 마이그레이션 추가할 것
+
+### 소식 3분류(section)
+
+`type`(자유 문자열, 분류가 계속 늘어날 수 있는 태그)과 별개로, "공지 / 학술 소식 / 활동
+소식" 3분류를 위한 `section` 컬럼을 추가했다(2026-08-28). `type`과 달리 **이 3개 외의
+값은 절대 늘어나지 않는다는 전제**라서 접근을 반대로 뒤집었다:
+
+- 고정 목록은 `src/lib/post-sections.ts`의 `POST_SECTIONS`(`"notice" | "academic" |
+  "activity"`) 하나에서 관리하고, 한국어/영어 라벨(`POST_SECTION_LABELS`)과 타입 가드
+  (`isPostSection`)도 같은 파일에 둔다 — 값을 추가/변경할 때 여기 하나만 고치면 됨
+- **DB 쪽도 이중으로 고정한다.** `schema.ts`의 `posts` 테이블에 `check("posts_section_check",
+  sql`section in ('notice', 'academic', 'activity')`)` 제약을 걸어서, 서버 코드의 검증을
+  우회해 직접 INSERT/UPDATE를 날려도 저 3개 값 외에는 DB 레벨에서 거부된다
+  (`member_posts.category`의 `check` 제약과 같은 패턴). **이 문자열 목록을 바꾸면
+  `post-sections.ts`의 `POST_SECTIONS`도 반드시 같이 갱신할 것** — 두 군데가 어긋나면
+  서버 액션 통과 후 DB insert에서 조용히 막히게 됨
+- 관리자 글쓰기/수정 폼(`PostForm.tsx`)에서는 `type`처럼 자유 입력(`datalist`)이 아니라
+  `<select>`로 `POST_SECTIONS` 값만 옵션으로 제공 — 애초에 다른 값을 입력할 수 없게
+  UI에서부터 막음. Server Action(`new/actions.ts`, `[id]/edit/actions.ts`)에서도
+  `isPostSection()`으로 한 번 더 검증(폼을 우회한 요청 대비)
+- 공개 `/news` 목록 페이지는 기존 `type` 드롭다운 필터와 별개로, `section` 값 3개 + "전체"를
+  탭 형태 링크(`?section=notice` 등)로 얹었다 — "각각을 읽을 수 있게"라는 요구를
+  쿼리 파라미터 필터로 구현. 검색 폼 제출 시 현재 선택된 `section`을 잃지 않도록
+  hidden input으로 같이 전달함
+- 기존 게시물은 마이그레이션에서 `section` 기본값을 `'notice'`(공지)로 채웠다 — 실제로는
+  학술/활동 소식에 해당하는 글도 섞여 있을 수 있으므로, 운영진이 관리자 편집 화면에서
+  실제 분류에 맞게 하나씩 재지정해야 함
+
+### 게시물 이메일 백업 (2026-08-28)
+
+Neon이 소식 게시물의 유일한 저장소라, 실수로 지우거나 DB 자체에 문제가 생겼을 때 복구할
+원문이 하나도 안 남는 상황을 막기 위한 안전망. 별도 백업 인프라(운영 비용 0원 원칙과 충돌)
+없이, 관리자가 글을 쓰거나 수정할 때마다 그 시점의 Markdown 원문 전체를 이메일로 자기 자신
+(`snucnsgleap@gmail.com` → `snucnsgleap@gmail.com`, 기존 회원 초대 메일과 같은 발신 계정)
+에게 보내는 방식으로 구현했다 — 메일함이 곧 타임라인이 있는 백업 저장소가 되는 셈.
+
+- `src/lib/post-backup-email.ts`의 `sendPostBackupEmail()`이 담당. `admin/news/new/actions.ts`,
+  `admin/news/[id]/edit/actions.ts` 양쪽에서 `createPost`/`updatePost` 성공 직후, `redirect()`
+  하기 전에 호출한다
+- 메일 본문에는 제목·본문 모두(한/영), `type`/`section`/작성자 표시명/게시일까지 포함 —
+  DB 행 하나를 그대로 복원할 수 있을 만큼의 정보량을 목표로 함
+- **켜고 끄는 스위치**: `.env.local`의 `POST_BACKUP_EMAIL_ENABLED`. 값을 비워두거나 아예
+  안 쓰면 켜짐(기본값), `false`로 설정하면 꺼짐 — 코드 수정 없이 이 값 하나로 제어된다.
+  받는 주소는 `POST_BACKUP_EMAIL_TO`로 바꿀 수 있고, 비워두면 발신 계정(`GMAIL_SMTP_USER`)
+  자기 자신에게 감
+- 발송에 실패해도(SMTP 설정 누락, 네트워크 오류 등) 글 저장 자체는 절대 막지 않는다 —
+  `sendPostBackupEmail()` 내부에서 실패를 잡아 `console.error`로만 남기고 삼킨다. 백업은
+  "있으면 좋은" 보조 장치이지, 게시글 작성/수정의 필수 경로가 아니어야 하기 때문
+- Gmail SMTP(포트 465, Node `tls` 모듈 직접 통신)·Resend 발송 로직은 기존
+  `src/lib/member-email.ts`에 있던 것을 `src/lib/email.ts`(`dispatchEmail`, `isEmailConfigured`)로
+  뽑아내 회원 메일과 게시물 백업 메일이 같은 디스패처를 공유하게 했다 — SMTP 연결·인증·재시도
+  로직을 두 곳에서 따로 관리하지 않기 위함. `member-email.ts`는 이제 이 공유 모듈을 감싸는
+  얇은 래퍼(회원 초대/인증 메일 문구만 담당)로 남음
+
+### 게시물 엑셀 백업 다운로드 (2026-08-28)
+
+이메일 백업(위 절)이 "글 하나하나의 시점별 스냅샷"이라면, 이건 "지금 이 순간 DB 전체"를
+한 번에 뽑는 백업. `/admin/news`의 "엑셀 백업 다운로드" 버튼을 누르면 그 순간 `posts`
+테이블 전 칼럼(id/section/type/제목·본문 한영/photo/작성자/게시일/생성·수정일시)을 `.xlsx`
+한 장으로 즉석 생성해 다운로드시킨다 — 별도 저장소나 배치 작업 없이 요청 시점에만 만들어지는
+방식이라 운영 비용 0원 원칙과 맞음.
+
+- `src/app/api/admin/posts-export/route.ts` (GET). `/admin/upload`와 동일한 패턴으로
+  `getSession()`을 직접 읽어 `session.isAdmin`이 아니면 401 — 상태를 바꾸지 않는 조회
+  요청이라 `requireAdmin()`(리다이렉트 지향)이나 CSRF 토큰은 쓰지 않음
+- 엑셀 생성은 `exceljs`(신규 의존성). 워크북 하나·시트 하나("소식")에 헤더 행 + 전체 행을
+  그대로 씀. `getAllPostsForExport()`(`src/lib/posts.ts`)가 페이지네이션 없이 전체를 조회
+- 관리자 화면(`/admin/news/page.tsx`)의 다운로드 링크는 `@/i18n/navigation`의 `Link`가 아니라
+  `next/link`를 `NextLink`로 바로 import해서 씀 — 이 링크는 페이지 이동이 아니라 파일
+  다운로드 응답을 주는 API 라우트라 `prefetch={false}`가 필요한데, i18n `Link`는 이 prop을
+  그대로 통과시켜주는지 보장이 없어 표준 `next/link`를 직접 쓰는 쪽을 택함.
+  `prefetch`를 꺼두지 않으면 마우스만 올려도 hover-prefetch로 엑셀 파일이 매번 새로 생성됨
 
 ### 게시물 번역
 
@@ -271,8 +359,10 @@ npm run dev
   들여쓰기 트리 형태로 한 번에 보여준다(`src/components/MobileNav.tsx`). 아코디언처럼 접혀있지 않고
   항상 펼쳐진 "사이트맵" 형태 — 메뉴 항목이 10개 안팎으로 적어서 단계별 탐색보다 한눈에 보이는 게 나음
 - **소식**: `/news`. Wix 원본에서 빠져있던 탭 — 공지사항/부원 안내/행사 후기/월간 글립(과학 카드뉴스)을
-  올릴 게시판 자리. 아직 Neon·에디터가 없어 지금은 "준비 중" 안내만 있는 placeholder
-  (`admin` 대시보드와 동일한 패턴). 게시판 스키마가 생기면 이 라우트에 목록/상세를 붙이면 됨
+  올리는 게시판(Neon `posts` 테이블 기반). Nav의 "소식"도 "구성원"/"활동 소개"와 같은 드롭다운으로
+  통일해(2026-08-28) `공지`/`학술 소식`/`활동 소식`(`section` 3분류, 위 "소식 3분류(section)" 절 참고)
+  각각의 `/news?section=...` 필터 페이지로 바로 연결 — 데스크톱은 `Dropdown` 컴포넌트, 모바일은
+  `활동 소개`와 동일하게 헤딩 + 하위 링크 나열 방식(`MobileNav.tsx`)
 - **활동의 "기수별 실제 내용"은 `activities.ts`에 넣지 않는다.** 이 파일은 "매년 거의 안 바뀌는
   3분류 구조 + 프로그램 이름"만 담당하고, 그 해의 구체적 진행 내용/사진/후기는 게시판(소식)에
   글로 쌓는 것을 전제로 함 — 코드 수정 없이 매년 반복되는 기록이 게시판 쪽에만 생기게 하려는 것.

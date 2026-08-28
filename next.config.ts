@@ -19,11 +19,22 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 // 클릭재킹·폼 하이재킹·외부 스크립트 주입 방어는 그대로 유지된다.
 // Turnstile(로그인/가입 폼)이 challenges.cloudflare.com의 스크립트와 iframe을
 // 쓰므로 그 도메인만 명시적으로 허용했다.
+//
+// 'unsafe-eval'은 `next dev`(NODE_ENV !== "production")에서만 추가한다. React/Next의
+// 개발 모드 Fast Refresh·스택트레이스 재구성 기능이 eval()을 쓰는데, 프로덕션 스크립트에는
+// 원래 eval()이 전혀 없다(브라우저 콘솔 경고 문구 그대로). 그래서 실제 배포(Vercel, NODE_ENV
+// 항상 production)나 `npm run start` 프리뷰에는 이 값이 절대 안 붙고, 로컬 `npm run dev`에서만
+// CSP가 개발 서버의 eval 사용을 막지 않도록 열어준다.
+const isDev = process.env.NODE_ENV !== "production";
+
 const cspDirectives = [
   `default-src 'self'`,
-  `script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com`,
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://challenges.cloudflare.com`,
   `style-src 'self' 'unsafe-inline'`,
-  `img-src 'self' blob: data:`,
+  // 소식 게시물 사진(에디터 업로드)이 저장되는 Vercel Blob public 도메인. 이게 없으면
+  // 업로드 자체는 성공해도 브라우저가 CSP img-src 위반으로 표시를 차단한다(2026-08-28 발견) —
+  // images.remotePatterns에 등록된 호스트 패턴과 동일하게 맞춰둘 것.
+  `img-src 'self' blob: data: https://*.public.blob.vercel-storage.com`,
   `font-src 'self'`,
   `connect-src 'self' https://challenges.cloudflare.com`,
   `frame-src https://challenges.cloudflare.com`,

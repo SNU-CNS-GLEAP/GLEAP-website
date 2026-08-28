@@ -7,6 +7,7 @@ import { Link, usePathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { activityCategories } from "@/content/activities";
 import { localize } from "@/lib/localized-text";
+import { POST_SECTIONS, POST_SECTION_LABELS } from "@/lib/post-sections";
 import { MobileNav } from "@/components/MobileNav";
 import { logout } from "@/app/[locale]/admin/(dashboard)/actions";
 import { DEFAULT_ALUMNI_COHORT_ID } from "@/content/members";
@@ -130,7 +131,6 @@ export function Nav() {
             label={t("members")}
             href="/members"
             items={[
-              { href: "/members", label: t("membersCurrent") },
               { href: `/members/alumni/${DEFAULT_ALUMNI_COHORT_ID}`, label: t("membersAlumni") },
             ]}
           />
@@ -142,9 +142,14 @@ export function Nav() {
               return { href: `/activities/${category.id}`, label: title.text, lang: title.lang };
             })}
           />
-          <Link href="/news" className="hover:text-primary">
-            {t("news")}
-          </Link>
+          <Dropdown
+            label={t("news")}
+            href="/news"
+            items={POST_SECTIONS.map((s) => ({
+              href: `/news?section=${s}`,
+              label: locale === "ko" ? POST_SECTION_LABELS[s].ko : POST_SECTION_LABELS[s].en,
+            }))}
+          />
           <Link href="/member" className="hover:text-primary">
             {t("community")}
           </Link>

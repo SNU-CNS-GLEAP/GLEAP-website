@@ -2,13 +2,14 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { localize } from "@/lib/localized-text";
 import { getPosts, getPostTypes } from "@/lib/posts";
+import { POST_SECTIONS, POST_SECTION_LABELS, isPostSection, type PostSection } from "@/lib/post-sections";
 import { excerpt } from "@/lib/text";
 import { AdminEditButton } from "@/components/admin/AdminEditButton";
 import { CsrfField } from "@/components/CsrfField";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ q?: string; type?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; type?: string; section?: string; page?: string }>;
 };
 
 export default async function NewsPage({ params, searchParams }: Props) {
@@ -19,10 +20,13 @@ export default async function NewsPage({ params, searchParams }: Props) {
   const sp = await searchParams;
   const q = sp.q?.trim() || undefined;
   const type = sp.type?.trim() || undefined;
+  const sectionRaw = sp.section?.trim();
+  const section: PostSection | undefined =
+    sectionRaw && isPostSection(sectionRaw) ? sectionRaw : undefined;
   const page = Math.max(1, Number(sp.page) || 1);
 
   const [{ posts, total, totalPages }, types] = await Promise.all([
-    getPosts({ page, q, type }),
+    getPosts({ page, q, type, section }),
     getPostTypes(),
   ]);
 
@@ -32,10 +36,12 @@ export default async function NewsPage({ params, searchParams }: Props) {
     day: "numeric",
   });
 
-  function buildHref(overrides: { page?: string }) {
+  function buildHref(overrides: { page?: string; section?: string }) {
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (type) params.set("type", type);
+    const nextSection = overrides.section !== undefined ? overrides.section : (section ?? "");
+    if (nextSection) params.set("section", nextSection);
     const nextPage = overrides.page;
     if (nextPage && nextPage !== "1") params.set("page", nextPage);
     const queryString = params.toString();
@@ -46,8 +52,31 @@ export default async function NewsPage({ params, searchParams }: Props) {
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-16">
       <h1 className="text-3xl font-semibold tracking-tight">{t("title")}</h1>
 
+      <nav className="flex flex-wrap gap-2 text-sm">
+        <Link
+          href={buildHref({ section: "" })}
+          className={`rounded-full border px-3 py-1 ${
+            section === undefined ? "border-primary bg-primary text-white" : "border-border text-muted"
+          }`}
+        >
+          {t("sectionAll")}
+        </Link>
+        {POST_SECTIONS.map((s) => (
+          <Link
+            key={s}
+            href={buildHref({ section: s })}
+            className={`rounded-full border px-3 py-1 ${
+              section === s ? "border-primary bg-primary text-white" : "border-border text-muted"
+            }`}
+          >
+            {locale === "ko" ? POST_SECTION_LABELS[s].ko : POST_SECTION_LABELS[s].en}
+          </Link>
+        ))}
+      </nav>
+
       <form action={`/${locale}/news`} className="flex flex-wrap gap-2">
         <CsrfField />
+        {section && <input type="hidden" name="section" value={section} />}
         <select
           name="type"
           defaultValue={type ?? ""}
@@ -87,6 +116,11 @@ export default async function NewsPage({ params, searchParams }: Props) {
               return (
                 <li key={post.id} className="flex flex-col gap-1 py-5">
                   <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
+                    <span className="rounded-full border border-primary px-2 py-0.5 text-primary">
+                      {locale === "ko"
+                        ? POST_SECTION_LABELS[post.section as PostSection].ko
+                        : POST_SECTION_LABELS[post.section as PostSection].en}
+                    </span>
                     <span className="rounded-full border border-border px-2 py-0.5">{post.type}</span>
                     <span>{dateFormatter.format(post.publishedAt)}</span>
                     {post.authorName && <span>· {post.authorName}</span>}

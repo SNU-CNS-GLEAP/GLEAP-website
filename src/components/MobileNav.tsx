@@ -6,6 +6,7 @@ import { Link, usePathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { activityCategories } from "@/content/activities";
 import { localize } from "@/lib/localized-text";
+import { POST_SECTIONS, POST_SECTION_LABELS } from "@/lib/post-sections";
 import { logout } from "@/app/[locale]/admin/(dashboard)/actions";
 import { DEFAULT_ALUMNI_COHORT_ID } from "@/content/members";
 import { CSRF_FIELD_NAME } from "@/lib/csrf-shared";
@@ -92,9 +93,18 @@ export function MobileNav({
             );
           })}
 
-          <Link href="/news" onClick={closeNav} className="py-2 font-medium hover:text-primary">
-            {t("news")}
-          </Link>
+          <span className="pt-2 font-medium">{t("news")}</span>
+          {POST_SECTIONS.map((s) => (
+            <Link
+              key={s}
+              href={`/news?section=${s}`}
+              onClick={closeNav}
+              className="py-2 pl-4 text-base text-muted hover:text-primary"
+            >
+              {locale === "ko" ? POST_SECTION_LABELS[s].ko : POST_SECTION_LABELS[s].en}
+            </Link>
+          ))}
+
           <Link href="/member" onClick={closeNav} className="py-2 font-medium hover:text-primary">
             {t("community")}
           </Link>

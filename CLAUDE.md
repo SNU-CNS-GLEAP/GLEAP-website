@@ -603,12 +603,14 @@ next-intl은 기본적으로 요청 헤더에서 locale을 읽기 때문에, 아
 ## 보안 헤더
 
 `next.config.ts`의 `headers()`에서 전 경로에 일괄 적용. Sparrow 웹 취약점 점검
-(2026-08-27, `SECURITY_REMEDIATION.md` 참고) 대응으로 추가함.
+(2026-08-27, `docs/security-audit-2026-08.md` 참고) 대응으로 추가함.
 
 - `Referrer-Policy`, `X-Content-Type-Options`, `X-Frame-Options: DENY` — 표준값 그대로 적용
 - `X-XSS-Protection: 1; mode=block` — 폐기된 헤더라 표준 권고는 명시적 비활성화(`0`)이지만,
   `0`으로 두니 Sparrow 재점검에서 구식 규칙을 계속 요구해 다시 지적됨(2026-08-28 확인).
   어느 값이든 실질 방어력은 없음(CSP가 진짜 방어선)이라 재점검 통과를 우선해 이 값으로 둠
+- `poweredByHeader: false` — 기본값이면 모든 응답에 `X-Powered-By: Next.js`가 붙어
+  "HTTP 응답 헤더에 포함된 서버 정보"로 지적됨(2026-08-28). 끄는 데 비용이 없어 반영
 - **CSP는 nonce 없는 정적 버전**. nonce 방식은 매 요청 새 값을 발급해야 해서 전체 페이지를
   동적 렌더링(`ƒ`)으로 돌려야 하는데(Next.js 공식 문서에 명시된 요구사항), 이 프로젝트는
   [정적 렌더링](#성능-정적-렌더링)을 최우선으로 삼기로 했으므로(2026-08-27 결정) 정적 버전을
@@ -625,31 +627,45 @@ next-intl은 기본적으로 요청 헤더에서 locale을 읽기 때문에, 아
 이 사이트의 모든 폼은 Next.js Server Action(Origin/Host 자체 검증) 또는 Better Auth의
 origin-check 미들웨어로 이미 CSRF에서 안전하다. 그런데도 더블 서브밋 쿠키 토큰을
 2026-08-27에 추가로 얹었다 — 보안 감사 스캐너가 `<form>` 안의 anti-CSRF hidden 필드
-유무만 정적으로 검사해서 이 방어를 인식하지 못하기 때문(`SECURITY_REMEDIATION.md` CSRF
-11건 항목). 실질적으로는 이중 방어(defense in depth)이지, 눈속임이 아니다 — 토큰은
+유무만 정적으로 검사해서 이 방어를 인식하지 못하기 때문(`docs/security-audit-2026-08.md`
+CSRF 11건 항목). 실질적으로는 이중 방어(defense in depth)이지, 눈속임이 아니다 — 토큰은
 실제로 서버에서 검증된다.
 
 - **발급**: `src/proxy.ts`가 매 페이지 요청마다 `gleap_csrf` 쿠키(httpOnly, 32바이트
-  랜덤 hex)가 없으면 새로 만든다. next-intl의 `createMiddleware`가 내부적으로
-  `new Headers(request.headers)`로 복사해 넘기는 걸 이용해, 쿠키를 만드는 바로 그 요청의
-  `cookie` 헤더에도 즉시 반영해 둔다 — 그렇지 않으면 첫 방문(쿠키가 아직 없는 요청) 때
-  폼에 빈 토큰이 찍혀서 그 요청의 첫 제출이 항상 실패하는 문제가 생긴다
+  랜덤 hex, **세션 동안 고정된 비밀값**)가 없으면 새로 만든다. next-intl의
+  `createMiddleware`가 내부적으로 `new Headers(request.headers)`로 복사해 넘기는 걸
+  이용해, 쿠키를 만드는 바로 그 요청의 `cookie` 헤더에도 즉시 반영해 둔다 — 그렇지 않으면
+  첫 방문(쿠키가 아직 없는 요청) 때 폼에 빈 토큰이 찍혀서 그 요청의 첫 제출이 항상
+  실패하는 문제가 생긴다
+- **폼에 실제로 심는 값은 쿠키 원본이 아니라 마스킹된 토큰**(2026-08-28 변경,
+  `src/lib/csrf.ts`의 `getCsrfToken()`이 `salt.HMAC(secret, salt)` 형태로 매 호출마다
+  새로 만듦). 처음엔 쿠키 값을 그대로 폼에 찍었는데, 재점검 스캐너가 CSRF 지적을
+  계속 반복해서 프로덕션에 같은 세션으로 두 번 curl해 재현해보니 hidden 값이 완전히
+  동일했다 — OWASP ZAP류 스캐너의 anti-CSRF 탐지 로직이 "같은 세션에서 값이 안 바뀌면
+  진짜 토큰이 아니다"로 판정하는 것으로 알려져 있어 이게 원인으로 확정됨. 검증은 여전히
+  세션 비밀값에 대한 HMAC이라 서버에서 문제없이 확인 가능(Rails의 masked authenticity
+  token과 같은 발상, 부수 효과로 BREACH류 압축 사이드채널 방어도 됨). 자세한 재현 과정은
+  `docs/security-audit-2026-08.md` 참고
 - **서버 렌더링 폼** (`admin/*`, `member/*` 등 이미 동적 렌더링인 페이지):
-  `src/components/CsrfField.tsx`(`getCsrfToken()`으로 쿠키를 읽어 hidden input 렌더)를
-  `<form>` 안에 넣는다. 클라이언트 컴포넌트가 폼을 감싸는 경우(`MemberPostForm`,
-  `MemberCommentForm`, `MemberProfileForm`)는 페이지(서버 컴포넌트)에서 토큰을 읽어
-  `csrfToken` prop으로 내려주고, 컴포넌트가 직접 hidden input을 그린다
+  `src/components/CsrfField.tsx`(`getCsrfToken()`으로 마스킹된 토큰을 발급해 hidden
+  input 렌더)를 `<form>` 안에 넣는다. 클라이언트 컴포넌트가 폼을 감싸는 경우
+  (`MemberPostForm`, `MemberCommentForm`, `MemberProfileForm`)는 페이지(서버 컴포넌트)에서
+  토큰을 읽어 `csrfToken` prop으로 내려주고, 컴포넌트가 직접 hidden input을 그린다.
+  **상태를 바꾸지 않는 GET 폼(예: `/news`의 검색 필터)에는 넣지 않는다** — CSRF는
+  애초에 POST 등 상태 변경 요청을 보호하는 것이라 GET 폼엔 의미가 없고, 토큰 값이
+  URL 쿼리스트링에 그대로 실려 나가(주소창·히스토리·Referer로 유출) 오히려 손해다
 - **정적 페이지에 얹힌 클라이언트 폼** (Nav/MobileNav의 로그아웃, `MemberAuthForm`의
   로그인/가입): 이 페이지들은 `cookies()`를 읽으면 안 되므로(읽는 순간 SSG가 깨짐),
   대신 이미 CSR로 호출 중인 `/api/session-status`가 `csrfToken`도 함께 내려주도록
   확장해 재사용한다. `MemberAuthForm`은 fetch 기반 제출이라 hidden input 값을
   `x-csrf-token` 헤더로도 같이 보낸다
 - **검증**: Server Action은 맨 앞에서 `assertCsrfToken(formData)`(`src/lib/csrf.ts`)를
-  호출 — 폼의 hidden 필드 값이 쿠키와 다르면(timing-safe 비교) 예외를 던진다.
-  `MemberAuthForm`이 쓰는 better-auth 경로(`/sign-in/email`, `/sign-up/email`)는
-  `src/lib/member-auth.ts`의 `hooks.before`에서 `x-csrf-token` 헤더와 쿠키를 직접
-  비교한다 — better-auth의 `ctx.headers`는 `next/headers`의 `cookies()`를 못 써서
-  raw `Cookie` 헤더 문자열을 직접 파싱함(`readCsrfCookieFromHeader`)
+  호출 — 폼의 hidden 필드 값이 쿠키 비밀값에 대한 유효한 HMAC이 아니면(timing-safe 비교)
+  예외를 던진다. `MemberAuthForm`이 쓰는 better-auth 경로(`/sign-in/email`,
+  `/sign-up/email`)는 `src/lib/member-auth.ts`의 `hooks.before`에서
+  `verifyCsrfHeaderToken()`으로 `x-csrf-token` 헤더 값을 검증한다 — better-auth의
+  `ctx.headers`는 `next/headers`의 `cookies()`를 못 써서 raw `Cookie` 헤더 문자열을
+  직접 파싱함(`readCsrfCookieFromHeader`)
 - **새 mutating 폼을 추가할 때**: Server Action 맨 앞에 `assertCsrfToken(formData)` 호출을
   넣고, 폼에는 상황에 맞게 `<CsrfField />`(서버 렌더링) 또는 `csrfToken` prop(클라이언트
   컴포넌트)을 넣을 것. 상수(`CSRF_FIELD_NAME` 등)는 클라이언트/서버 양쪽에서 쓰므로
@@ -662,6 +678,14 @@ origin-check 미들웨어로 이미 CSRF에서 안전하다. 그런데도 더블
   로그인 페이지 리다이렉트 자체가 이미 정상 동작(스캐너가 리다이렉트를 따라가서 최종
   200을 기록한 것)이라 고칠 대상이 없다. CSRF는 진짜로 몇 겹 더 방어를 얹을 수 있어서
   했지만, 이 둘은 "고치는 척"이 곧 회귀이므로 사용자와 상의 후 그대로 둠(2026-08-27)
+- **재점검에서 "이미 고쳤는데 또 잡히는" 항목을 만나면 가장 먼저 "배포까지 됐는가"부터
+  의심할 것** (2026-08-28 교훈) — XSS 보호 헤더/비밀번호 자동완성 지적이 반복돼 스캐너
+  버그인가 한참 의심했는데, 실제 원인은 수정 커밋이 재점검 시각보다 늦게 만들어졌고
+  그마저도 push가 안 된 상태였던 것. 특히 이 저장소는 **GitHub 자체의 default 브랜치는
+  `main`이지만 Vercel Production 브랜치는 `main-structure`** 라 헷갈리기 쉽다 —
+  `git remote show origin`의 `HEAD branch`는 `main`을 가리키지만, 실제 서비스 중인
+  코드는 `main-structure`가 맞다(`main`엔 CSP/CSRF 관련 코드가 아예 없음). 재점검 전에
+  `git status`로 로컬이 `origin/main-structure`보다 ahead인지, push가 됐는지부터 확인할 것
 
 ## 개발 시 주의
 

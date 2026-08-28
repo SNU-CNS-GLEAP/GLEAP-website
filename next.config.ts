@@ -53,6 +53,10 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // 기본값(true)이면 모든 응답에 `X-Powered-By: Next.js` 헤더가 붙어 사용 프레임워크가
+  // 그대로 드러난다 — Sparrow 재점검(2026-08-28)의 "HTTP 응답 헤더에 포함된 서버 정보"
+  // 지적 대응. 끄면 헤더 자체가 안 붙을 뿐 기능에는 영향 없음
+  poweredByHeader: false,
   images: {
     remotePatterns: [
       {

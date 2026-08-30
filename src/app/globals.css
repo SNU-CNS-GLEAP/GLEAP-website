@@ -1,17 +1,32 @@
 @import "tailwindcss";
+@import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 
 /*
  * GLEAP 브랜드 컬러 — public/logo_gleap.png 기준.
  * 사이트 전체 색을 바꾸고 싶으면 이 값들만 고치면 됨 (다크모드 없음, 항상 밝은 배경 고정).
  */
 :root {
+  --font-gleap-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-gleap-serif: var(--font-gleap-sans);
   --background: #ffffff;
-  --surface: #f5f6f8; /* 카드/구역 배경 등 살짝 구분이 필요할 때 */
-  --foreground: #1a1a1a;
-  --primary: #1b3a7a; /* 로고의 네이비 (A, P) */
-  --muted: #6b6b6b; /* 로고의 그레이 (G L E) */
-  --border: #e5e5e5;
+  --surface: #f4f7fb; /* 카드/구역 배경 등 살짝 구분이 필요할 때 */
+  --foreground: #101828;
+  --primary: #163a82; /* 로고의 네이비 (A, P) */
+  --primary-deep: #071b49; /* 몰입형 브랜드 섹션 배경 */
+  --accent: #2f65e8; /* 링크, CTA, 데이터 강조 */
+  --accent-soft: #eaf2ff;
+  --cyan: #69d8ff; /* 과학 궤도/신호 그래픽 */
+  --gold: #a88436; /* Honor Society 인장과 헤리티지 강조 */
+  --gold-soft: #f5efdf;
+  --muted: #667085; /* 로고의 그레이 (G L E) */
+  --border: #dfe5ee;
   --admin: #b45309; /* 관리자 모드 표시 전용. 네이비(primary)와 겹치지 않는 색으로 의도적으로 선택 */
+  --control-border: #cfd7e5;
+  --control-border-hover: #aebbd0;
+  --control-placeholder: #98a2b3;
+  --control-focus-ring: rgb(47 101 232 / 14%);
+  --control-height: 3rem;
+  color-scheme: light;
 }
 
 @theme inline {
@@ -19,15 +34,424 @@
   --color-surface: var(--surface);
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
+  --color-primary-deep: var(--primary-deep);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-cyan: var(--cyan);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
   --color-muted: var(--muted);
   --color-border: var(--border);
   --color-admin: var(--admin);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-gleap-sans);
+  --font-mono: var(--font-gleap-sans);
+  --font-serif: var(--font-gleap-sans);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-gleap-sans);
+  font-synthesis: none;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+:where(button, input, select, textarea) {
+  color: inherit;
+  font-family: inherit;
+}
+
+:where(
+  input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="button"]):not([type="submit"]):not([type="reset"]),
+  select,
+  textarea
+) {
+  min-height: var(--control-height);
+  border: 1px solid var(--control-border);
+  border-radius: 0.125rem;
+  background-color: #fff;
+  padding: 0.6875rem 0.9375rem;
+  color: var(--foreground);
+  font-size: 0.875rem;
+  font-weight: 450;
+  letter-spacing: -0.012em;
+  line-height: 1.55;
+  box-shadow: 0 1px 2px rgb(7 27 73 / 3%);
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+:where(
+  input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="button"]):not([type="submit"]):not([type="reset"]),
+  select,
+  textarea
+):hover:not(:disabled) {
+  border-color: var(--control-border-hover);
+}
+
+:where(
+  input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="button"]):not([type="submit"]):not([type="reset"]),
+  select,
+  textarea
+):focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 4px var(--control-focus-ring);
+}
+
+:where(input, textarea)::placeholder {
+  color: var(--control-placeholder);
+  opacity: 1;
+}
+
+:where(input, select, textarea):disabled {
+  cursor: not-allowed;
+  background-color: var(--surface);
+  color: var(--muted);
+}
+
+:where(textarea) {
+  min-height: 7.5rem;
+  resize: vertical;
+}
+
+:where(select) {
+  cursor: pointer;
+}
+
+:where(form label) {
+  color: var(--foreground);
+  font-family: var(--font-gleap-sans);
+  letter-spacing: -0.012em;
+}
+
+.form-panel {
+  --form-accent: var(--primary);
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--form-accent);
+  border-radius: 0.125rem;
+  background: #fff;
+  box-shadow: 0 18px 48px rgb(7 27 73 / 6%);
+}
+
+.form-panel-accent { --form-accent: var(--accent); }
+.form-panel-admin { --form-accent: var(--admin); }
+
+.form-button-primary,
+.form-button-secondary,
+.form-button-danger {
+  display: inline-flex;
+  min-height: var(--control-height);
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 0.125rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.form-button-primary {
+  background: var(--primary-deep);
+  color: #fff;
+  box-shadow: 0 6px 16px rgb(7 27 73 / 12%);
+}
+
+.form-button-primary:hover:not(:disabled) {
+  background: var(--accent);
+  box-shadow: 0 8px 20px rgb(47 101 232 / 18%);
+  transform: translateY(-1px);
+}
+
+.form-button-secondary {
+  border-color: var(--control-border);
+  background: #fff;
+  color: var(--primary-deep);
+}
+
+.form-button-secondary:hover:not(:disabled) {
+  border-color: var(--primary);
+  background: var(--surface);
+}
+
+.form-button-danger {
+  border-color: #fecaca;
+  background: #fff;
+  color: #b42318;
+}
+
+.form-button-danger:hover:not(:disabled) {
+  border-color: #dc2626;
+  background: #fef2f2;
+}
+
+:where(.form-button-primary, .form-button-secondary, .form-button-danger):disabled {
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.52;
+  transform: none;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 116px;
+}
+
+[data-site-header] {
+  font-family: var(--font-gleap-sans);
+  transition: box-shadow 320ms ease, border-color 320ms ease;
+}
+
+html[data-page-scrolled="true"] [data-site-header] {
+  border-color: rgb(22 58 130 / 12%);
+  box-shadow: 0 12px 36px rgb(7 27 73 / 7%);
+}
+
+.site-mega-panel {
+  animation: site-mega-enter 180ms cubic-bezier(.2, .75, .25, 1) both;
+  transform-origin: top center;
+}
+
+html[lang="ko"] .site-mega-title {
+  max-width: none;
+  font-size: clamp(1.45rem, 2.2vw, 2.4rem);
+  letter-spacing: -.05em;
+  white-space: nowrap;
+}
+
+@keyframes site-mega-enter {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+::selection {
+  background: var(--accent);
+  color: white;
+}
+
+:where(a, button):focus-visible {
+  outline: 3px solid rgb(47 101 232 / 42%);
+  outline-offset: 3px;
+}
+
+.skip-link {
+  position: fixed;
+  z-index: 100;
+  top: 0.75rem;
+  left: 0.75rem;
+  transform: translateY(-180%);
+  background: var(--primary-deep);
+  padding: 0.8rem 1rem;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 700;
+  transition: transform 160ms ease;
+}
+
+.skip-link:focus { transform: translateY(0); }
+
+.page-shell {
+  min-height: 100%;
+  background: #fff;
+}
+
+.page-hero {
+  border-bottom: 1px solid var(--border);
+  background: #fff;
+}
+
+.page-hero-inner,
+.page-content {
+  width: min(100%, 94rem);
+  margin-inline: auto;
+  padding-inline: clamp(1.5rem, 4vw, 4.5rem);
+}
+
+.page-hero-inner {
+  padding-block: clamp(2.75rem, 5vw, 4.5rem);
+}
+
+.page-kicker {
+  margin-top: 0.85rem;
+  color: #526078;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1.6;
+  text-transform: uppercase;
+}
+
+.page-display {
+  max-width: 24ch;
+  color: var(--primary-deep);
+  font-size: clamp(2.15rem, 4.2vw, 3.75rem);
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  line-height: 1.12;
+  text-wrap: balance;
+}
+
+.page-lede {
+  max-width: 52rem;
+  margin-top: 1.25rem;
+  color: #5c687c;
+  font-size: 0.95rem;
+  line-height: 1.75;
+  text-wrap: pretty;
+}
+
+.page-hero-meta {
+  max-width: 42rem;
+  margin-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+
+.institutional-band {
+  min-height: 30px;
+  background: var(--primary-deep);
+  color: rgb(255 255 255 / 72%);
+}
+
+.institutional-band-inner {
+  display: flex;
+  width: min(100%, 94rem);
+  min-height: 30px;
+  align-items: center;
+  gap: 1rem;
+  margin-inline: auto;
+  padding-inline: clamp(1.5rem, 4vw, 3rem);
+  font-size: 9px;
+  font-weight: 650;
+  letter-spacing: .16em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.institutional-band-mark { color: #d7b66b; }
+.institutional-band-meta { margin-left: auto; color: #d7b66b; }
+
+.site-footer {
+  border-top: 4px solid var(--primary-deep);
+  background: linear-gradient(180deg, #fff 0%, #f5f8fc 100%);
+}
+
+.honor-seal {
+  --seal-color: var(--primary-deep);
+  position: relative;
+  display: grid;
+  width: 9rem;
+  aspect-ratio: 1;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  color: var(--seal-color);
+  font-family: var(--font-serif);
+  text-align: center;
+}
+
+.honor-seal[data-size="sm"] { width: 7.25rem; }
+.honor-seal[data-size="lg"] { width: clamp(11rem, 18vw, 16rem); }
+.honor-seal[data-variant="gold"] { --seal-color: var(--gold); }
+.honor-seal[data-variant="light"] { --seal-color: rgb(255 255 255 / 78%); }
+
+.honor-seal::before,
+.honor-seal::after {
+  position: absolute;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  content: "";
+  pointer-events: none;
+}
+
+.honor-seal::before { inset: .34rem; opacity: .72; }
+.honor-seal::after { inset: 1.15rem; opacity: .4; }
+.honor-seal[data-size="sm"]::after { inset: .93rem; }
+
+.honor-seal-orbit {
+  position: absolute;
+  width: 48%;
+  height: 24%;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  opacity: .58;
+  transform: rotate(-24deg);
+}
+
+.honor-seal-orbit::after {
+  position: absolute;
+  top: 48%;
+  right: -.17rem;
+  width: .34rem;
+  height: .34rem;
+  border-radius: 50%;
+  background: currentColor;
+  content: "";
+}
+
+.honor-seal-top,
+.honor-seal-bottom,
+.honor-seal-subtitle,
+.honor-seal-year { position: absolute; z-index: 1; font-family: var(--font-sans); font-weight: 700; letter-spacing: .12em; white-space: nowrap; }
+.honor-seal-top { top: 10%; font-size: clamp(.34rem, .7vw, .5rem); }
+.honor-seal-bottom { bottom: 9%; font-size: clamp(.32rem, .65vw, .47rem); }
+.honor-seal-center { position: relative; z-index: 1; margin-top: -.12em; font-size: clamp(2.6rem, 5vw, 4.5rem); line-height: 1; }
+.honor-seal-year { top: 31%; font-size: .34rem; }
+.honor-seal-subtitle { bottom: 28%; max-width: 62%; overflow: hidden; font-size: .29rem; letter-spacing: .09em; text-overflow: ellipsis; }
+
+.page-content { padding-block: clamp(4rem, 8vw, 7.5rem); }
+
+.section-kicker {
+  color: var(--accent);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.section-display {
+  color: var(--primary-deep);
+  font-size: clamp(2rem, 4.2vw, 4.25rem);
+  font-weight: 620;
+  letter-spacing: -0.055em;
+  line-height: 1.05;
+  text-wrap: balance;
+}
+
+.editorial-link {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 0.65rem;
+  border-bottom: 1px solid #aeb7c5;
+  padding-block: 0.5rem;
+  color: #263650;
+  font-size: 0.82rem;
+  font-weight: 700;
+  transition: gap 200ms ease, border-color 200ms ease, color 200ms ease;
+}
+
+.editorial-link:hover { gap: 0.95rem; border-color: var(--primary); color: var(--primary); }
+
+.admin-page {
+  width: min(100%, 96rem);
+  margin-inline: auto;
+  padding: clamp(2rem, 5vw, 4.5rem) clamp(1.25rem, 4vw, 4rem) 6rem;
+}
+
+@media (max-width: 899px) {
+  .institutional-band-meta { display: none; }
+  .institutional-band-inner { justify-content: center; text-align: center; }
+  .institutional-band-mark { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .site-mega-panel { animation: none; }
+  .skip-link,
+  .editorial-link { transition: none; }
 }

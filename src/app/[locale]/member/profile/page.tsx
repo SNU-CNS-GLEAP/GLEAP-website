@@ -1,33 +1,31 @@
 import { MemberProfileForm } from "@/components/member/MemberProfileForm";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { updateMyProfile } from "../community/actions";
 import { requireMember } from "@/lib/member-auth";
 import { getCsrfToken } from "@/lib/csrf";
 import { getMemberProfile } from "@/lib/member-community";
+import { MemberPortalHeader } from "@/components/member/MemberPortalHeader";
 
 type Props = { params: Promise<{ locale: string }> };
 
 export default async function MyMemberProfilePage({ params }: Props) {
   const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations("MemberArea");
   const member = await requireMember(locale);
   const profile = await getMemberProfile(member.user.id);
   const csrfToken = await getCsrfToken();
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-12">
-      <div>
-        <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
-          회원 전용 공간
-        </span>
-        <h1 className="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-          내 프로필 관리
-        </h1>
-        <p className="mt-1 text-sm text-muted">
-          동아리 부원들에게 공개되는 프로필 정보를 수정합니다. (연락처 등 민감 정보는 기재하지 마세요)
-        </p>
-      </div>
+    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-6 py-10 sm:py-14">
+      <MemberPortalHeader
+        kicker={t("privateArea")}
+        title={t("profilePageTitle")}
+        description={t("profilePageDescription")}
+        index="02"
+      />
 
       <MemberProfileForm
-        locale={locale}
         defaultValues={{
           name: profile?.name ?? member.user.name,
           cohort: profile?.cohort ?? "",

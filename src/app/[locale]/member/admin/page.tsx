@@ -1,21 +1,26 @@
 import { approveMemberEmail, removeMemberAccess, resendMemberInvitation } from "../community/actions";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { CsrfField } from "@/components/CsrfField";
 import { requireMember } from "@/lib/member-auth";
 import { getMemberAccessList } from "@/lib/member-community";
 import { isMemberEmailConfigured } from "@/lib/member-email";
+import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
+import { MemberPortalHeader } from "@/components/member/MemberPortalHeader";
 
 type Props = { params: Promise<{ locale: string }> };
 
 export default async function MemberAdminPage({ params }: Props) {
   const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations("MemberArea");
   const member = await requireMember(locale);
   if (member.role !== "admin") {
     return (
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-6 py-16">
-        <h1 className="text-2xl font-semibold">접근 권한 없음</h1>
-        <p className="text-muted">이 화면은 운영진만 사용할 수 있습니다.</p>
-        <Link href="/member" className="text-primary">회원 홈으로 돌아가기</Link>
+        <h1 className="text-2xl font-semibold">{t("accessDenied")}</h1>
+        <p className="text-muted">{t("accessDeniedDescription")}</p>
+        <Link href="/member" className="text-primary">{t("returnMemberHome")}</Link>
       </main>
     );
   }
@@ -24,71 +29,68 @@ export default async function MemberAdminPage({ params }: Props) {
   const emailConfigured = isMemberEmailConfigured();
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-8 px-6 py-12">
-      <div className="flex flex-col gap-2 border-b border-border pb-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-sm font-semibold text-primary">운영진 전용</p>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">회원 승인 및 초대 관리</h1>
-          <p className="mt-1 text-sm text-muted">
-            부원의 이름, 기수, 이메일을 등록하고 전용 가입 초대 링크를 발송합니다.
-          </p>
-        </div>
-        <Link href="/member" className="text-sm font-medium text-primary hover:underline">
-          ← 회원 홈으로
-        </Link>
-      </div>
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-6 py-10 sm:py-14">
+      <MemberPortalHeader
+        kicker={t("adminKicker")}
+        title={t("adminTitle")}
+        description={t("adminDescription")}
+        index="A"
+        actions={<Link href="/member" className="text-[.68rem] font-semibold uppercase tracking-[.16em] text-white/70 hover:text-accent">{t("backMemberHome")}</Link>}
+      />
+
+      <div className="flex flex-col gap-8 border-x border-b border-border bg-white p-6 sm:p-9">
 
       {/* 발송 시스템 상태 카드 */}
-      <div className={`rounded-xl border p-4 text-sm ${emailConfigured ? "border-emerald-200 bg-emerald-50/50 text-emerald-900" : "border-amber-200 bg-amber-50/50 text-amber-900"}`}>
+      <div className={`border-l-2 p-4 text-sm ${emailConfigured ? "border-emerald-500 bg-emerald-50/50 text-emerald-900" : "border-[#b49347] bg-amber-50/50 text-amber-900"}`}>
         <div className="flex items-center gap-2 font-semibold">
-          <span>{emailConfigured ? "✅ 이메일 발송 연결됨" : "⚠️ 이메일 발송 설정 대기 중"}</span>
+          <span>{emailConfigured ? `✅ ${t("emailConnected")}` : `⚠️ ${t("emailPending")}`}</span>
         </div>
         <p className="mt-1 text-xs text-muted-foreground">
           {emailConfigured
-            ? "Gmail SMTP 발송이 연결되어 있어 신규 회원 등록 시 맞춤 초대장이 자동으로 발송됩니다."
-            : "환경변수(GMAIL_SMTP_USER, GMAIL_SMTP_APP_PASSWORD)가 등록되면 초대 메일이 실제 자동 발송됩니다."}
+            ? t("emailConnectedDescription")
+            : t("emailPendingDescription")}
         </p>
       </div>
 
       {/* 신규 회원 승인 및 초대 폼 */}
-      <form action={approveMemberEmail.bind(null, locale)} className="flex flex-col gap-4 rounded-xl border border-border bg-background p-6 shadow-sm">
+      <form action={approveMemberEmail.bind(null, locale)} className="flex flex-col gap-5 border border-border bg-white p-6">
         <CsrfField />
-        <h2 className="text-base font-semibold text-foreground">신규 회원 등록 및 구성원 연동 초대장 발송</h2>
+        <h2 className="font-serif text-xl font-normal text-primary-deep">{t("inviteTitle")}</h2>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <label className="flex flex-col gap-1.5 text-sm font-medium">
-            이름 (실명)
+            {t("nameLabel")}
             <input
               name="name"
               type="text"
               required
               maxLength={80}
-              placeholder="예: 박정민"
-              className="rounded-lg border border-border px-3 py-2 font-normal focus:border-primary focus:outline-none"
+              placeholder={t("namePlaceholder")}
+              className="min-h-11 border border-border px-3 font-normal focus:border-primary focus:outline-none"
             />
           </label>
 
           <label className="flex flex-col gap-1.5 text-sm font-medium">
-            기수
+            {t("cohort")}
             <input
               name="cohort"
               type="text"
               maxLength={40}
-              placeholder="예: 14기"
-              defaultValue="15기"
-              className="rounded-lg border border-border px-3 py-2 font-normal focus:border-primary focus:outline-none"
+              placeholder={t("cohortPlaceholder")}
+              defaultValue={t("cohortDefault")}
+              className="min-h-11 border border-border px-3 font-normal focus:border-primary focus:outline-none"
             />
           </label>
 
           <label className="flex flex-col gap-1.5 text-sm font-medium sm:col-span-2 lg:col-span-2">
-            이메일 주소
+            {t("emailLabel")}
             <input
               name="email"
               type="email"
               required
               maxLength={320}
               placeholder="member@snu.ac.kr"
-              className="rounded-lg border border-border px-3 py-2 font-normal focus:border-primary focus:outline-none"
+              className="min-h-11 border border-border px-3 font-normal focus:border-primary focus:outline-none"
             />
           </label>
         </div>
@@ -96,14 +98,14 @@ export default async function MemberAdminPage({ params }: Props) {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-t border-border pt-4">
           <div className="flex flex-wrap items-center gap-4">
             <label className="flex items-center gap-2 text-sm font-medium">
-              권한
+              {t("role")}
               <select
                 name="role"
                 defaultValue="member"
                 className="rounded-lg border border-border px-3 py-1.5 font-normal focus:border-primary focus:outline-none"
               >
-                <option value="member">일반 회원</option>
-                <option value="admin">운영진</option>
+                <option value="member">{t("memberRole")}</option>
+                <option value="admin">{t("adminRole")}</option>
               </select>
             </label>
 
@@ -114,34 +116,34 @@ export default async function MemberAdminPage({ params }: Props) {
                 defaultChecked={true}
                 className="h-4 w-4 rounded border-border text-primary"
               />
-              등록 즉시 가입 초대 메일 발송하기
+              {t("sendInvitation")}
             </label>
           </div>
 
           <button
             type="submit"
-            className="w-fit rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 transition"
+            className="form-button-primary w-fit"
           >
-            승인 및 초대장 발송
+            {t("approveInvitation")}
           </button>
         </div>
       </form>
 
       {/* 승인 목록 테이블 */}
-      <section className="rounded-xl border border-border bg-background shadow-sm">
+      <section className="border border-border bg-white">
         <div className="border-b border-border px-6 py-4">
-          <h2 className="font-semibold text-foreground">승인된 회원 명단 ({approvedMembers.length}명)</h2>
+          <h2 className="font-semibold text-foreground">{t("approvedList", { count: approvedMembers.length })}</h2>
         </div>
         <div className="divide-y divide-border">
           {approvedMembers.length === 0 ? (
-            <p className="p-6 text-center text-sm text-muted">등록된 승인 회원이 없습니다.</p>
+            <p className="p-6 text-center text-sm text-muted">{t("emptyApproved")}</p>
           ) : (
             approvedMembers.map((approved) => (
               <div key={approved.id} className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-foreground">
-                      {approved.registeredName || "미가입"}
+                      {approved.registeredName || t("notRegistered")}
                     </span>
                     {approved.registeredCohort && (
                       <span className="rounded bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
@@ -150,14 +152,14 @@ export default async function MemberAdminPage({ params }: Props) {
                     )}
                     <span className="text-sm text-muted">({approved.email})</span>
                     <span className={`rounded px-2 py-0.5 text-xs font-medium ${approved.role === "admin" ? "bg-amber-100 text-amber-900" : "bg-surface text-muted"}`}>
-                      {approved.role === "admin" ? "운영진" : "일반 회원"}
+                      {approved.role === "admin" ? t("adminRole") : t("memberRole")}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-muted">
                     {approved.isRegistered ? (
-                      <span className="text-emerald-700 font-medium">✓ 가입 완료 (프로필 연동됨)</span>
+                      <span className="text-emerald-700 font-medium">✓ {t("registered")}</span>
                     ) : (
-                      <span className="text-amber-700 font-medium">⏳ 가입 대기 중 (초대 발송됨)</span>
+                      <span className="text-amber-700 font-medium">⏳ {t("waiting")}</span>
                     )}
                   </div>
                 </div>
@@ -170,18 +172,18 @@ export default async function MemberAdminPage({ params }: Props) {
                       disabled={!emailConfigured}
                       className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-surface disabled:opacity-40 transition"
                     >
-                      초대장 재발송
+                      {t("resend")}
                     </button>
                   </form>
                   {approved.email !== "snucnsgleap@gmail.com" && (
                     <form action={removeMemberAccess.bind(null, locale, approved.email)}>
                       <CsrfField />
-                      <button
-                        type="submit"
+                      <ConfirmSubmitButton
+                        confirmMessage={t("removeConfirm", { email: approved.email })}
                         className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition"
                       >
-                        삭제
-                      </button>
+                        {t("remove")}
+                      </ConfirmSubmitButton>
                     </form>
                   )}
                 </div>
@@ -190,6 +192,7 @@ export default async function MemberAdminPage({ params }: Props) {
           )}
         </div>
       </section>
+      </div>
     </main>
   );
 }

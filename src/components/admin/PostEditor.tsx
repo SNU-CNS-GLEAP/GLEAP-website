@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useEditor, useEditorState, EditorContent, type Editor } from "@tiptap/react";
 import { StarterKit } from "@tiptap/starter-kit";
 import { Image as TiptapImage } from "@tiptap/extension-image";
@@ -59,7 +60,8 @@ type Props = {
   placeholder?: string;
 };
 
-export function PostEditor({ name, defaultValue = "", placeholder = "내용을 입력하세요..." }: Props) {
+export function PostEditor({ name, defaultValue = "", placeholder }: Props) {
+  const t = useTranslations("AdminArea");
   const [markdown, setMarkdown] = useState(defaultValue);
 
   const editor = useEditor({
@@ -80,7 +82,7 @@ export function PostEditor({ name, defaultValue = "", placeholder = "내용을 �
         },
       }),
       ResizableImage,
-      Placeholder.configure({ placeholder }),
+      Placeholder.configure({ placeholder: placeholder ?? t("editorPlaceholder") }),
       Markdown,
     ],
     content: defaultValue,
@@ -108,6 +110,7 @@ export function PostEditor({ name, defaultValue = "", placeholder = "내용을 �
 }
 
 function Toolbar({ editor }: { editor: Editor }) {
+  const t = useTranslations("AdminArea");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -134,7 +137,7 @@ function Toolbar({ editor }: { editor: Editor }) {
 
   function promptLink() {
     const previousUrl = editor.getAttributes("link").href as string | undefined;
-    const url = window.prompt("링크 URL", previousUrl ?? "https://");
+    const url = window.prompt(t("linkPrompt"), previousUrl ?? "https://");
     if (url === null) return;
     if (url === "") {
       editor.chain().focus().extendMarkRange("link").unsetLink().run();
@@ -154,14 +157,14 @@ function Toolbar({ editor }: { editor: Editor }) {
       formData.append("file", file);
       const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
       if (!res.ok) {
-        const { error } = await res.json().catch(() => ({ error: "업로드 실패" }));
-        window.alert(`이미지 업로드 실패: ${error ?? res.statusText}`);
+        const { error } = await res.json().catch(() => ({ error: t("uploadFailed") }));
+        window.alert(t("uploadFailedDetail", { error: error ?? res.statusText }));
         return;
       }
       const { url } = (await res.json()) as { url: string };
       editor.chain().focus().setImage({ src: url }).run();
     } catch {
-      window.alert("이미지 업로드 실패: 네트워크 오류");
+      window.alert(t("uploadFailedDetail", { error: t("networkError") }));
     } finally {
       setUploading(false);
     }
@@ -170,37 +173,37 @@ function Toolbar({ editor }: { editor: Editor }) {
   return (
     <div className="flex flex-wrap gap-1 rounded-t border border-border bg-surface p-1">
       <ToolbarButton active={toolbarState.isHeading2} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>
-        제목1
+        {t("heading2")}
       </ToolbarButton>
       <ToolbarButton active={toolbarState.isHeading3} onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}>
-        제목2
+        {t("heading3")}
       </ToolbarButton>
       <ToolbarButton active={toolbarState.isHeading4} onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()}>
-        제목3
+        {t("heading4")}
       </ToolbarButton>
       <Divider />
       <ToolbarButton active={toolbarState.isBold} onClick={() => editor.chain().focus().toggleBold().run()}>
-        굵게
+        {t("bold")}
       </ToolbarButton>
       <ToolbarButton active={toolbarState.isItalic} onClick={() => editor.chain().focus().toggleItalic().run()}>
-        기울임
+        {t("italic")}
       </ToolbarButton>
       <Divider />
       <ToolbarButton active={toolbarState.isBulletList} onClick={() => editor.chain().focus().toggleBulletList().run()}>
-        목록
+        {t("bulletList")}
       </ToolbarButton>
       <ToolbarButton active={toolbarState.isOrderedList} onClick={() => editor.chain().focus().toggleOrderedList().run()}>
-        번호 목록
+        {t("orderedList")}
       </ToolbarButton>
       <ToolbarButton active={toolbarState.isBlockquote} onClick={() => editor.chain().focus().toggleBlockquote().run()}>
-        인용문
+        {t("blockquote")}
       </ToolbarButton>
       <Divider />
       <ToolbarButton active={toolbarState.isLink} onClick={promptLink}>
-        링크
+        {t("link")}
       </ToolbarButton>
       <ToolbarButton onClick={() => fileInputRef.current?.click()} disabled={uploading}>
-        {uploading ? "업로드 중..." : "이미지"}
+        {uploading ? t("uploading") : t("image")}
       </ToolbarButton>
       <input
         ref={fileInputRef}
@@ -212,7 +215,7 @@ function Toolbar({ editor }: { editor: Editor }) {
       {toolbarState.isImage && (
         <>
           <Divider />
-          <span className="self-center px-1 text-xs text-muted">선택한 이미지 폭</span>
+          <span className="self-center px-1 text-xs text-muted">{t("selectedImageWidth")}</span>
           {[25, 50, 75, 100].map((pct) => (
             <ToolbarButton
               key={pct}

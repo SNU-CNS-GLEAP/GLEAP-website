@@ -5,8 +5,8 @@ export const about: {
   paragraphs: LocalizedText[];
 } = {
   motto: {
-    ko: "Connect Science, Illuminate World",
-    en: "Connect Science, Illuminate World",
+    ko: "Connect Science, Illuminate the World.",
+    en: "Connect Science, Illuminate the World.",
   },
   paragraphs: [
     {

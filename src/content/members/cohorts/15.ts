@@ -6,7 +6,8 @@ export const cohort: Cohort = {
   description: { ko: "GLEAP 15기 회원 명단입니다.", en: "Roster of GLEAP's 15th generation members." },
   members: [
     {
-      name: { ko: "고주형", en: "KO Juhyeong" },
+      surname: { ko: "고", en: "Ko" },
+      givenName: { ko: "주형", en: "Juhyeong" },
       department: { ko: "화학부", en: "Dept of Chemistry" },
       photo: "/members/15고주형.jpg",
       links: {
@@ -14,41 +15,49 @@ export const cohort: Cohort = {
       },
     },
     {
-      name: { ko: "김도현", en: "KIM Dohyun" },
+      surname: { ko: "김", en: "Kim" },
+      givenName: { ko: "도현", en: "Dohyun" },
       department: { ko: "통계학과", en: "Dept of Statistics" },
       photo: "/members/15김도현.jpg",
+      email: "kdhyu217@gmail.com",
     },
     {
-      name: { ko: "김민채", en: "KIM Minchae" },
+      surname: { ko: "김", en: "Kim" },
+      givenName: { ko: "민채", en: "Minchae" },
       department: { ko: "수리과학부", en: "Dept of Mathematical Sciences" },
       photo: "/members/15김민채.jpg",
     },
     {
-      name: { ko: "김성민", en: "KIM Seongmin" },
+      surname: { ko: "김", en: "Kim" },
+      givenName: { ko: "성민", en: "Seongmin" },
       department: { ko: "화학부", en: "Dept of Chemistry" },
       photo: "/members/15김성민.jpg",
     },
     {
-      name: { ko: "문현호", en: "MOON Hyunho" },
+      surname: { ko: "문", en: "Moon" },
+      givenName: { ko: "현호", en: "Hyunho" },
       department: { ko: "생명과학부", en: "Dept of Biological Sciences" },
       photo: "/members/15문현호.jpg",
       email: "octahedron00@gmail.com",
       links: {
+        linkedin: "https://www.linkedin.com/in/%ED%98%84%ED%98%B8-%EB%AC%B8-687a44214/",
         tistory: "https://octahedron00.tistory.com",
         github: "https://github.com/octahedron00",
-        instagram: "https://instagram.com/octo.moon_",
       },
     },
     {
-      name: { ko: "서채원", en: "SEO Chaeone" },
+      surname: { ko: "서", en: "Seo" },
+      givenName: { ko: "채원", en: "Chaeone" },
       department: { ko: "화학부", en: "Dept of Chemistry" },
       photo: "/members/15서채원.jpg",
+      email: "cheaone15@gmail.com",
       links: {
-        github: "https://github.com/chaeone15",
+        linkedin: "https://www.linkedin.com/in/chaeone-seo/",
       },
     },
     {
-      name: { ko: "이다인", en: "LEE Dain" },
+      surname: { ko: "이", en: "Lee" },
+      givenName: { ko: "다인", en: "Dain" },
       department: { ko: "지구환경과학부", en: "Dept of Earth and Environmental Sciences" },
       photo: "/members/15이다인.jpg",
       links: {
@@ -56,15 +65,18 @@ export const cohort: Cohort = {
       },
     },
     {
-      name: { ko: "정지혜", en: "JUNG Ji-Hye" },
+      surname: { ko: "정", en: "Jung" },
+      givenName: { ko: "지혜", en: "Ji-Hye" },
       department: { ko: "생명과학부", en: "Dept of Biological Sciences" },
       photo: "/members/15정지혜.jpg",
       links: {
-        github: "https://github.com/jungjh06",
+        instagram: "https://instagram.com/stopthesun_",
       },
+      email: "jungjh2949@gmail.com",
     },
     {
-      name: { ko: "차혜린", en: "CHA Hyerin" },
+      surname: { ko: "차", en: "Cha" },
+      givenName: { ko: "혜린", en: "Hyerin" },
       department: { ko: "지구환경과학부", en: "Dept of Earth and Environmental Sciences" },
       photo: "/members/15차혜린.jpg",
       links: {
@@ -72,9 +84,11 @@ export const cohort: Cohort = {
       },
     },
     {
-      name: { ko: "한수민", en: "HAN Sumin" },
+      surname: { ko: "한", en: "Han" },
+      givenName: { ko: "수민", en: "Sumin" },
       department: { ko: "물리천문학부", en: "Dept of Physics and Astronomy" },
       photo: "/members/15한수민.jpg",
+      email: "summmin22@gmail.com",
     },
   ],
 };

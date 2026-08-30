@@ -21,6 +21,27 @@ Claude Code 세션 컨텍스트 겸 인수인계 문서. **결정된 사항과 �
 
 ---
 
+
+
+
+## 긴급: 브라우저 확인 (2026.08~09 오류)
+
+앱 내장 Preview 페인은 쓰지 않는다. 대신 Playwright로 사용자의 Chrome을 띄운다.
+
+  const browser = await chromium.launch({ channel: 'chrome', headless: false });
+
+- dev 서버는 사용자가 별도 터미널에 띄워둔다. 이미 3000번이 떠 있으면 다시 띄우지 않는다.
+- 페이지 확인, 클릭, 콘솔 에러 수집, 스크린샷 모두 이 방식으로 한다.
+- 일회성 확인은 `scripts/` 아래 임시 파일로 짜고 지운다.
+- 반복 검증은 스크립트로 남긴다. 예: `npm run audit:csrf`
+
+(내장 브라우저로 로컬 서버를 렌더링하면 GPU 프로세스가 죽어 세션이 끊긴다.
+ 2026-08-30 두 번 발생, exitCode 0x060C201E)
+
+
+
+
+
 ## 스택
 
 | 영역 | 선택 | 이유 |
@@ -161,7 +182,8 @@ npm run dev
   `drizzle-orm/neon-http`로 만든 클라이언트를 내보냄. 규모(게시물 CRUD 하나)에 Prisma는
   무겁다고 판단 — Drizzle은 스키마가 TS 파일 하나라 읽기 쉽고 마이그레이션도 가벼움
 - 컬럼: `type`(자유 문자열 — 월간 글립/저널 클럽/행사/공지사항 등. enum이 아닌 이유는
-  분류가 늘어날 수 있는데 enum이면 늘 때마다 마이그레이션이 필요해서), `title_ko`/`body_ko`(필수),
+  분류가 늘어날 수 있는데 enum이면 늘 때마다 마이그레이션이 필요해서), `section`(공지/학술
+  소식/활동 소식 3분류 고정 — 아래 "소식 3분류(section)" 절 참고), `title_ko`/`body_ko`(필수),
   `title_en`/`body_en`(선택 — 비어있으면 `localize()`가 한국어로 폴백, 아래 번역 절과 동일 규칙),
   `author_name`(선택, 작성자가 직접 입력하는 크레딧 표기용 — 계정이 1개뿐이라 로그인과 무관),
   `created_at`/`updated_at`
@@ -171,8 +193,140 @@ npm run dev
 - 마이그레이션: `schema.ts` 수정 → `npm run db:generate`(diff SQL 생성) → `npm run db:migrate`
   (현재 `.env.local`의 `DATABASE_URL_UNPOOLED`가 가리키는 DB에 적용). `drizzle.config.ts`가
   마이그레이션 전용으로 unpooled 연결을 쓰도록 지정돼 있음
+  > **2026-08-28 갱신 — 마이그레이션 파일 0000~0007을 전부 idempotent하게 고쳐서, 어떤
+  > 상태의 DB에 대고 돌려도 `db:migrate` 하나로 안전하게 맞춰지도록 만들었다.**
+  >
+  > **원래 문제**: `drizzle-orm`의 `migrate()`는 `drizzle.__drizzle_migrations`에서
+  > **가장 최근 행 하나의 `created_at`**만 보고, `drizzle/meta/_journal.json`에 있는
+  > 마이그레이션 중 그보다 `when` 값이 큰 것들을 전부 "안 적용됨"으로 간주해 실행한다
+  > (개별 마이그레이션 단위로 이미 적용됐는지 보는 게 아니라 딱 이 시각 비교 하나뿐 —
+  > `node_modules/drizzle-orm/migrator.js`, `neon-http/migrator.js` 참고). dev 브랜치를
+  > 조회해보니 이 추적 테이블에는 0000~0001만 기록돼 있었는데 실제 스키마는 0002~0006까지
+  > (회원 인증 테이블, `published_at`, `section`, `member_post_dislikes`) 이미 반영돼
+  > 있었다 — 그 구간이 `db:migrate` 경로가 아니라 다른 방법(Neon 콘솔 SQL 편집기 등)으로
+  > 직접 적용됐던 것. `member_post_dislikes`를 만든 파일은 `_journal.json`에 등록조차
+  > 안 돼 있었고(`readMigrationFiles`는 journal에 있는 것만 읽는다), 0000~0004는
+  > drizzle-kit이 기본 생성한 그대로라 `CREATE TABLE`에 `IF NOT EXISTS`가 없었다 — 그래서
+  > `db:migrate`를 그냥 돌리면 0002의 `CREATE TABLE "account"`부터 "이미 존재함" 에러로
+  > 실패했다.
+  >
+  > **고친 방법**: (1) 빠진 파일을 `0007_add_member_post_dislikes.sql`로 이름 붙여 journal에
+  > 등록. (2) 0000~0004의 모든 DDL을 나머지 파일(0005~0007)과 같은 방어적 스타일로 통일 —
+  > `CREATE TABLE` → `IF NOT EXISTS`, `ALTER TABLE ... ADD COLUMN` → `IF NOT EXISTS`,
+  > `ADD CONSTRAINT` → `DO $$ BEGIN ... EXCEPTION WHEN duplicate_object THEN null; END $$;`,
+  > `CREATE INDEX`/`DROP INDEX` → `IF NOT EXISTS`/`IF EXISTS`. **의도적인 스키마 변경은
+  > 하나도 없다** — 같은 결과를 몇 번 실행해도 안전하게 만든 것뿐.
+  >
+  > **검증**: dev DB 추적 테이블을 일부러 "0001까지만 적용됨"으로 되돌려 놓고(=이번에
+  > 문제가 됐던 프리뷰 브랜치와 같은 상황을 재현) `db:migrate`를 다시 돌려봤다. 0002~0006은
+  > 전부 조용히 스킵되며 통과했고, 0007(`member_post_dislikes`의 FK 제약 추가)에서만 진짜
+  > 에러가 났는데 — 이건 idempotency 문제가 아니라, 그 테이블에 실제로 `member_posts`에
+  > 없는 `post_id`를 가리키는 고아 행이 dev DB에 하나 남아있어서 FK 제약 추가 자체가
+  > 데이터 무결성 위반으로 막힌 것이었다(2026-08-20에 생긴 테스트 데이터로 추정). 그 행
+  > 하나를 지우고 나니 `db:migrate`가 처음부터 끝까지 완전히 성공했다.
+  >
+  > **결론**: 이제 **어느 브랜치에 대해서든(운영, 새 프리뷰, 완전히 새로 만든 빈 DB까지)
+  > `npm run db:migrate`를 그냥 돌리면 안전하게 최신 상태로 맞춰진다** — 더 이상 브랜치마다
+  > 추적 테이블을 손으로 맞추는 작업이 필요 없다. 다만 이번에 발견한 것처럼 실제 데이터가
+  > 참조 무결성을 어기고 있으면(예: FK 없이 오래 운영되다 생긴 고아 행) 그 데이터부터
+  > 정리해야 마이그레이션이 통과한다 — 이런 경우 `db:migrate`가 어느 테이블/제약에서
+  > 막혔는지 에러 메시지에 그대로 나오니 그것부터 확인할 것.
+  >
+  > **그래서 `package.json`의 `prebuild` 스크립트로 마이그레이션을 걸어뒀다** — `npm run
+  > build`(Vercel이 배포마다 실행하는 바로 그 명령)를 실행하면 npm이 `build`보다 먼저
+  > `prebuild`를 자동으로 실행하는 표준 동작을 그대로 이용한 것. 이제 **프로덕션이든 PR
+  > 프리뷰든, 배포될 때마다 그 배포가 실제로 연결된 DB 브랜치에 대해 마이그레이션이 자동으로
+  > 먼저 실행된다** — 오늘 있었던 "이 브랜치엔 컬럼 하나가 안 들어갔다"류 사고가 애초에
+  > 생길 수 없는 구조. 마이그레이션이 idempotent해서 이미 최신 상태인 브랜치에서는 그냥
+  > 몇 초 안에 아무 것도 안 하고 넘어간다. **트레이드오프**: 마이그레이션 파일이 잘못됐거나
+  > (문법 오류 등) 위 사례처럼 실제 데이터와 충돌하면 그 배포 자체가 빌드 실패로 막힌다 —
+  > 깨진 스키마로 서비스되는 것보단 낫다고 판단해 받아들인 선택. 로컬에서 `npm run build`를
+  > 돌릴 때도 똑같이 `.env.local`이 가리키는 개인 Neon 브랜치에 대해 실행되니 참고할 것
+  >
+  > **`drizzle-kit migrate` CLI가 아니라 `scripts/migrate.mjs`를 직접 씀** (2026-08-28,
+  > prebuild 적용 직후 Vercel 프리뷰 빌드에서 발견) — `drizzle-kit migrate`는 postgresql
+  > 다이얼렉트에서 Neon 호스트를 감지하면 내부적으로 웹소켓 연결로 전환하는데, 로컬에서는
+  > 되지만 **Vercel 빌드 샌드박스는 아웃바운드 웹소켓을 막아둔 것으로 보여** `Warning
+  > '@neondatabase/serverless' can only connect to remote Neon/Vercel Postgres/Supabase
+  > instances through a websocket` 뒤에 빌드가 실패했다. 앱 런타임이 실제로 쓰는
+  > `drizzle-orm/neon-http`는 순수 HTTPS(fetch)라 이 제약이 없어서, `drizzle-kit` CLI 대신
+  > `drizzle-orm/neon-http/migrator`의 `migrate()`를 직접 호출하는 스크립트로 바꿨다 —
+  > 웹소켓을 아예 안 쓰므로 빌드 샌드박스에서도 동작함. `db:generate`는 스키마 diff만 계산
+  > (DB 연결 불필요)이라 그대로 `drizzle-kit generate` 유지
 - "자동 번역됨" 배지, 활동 카테고리 태그 필드는 아직 스키마에 없음 — 번역 API 연동이랑
   `/activities/[category]` 연계 기능을 실제로 붙일 때 마이그레이션 추가할 것
+
+### 소식 3분류(section)
+
+`type`(자유 문자열, 분류가 계속 늘어날 수 있는 태그)과 별개로, "공지 / 학술 소식 / 활동
+소식" 3분류를 위한 `section` 컬럼을 추가했다(2026-08-28). `type`과 달리 **이 3개 외의
+값은 절대 늘어나지 않는다는 전제**라서 접근을 반대로 뒤집었다:
+
+- 고정 목록은 `src/lib/post-sections.ts`의 `POST_SECTIONS`(`"notice" | "academic" |
+  "activity"`) 하나에서 관리하고, 한국어/영어 라벨(`POST_SECTION_LABELS`)과 타입 가드
+  (`isPostSection`)도 같은 파일에 둔다 — 값을 추가/변경할 때 여기 하나만 고치면 됨
+- **DB 쪽도 이중으로 고정한다.** `schema.ts`의 `posts` 테이블에 `check("posts_section_check",
+  sql`section in ('notice', 'academic', 'activity')`)` 제약을 걸어서, 서버 코드의 검증을
+  우회해 직접 INSERT/UPDATE를 날려도 저 3개 값 외에는 DB 레벨에서 거부된다
+  (`member_posts.category`의 `check` 제약과 같은 패턴). **이 문자열 목록을 바꾸면
+  `post-sections.ts`의 `POST_SECTIONS`도 반드시 같이 갱신할 것** — 두 군데가 어긋나면
+  서버 액션 통과 후 DB insert에서 조용히 막히게 됨
+- 관리자 글쓰기/수정 폼(`PostForm.tsx`)에서는 `type`처럼 자유 입력(`datalist`)이 아니라
+  `<select>`로 `POST_SECTIONS` 값만 옵션으로 제공 — 애초에 다른 값을 입력할 수 없게
+  UI에서부터 막음. Server Action(`new/actions.ts`, `[id]/edit/actions.ts`)에서도
+  `isPostSection()`으로 한 번 더 검증(폼을 우회한 요청 대비)
+- 공개 `/news` 목록 페이지는 기존 `type` 드롭다운 필터와 별개로, `section` 값 3개 + "전체"를
+  탭 형태 링크(`?section=notice` 등)로 얹었다 — "각각을 읽을 수 있게"라는 요구를
+  쿼리 파라미터 필터로 구현. 검색 폼 제출 시 현재 선택된 `section`을 잃지 않도록
+  hidden input으로 같이 전달함
+- 기존 게시물은 마이그레이션에서 `section` 기본값을 `'notice'`(공지)로 채웠다 — 실제로는
+  학술/활동 소식에 해당하는 글도 섞여 있을 수 있으므로, 운영진이 관리자 편집 화면에서
+  실제 분류에 맞게 하나씩 재지정해야 함
+
+### 게시물 이메일 백업 (2026-08-28)
+
+Neon이 소식 게시물의 유일한 저장소라, 실수로 지우거나 DB 자체에 문제가 생겼을 때 복구할
+원문이 하나도 안 남는 상황을 막기 위한 안전망. 별도 백업 인프라(운영 비용 0원 원칙과 충돌)
+없이, 관리자가 글을 쓰거나 수정할 때마다 그 시점의 Markdown 원문 전체를 이메일로 자기 자신
+(`snucnsgleap@gmail.com` → `snucnsgleap@gmail.com`, 기존 회원 초대 메일과 같은 발신 계정)
+에게 보내는 방식으로 구현했다 — 메일함이 곧 타임라인이 있는 백업 저장소가 되는 셈.
+
+- `src/lib/post-backup-email.ts`의 `sendPostBackupEmail()`이 담당. `admin/news/new/actions.ts`,
+  `admin/news/[id]/edit/actions.ts` 양쪽에서 `createPost`/`updatePost` 성공 직후, `redirect()`
+  하기 전에 호출한다
+- 메일 본문에는 제목·본문 모두(한/영), `type`/`section`/작성자 표시명/게시일까지 포함 —
+  DB 행 하나를 그대로 복원할 수 있을 만큼의 정보량을 목표로 함
+- **켜고 끄는 스위치**: `.env.local`의 `POST_BACKUP_EMAIL_ENABLED`. 값을 비워두거나 아예
+  안 쓰면 켜짐(기본값), `false`로 설정하면 꺼짐 — 코드 수정 없이 이 값 하나로 제어된다.
+  받는 주소는 `POST_BACKUP_EMAIL_TO`로 바꿀 수 있고, 비워두면 발신 계정(`GMAIL_SMTP_USER`)
+  자기 자신에게 감
+- 발송에 실패해도(SMTP 설정 누락, 네트워크 오류 등) 글 저장 자체는 절대 막지 않는다 —
+  `sendPostBackupEmail()` 내부에서 실패를 잡아 `console.error`로만 남기고 삼킨다. 백업은
+  "있으면 좋은" 보조 장치이지, 게시글 작성/수정의 필수 경로가 아니어야 하기 때문
+- Gmail SMTP(포트 465, Node `tls` 모듈 직접 통신)·Resend 발송 로직은 기존
+  `src/lib/member-email.ts`에 있던 것을 `src/lib/email.ts`(`dispatchEmail`, `isEmailConfigured`)로
+  뽑아내 회원 메일과 게시물 백업 메일이 같은 디스패처를 공유하게 했다 — SMTP 연결·인증·재시도
+  로직을 두 곳에서 따로 관리하지 않기 위함. `member-email.ts`는 이제 이 공유 모듈을 감싸는
+  얇은 래퍼(회원 초대/인증 메일 문구만 담당)로 남음
+
+### 게시물 엑셀 백업 다운로드 (2026-08-28)
+
+이메일 백업(위 절)이 "글 하나하나의 시점별 스냅샷"이라면, 이건 "지금 이 순간 DB 전체"를
+한 번에 뽑는 백업. `/admin/news`의 "엑셀 백업 다운로드" 버튼을 누르면 그 순간 `posts`
+테이블 전 칼럼(id/section/type/제목·본문 한영/photo/작성자/게시일/생성·수정일시)을 `.xlsx`
+한 장으로 즉석 생성해 다운로드시킨다 — 별도 저장소나 배치 작업 없이 요청 시점에만 만들어지는
+방식이라 운영 비용 0원 원칙과 맞음.
+
+- `src/app/api/admin/posts-export/route.ts` (GET). `/admin/upload`와 동일한 패턴으로
+  `getSession()`을 직접 읽어 `session.isAdmin`이 아니면 401 — 상태를 바꾸지 않는 조회
+  요청이라 `requireAdmin()`(리다이렉트 지향)이나 CSRF 토큰은 쓰지 않음
+- 엑셀 생성은 `exceljs`(신규 의존성). 워크북 하나·시트 하나("소식")에 헤더 행 + 전체 행을
+  그대로 씀. `getAllPostsForExport()`(`src/lib/posts.ts`)가 페이지네이션 없이 전체를 조회
+- 관리자 화면(`/admin/news/page.tsx`)의 다운로드 링크는 `@/i18n/navigation`의 `Link`가 아니라
+  `next/link`를 `NextLink`로 바로 import해서 씀 — 이 링크는 페이지 이동이 아니라 파일
+  다운로드 응답을 주는 API 라우트라 `prefetch={false}`가 필요한데, i18n `Link`는 이 prop을
+  그대로 통과시켜주는지 보장이 없어 표준 `next/link`를 직접 쓰는 쪽을 택함.
+  `prefetch`를 꺼두지 않으면 마우스만 올려도 hover-prefetch로 엑셀 파일이 매번 새로 생성됨
 
 ### 게시물 번역
 
@@ -208,7 +362,7 @@ npm run dev
     `DEFAULT_ALUMNI_COHORT_ID` 파생 로직([Alumni 기준] 참고)을 그대로 유지
   - 바깥에서 보는 인터페이스(`import { cohorts } from "@/content/members"` 등 named export)는 이전과
     동일 — `members.ts` 파일이 `members/index.ts`로 바뀐 것뿐이라 호출부(`MemberCard.tsx`,
-    `AlumniCohortBrowser.tsx`, `/members`, `/members/alumni`, `member-auth.ts`) 수정 불필요
+    `/members`, `/members/alumni`, `member-auth.ts`) 수정 불필요
   - 새 기수를 추가할 때: `cohorts/16.ts` 파일을 만들고 `index.ts`의 import 목록과 `cohorts` 배열에
     한 줄씩 추가. Next.js/webpack이 정적으로 분석 가능해야 해서 `fs.readdirSync` 같은 자동 스캔 대신
     명시적 import 나열 방식을 씀 — 파일 하나 깜빡하면 그 기수만 안 보이는 정도라 실수해도 눈에 잘 띔
@@ -231,10 +385,25 @@ npm run dev
   members" 목록, 11·12기는 Wix Alumni 페이지의 기수 드롭다운이 SSR로 내려주는 JSON을 직접
   파싱해 확인). 1~10기는 Wix 쪽에도 드롭다운 옵션(8~12기)만 있고 실제 등록된 인원이 없어
   그대로 빈 자리표시자(`members: []`)로 남겨둠 — 나중에 명단이 확인되면 채울 것
-- **Alumni 페이지 UI**: `/members/alumni`는 서버 컴포넌트(SSG 유지)가 `alumniCohorts` 전체를
-  클라이언트 컴포넌트 `AlumniCohortBrowser`에 넘기고, 그 안의 `<select>`로 기수를 골라 클라이언트에서
-  필터링한다. 기본 선택값은 `DEFAULT_ALUMNI_COHORT_ID`(최신 기수 - `CURRENT_COHORT_COUNT`, 지금은
-  13기). API 호출 없이 이미 전달받은 데이터 안에서만 걸러내는 방식이라 정적 렌더링에 영향 없음
+- **Alumni 페이지 UI (2026-08-27 갱신)**: 드롭다운으로 클라이언트에서 필터링하던 기존 방식
+  (`AlumniCohortBrowser`, 클라이언트 컴포넌트)을 버리고 `/activities`·`/activities/[category]`와
+  똑같은 패턴으로 재구성함 — 기수별로 실제 URL을 갖는 정적 페이지가 외부 링크 공유·북마크에
+  유리하다는 판단.
+  - `/members/alumni` — 전체 기수를 최신순으로 나열하고 각 기수로 가는 링크만 보여주는 서버
+    컴포넌트 (`activities/page.tsx`와 동일 구조)
+  - `/members/alumni/[id]` — 기수 하나의 명단을 보여주는 서버 컴포넌트. `generateStaticParams()`가
+    `alumniCohorts`의 모든 id를 미리 생성하고, 존재하지 않는 id는 `notFound()`로 404 처리
+    (`activities/[category]/page.tsx`와 동일 구조)
+  - 기수 전환 UI는 예전 드롭다운 감성을 그대로 살리되, 관리자 화면의 "떠 있는 수정 버튼" 패턴과
+    같은 방식으로 아주 작은 클라이언트 컴포넌트(`AlumniCohortSelect`) 하나만 페이지 상단에
+    "섬"처럼 얹었다. 페이지 자체는 여전히 서버 컴포넌트라 `generateStaticParams`/`notFound`가
+    그대로 적용되고, 이 컴포넌트만 하이드레이션 후 `<select>`의 `onChange`에서
+    `useRouter()`(최상위에서 호출, 콜백 안에서 호출하면 Hooks 규칙 위반)로 `/members/alumni/{id}`로
+    `push`한다 — URL이 실제로 바뀌므로 새로고침·공유·북마크 모두 그 기수 그대로 유지됨
+  - 서버 컴포넌트가 클라이언트 컴포넌트를 자식으로 렌더링하는 것 자체는 정적 생성에 영향을 주지
+    않으므로, 두 라우트 모두 `npm run build` 출력에서 `●`(SSG)로 찍힘 —
+    `Nav.tsx`/`MobileNav.tsx`의 "Alumni" 메뉴는 `DEFAULT_ALUMNI_COHORT_ID`를 이용해 최신 alumni
+    기수 페이지로 바로 연결(기존 그대로 유지)
 - 영문 작성 시 [서울대 자연대 공식 GLEAP 소개 페이지](https://science.snu.ac.kr/en/campus-life/activity/gleap)를
   톤·용어 참고용으로 사용 (활동 3분류를 Academic / Social Contribution / Exchange로 표기).
   `about.ts`는 이미 이 페이지를 참고해 실제 영문으로 채워둔 예시임 — 그대로 복사하지 말고 참고만 할 것
@@ -256,8 +425,10 @@ npm run dev
   들여쓰기 트리 형태로 한 번에 보여준다(`src/components/MobileNav.tsx`). 아코디언처럼 접혀있지 않고
   항상 펼쳐진 "사이트맵" 형태 — 메뉴 항목이 10개 안팎으로 적어서 단계별 탐색보다 한눈에 보이는 게 나음
 - **소식**: `/news`. Wix 원본에서 빠져있던 탭 — 공지사항/부원 안내/행사 후기/월간 글립(과학 카드뉴스)을
-  올릴 게시판 자리. 아직 Neon·에디터가 없어 지금은 "준비 중" 안내만 있는 placeholder
-  (`admin` 대시보드와 동일한 패턴). 게시판 스키마가 생기면 이 라우트에 목록/상세를 붙이면 됨
+  올리는 게시판(Neon `posts` 테이블 기반). Nav의 "소식"도 "구성원"/"활동 소개"와 같은 드롭다운으로
+  통일해(2026-08-28) `공지`/`학술 소식`/`활동 소식`(`section` 3분류, 위 "소식 3분류(section)" 절 참고)
+  각각의 `/news?section=...` 필터 페이지로 바로 연결 — 데스크톱은 `Dropdown` 컴포넌트, 모바일은
+  `활동 소개`와 동일하게 헤딩 + 하위 링크 나열 방식(`MobileNav.tsx`)
 - **활동의 "기수별 실제 내용"은 `activities.ts`에 넣지 않는다.** 이 파일은 "매년 거의 안 바뀌는
   3분류 구조 + 프로그램 이름"만 담당하고, 그 해의 구체적 진행 내용/사진/후기는 게시판(소식)에
   글로 쌓는 것을 전제로 함 — 코드 수정 없이 매년 반복되는 기록이 게시판 쪽에만 생기게 하려는 것.
@@ -495,6 +666,123 @@ next-intl은 기본적으로 요청 헤더에서 locale을 읽기 때문에, 아
 - 확인 방법: `npm run build` 출력에서 admin 제외 전부 `●`(SSG)인지 확인.
   배포 후에는 응답 헤더 `x-vercel-cache: HIT`/`PRERENDER`, `x-vercel-id`에 `iad1`이 없는지 확인
 
+## 보안 헤더
+
+`next.config.ts`의 `headers()`에서 전 경로에 일괄 적용. Sparrow 웹 취약점 점검
+(2026-08-27, `docs/security-audit-2026-08.md` 참고) 대응으로 추가함.
+
+- `Referrer-Policy`, `X-Content-Type-Options`, `X-Frame-Options: DENY` — 표준값 그대로 적용
+- `X-XSS-Protection: 1; mode=block` — 폐기된 헤더라 표준 권고는 명시적 비활성화(`0`)이지만,
+  `0`으로 두니 Sparrow 재점검에서 구식 규칙을 계속 요구해 다시 지적됨(2026-08-28 확인).
+  어느 값이든 실질 방어력은 없음(CSP가 진짜 방어선)이라 재점검 통과를 우선해 이 값으로 둠
+- `poweredByHeader: false` — 기본값이면 모든 응답에 `X-Powered-By: Next.js`가 붙어
+  "HTTP 응답 헤더에 포함된 서버 정보"로 지적됨(2026-08-28). 끄는 데 비용이 없어 반영
+- **CSP는 nonce 없는 정적 버전**. nonce 방식은 매 요청 새 값을 발급해야 해서 전체 페이지를
+  동적 렌더링(`ƒ`)으로 돌려야 하는데(Next.js 공식 문서에 명시된 요구사항), 이 프로젝트는
+  [정적 렌더링](#성능-정적-렌더링)을 최우선으로 삼기로 했으므로(2026-08-27 결정) 정적 버전을
+  택함. 대가로 `script-src`에 `'unsafe-inline'`을 열어둠 — App Router가 하이드레이션 데이터를
+  인라인 스크립트(`self.__next_f.push(...)`)로 내려보내는데 정적 페이지는 nonce를 받을 수
+  없어서 막으면 전 페이지가 깨짐. `frame-ancestors`/`object-src`/`base-uri`/`form-action`/외부
+  오리진 제한(Turnstile 도메인만 허용)은 전부 정상 적용되므로 클릭재킹·폼 하이재킹·임의
+  스크립트 주입 방어는 유지됨
+- CSP를 고칠 때는(외부 리소스 추가 등) `next.config.ts`의 `cspDirectives`만 수정하면 됨.
+  브라우저 콘솔에 CSP 위반 로그가 뜨면 원인 오리진을 해당 지시문에 추가할 것
+
+## CSRF 이중 방어 (더블 서브밋 쿠키)
+
+이 사이트의 모든 폼은 Next.js Server Action(Origin/Host 자체 검증) 또는 Better Auth의
+origin-check 미들웨어로 이미 CSRF에서 안전하다. 그런데도 더블 서브밋 쿠키 토큰을
+2026-08-27에 추가로 얹었다 — 보안 감사 스캐너가 `<form>` 안의 anti-CSRF hidden 필드
+유무만 정적으로 검사해서 이 방어를 인식하지 못하기 때문(`docs/security-audit-2026-08.md`
+CSRF 11건 항목). 실질적으로는 이중 방어(defense in depth)이지, 눈속임이 아니다 — 토큰은
+실제로 서버에서 검증된다.
+
+- **발급**: `src/proxy.ts`가 매 페이지 요청마다 `gleap_csrf` 쿠키(httpOnly, 32바이트
+  랜덤 hex, **세션 동안 고정된 비밀값**)가 없으면 새로 만든다. next-intl의
+  `createMiddleware`가 내부적으로 `new Headers(request.headers)`로 복사해 넘기는 걸
+  이용해, 쿠키를 만드는 바로 그 요청의 `cookie` 헤더에도 즉시 반영해 둔다 — 그렇지 않으면
+  첫 방문(쿠키가 아직 없는 요청) 때 폼에 빈 토큰이 찍혀서 그 요청의 첫 제출이 항상
+  실패하는 문제가 생긴다
+- **폼에 실제로 심는 값은 쿠키 원본이 아니라 마스킹된 토큰**(2026-08-28 변경,
+  `src/lib/csrf.ts`의 `getCsrfToken()`이 `salt.HMAC(secret, salt)` 형태로 매 호출마다
+  새로 만듦). 처음엔 쿠키 값을 그대로 폼에 찍었는데, 재점검 스캐너가 CSRF 지적을
+  계속 반복해서 프로덕션에 같은 세션으로 두 번 curl해 재현해보니 hidden 값이 완전히
+  동일했다 — OWASP ZAP류 스캐너의 anti-CSRF 탐지 로직이 "같은 세션에서 값이 안 바뀌면
+  진짜 토큰이 아니다"로 판정하는 것으로 알려져 있어 이게 원인으로 확정됨. 검증은 여전히
+  세션 비밀값에 대한 HMAC이라 서버에서 문제없이 확인 가능(Rails의 masked authenticity
+  token과 같은 발상, 부수 효과로 BREACH류 압축 사이드채널 방어도 됨). 자세한 재현 과정은
+  `docs/security-audit-2026-08.md` 참고
+- **hidden 필드 "이름"을 스캐너 사전에 맞춘다** (2026-08-30 변경, 이게 마지막 원인이었다).
+  마스킹 토큰까지 넣었는데도 `/member/signup`이 계속 지적됐는데, 지적된 프로덕션 HTML을
+  보니 **값이 채워진 hidden 필드가 실제로 폼 안에 있었다**. 즉 스캐너는 필드의 존재가
+  아니라 **이름**을 자체 사전과 대조하고 있었고, 우리가 쓰던 snake_case `csrf_token`은
+  그 사전에 없었다. 리포트 본문이 예시로 명시한 세 이름(`CSRFToken` / `anticsrf` /
+  `OWASP_CSRFTOKEN`)을 **전부** 심는다 — 어느 하나가 그 도구의 사전에 없더라도 나머지가
+  걸리게 하려는 것으로, hidden input 두 개가 느는 것뿐이라 비용이 사실상 없다. 값은 셋 다
+  동일한 마스킹 토큰이고 검증은 하나만 유효하면 통과한다. 목록은
+  `src/lib/csrf-shared.ts`의 `CSRF_FIELD_NAMES`, 렌더링은
+  `src/components/CsrfInputs.tsx` 한 곳에서만 관리한다. 구 이름 `csrf_token`은
+  `CSRF_ACCEPTED_FIELD_NAMES`에 남겨 검증에서만 받아준다(배포 직전에 렌더된 페이지가
+  옛 이름으로 제출하는 경우 대비)
+- **서버 렌더링 폼** (`admin/*`, `member/*` 등 이미 동적 렌더링인 페이지):
+  `src/components/CsrfField.tsx`(`getCsrfToken()`으로 마스킹된 토큰을 발급해 hidden
+  input 렌더)를 `<form>` 안에 넣는다. 클라이언트 컴포넌트가 폼을 감싸는 경우
+  (`MemberPostForm`, `MemberCommentForm`, `MemberProfileForm`)는 페이지(서버 컴포넌트)에서
+  토큰을 읽어 `csrfToken` prop으로 내려주고, 컴포넌트가 직접 hidden input을 그린다.
+  **예외 없이 모든 `<form>`에 넣는다** — 원래는 상태를 바꾸지 않는 GET 폼(`/news`의
+  검색 필터)을 제외했었다. CSRF는 상태 변경 요청을 보호하는 것이라 GET 폼엔 의미가 없고,
+  토큰이 URL 쿼리스트링에 실려 나가(주소창·히스토리·Referer로 유출) 오히려 손해이기
+  때문이다. 그런데 스캐너는 그런 구분 없이 페이지 안의 모든 `<form>`을 검사해서 이
+  검색 폼도 계속 지적했다. 그래서 **폼 자체를 GET → Server Action(POST)으로 바꾸고
+  검색 조건만 뽑아 실제 목록 URL로 `redirect()`** 하는 방식(Post/Redirect/Get)으로
+  풀었다(`src/app/[locale]/news/actions.ts`). 토큰은 진짜로 검증되고, 토큰이 URL에
+  실리지도 않으며, 사용자에게 남는 주소는 예전과 똑같은 `?q=...&section=...` 쿼리스트링이다
+  (JS 없이도 동작 — Next.js Server Action 폼은 progressive enhancement를 지원)
+- **클라이언트 폼**: Nav/MobileNav의 로그아웃 폼은 `admin` 화면에서만 렌더되고 SSG
+  페이지 위에 얹혀 있어(`cookies()`를 읽는 순간 SSG가 깨짐) 이미 CSR로 호출 중인
+  `/api/session-status`가 `csrfToken`도 함께 내려주도록 확장해 재사용한다.
+  **`MemberAuthForm`(로그인/가입)은 여기서 예외로 뺐다**(2026-08-30) — 스캐너는 JS를
+  실행하지 않고 raw HTML만 보므로, 클라이언트에서 fetch로 채우는 방식은 "값이 빈
+  hidden 필드"로 보인다. 그래서 `/member/login`·`/member/signup` 페이지(서버 컴포넌트)가
+  `getCsrfToken()`으로 토큰을 발급해 `initialCsrfToken` prop으로 내려준다. 이 호출로 두
+  페이지는 동적 렌더링(`ƒ`)이 되지만 로그인 화면이라 영향이 없다(signup은 `searchParams`
+  때문에 원래도 동적이었다). 컴포넌트의 `useEffect`는 남겨뒀다 — 혹시 HTML이 캐시돼
+  토큰이 낡았을 때 최신 값으로 덮어쓰는 안전장치. `MemberAuthForm`은 fetch 기반 제출이라
+  hidden input 값을 `x-csrf-token` 헤더로도 같이 보낸다
+- **검증**: Server Action은 맨 앞에서 `assertCsrfToken(formData)`(`src/lib/csrf.ts`)를
+  호출 — 폼의 hidden 필드 값이 쿠키 비밀값에 대한 유효한 HMAC이 아니면(timing-safe 비교)
+  예외를 던진다. `MemberAuthForm`이 쓰는 better-auth 경로(`/sign-in/email`,
+  `/sign-up/email`)는 `src/lib/member-auth.ts`의 `hooks.before`에서
+  `verifyCsrfHeaderToken()`으로 `x-csrf-token` 헤더 값을 검증한다 — better-auth의
+  `ctx.headers`는 `next/headers`의 `cookies()`를 못 써서 raw `Cookie` 헤더 문자열을
+  직접 파싱함(`readCsrfCookieFromHeader`)
+- **새 폼을 추가할 때**(GET/POST 가리지 말 것): 서버 컴포넌트면 `<form>` 안에
+  `<CsrfField />`를, 클라이언트 컴포넌트면 서버에서 받은 토큰으로 `<CsrfInputs token={...} />`를
+  넣고, Server Action 맨 앞에 `assertCsrfToken(formData)`를 호출한다. 순수 조회용
+  GET 폼이 필요하더라도 위 `/news` 검색 폼처럼 Server Action + `redirect()`로 만들 것.
+  상수(`CSRF_FIELD_NAMES` 등)는 클라이언트/서버 양쪽에서 쓰므로 `src/lib/csrf-shared.ts`에
+  있다 — `src/lib/csrf.ts`는 `"server-only"`라 클라이언트 컴포넌트에서 직접 import할 수 없음
+- **검증은 `npm run audit:csrf`로 한다**(`scripts/audit-csrf.mjs`). 로그인 없이 도달
+  가능한 폼이 있는 경로를 전부 fetch해서, **raw HTML 기준으로** 세 이름의 hidden 필드가
+  값과 함께 들어있는지 확인한다(= 스캐너가 보는 것과 같은 조건). 기본 대상은
+  `http://localhost:3000`이고, 배포본을 보려면 `npm run audit:csrf -- https://주소`.
+  폼을 추가·수정했으면 push 전에 이걸 돌릴 것
+- **의도적으로 손대지 않은 것**: `NEXT_LOCALE` 쿠키의 HttpOnly 누락(7건)과 `/admin`의
+  200 응답(1건)은 스캐너 오탐이 맞고, 여기에 "보이는 변화"를 억지로 만들면 오히려
+  기능이 깨진다 — 전자는 next-intl이 언어 전환 시 `document.cookie`로 클라이언트에서
+  직접 쓰는 쿠키라 HttpOnly를 걸면 그 동기화가 조용히 실패하고, 후자는 `requireAdmin()`의
+  로그인 페이지 리다이렉트 자체가 이미 정상 동작(스캐너가 리다이렉트를 따라가서 최종
+  200을 기록한 것)이라 고칠 대상이 없다. CSRF는 진짜로 몇 겹 더 방어를 얹을 수 있어서
+  했지만, 이 둘은 "고치는 척"이 곧 회귀이므로 사용자와 상의 후 그대로 둠(2026-08-27)
+- **재점검에서 "이미 고쳤는데 또 잡히는" 항목을 만나면 가장 먼저 "배포까지 됐는가"부터
+  의심할 것** (2026-08-28 교훈) — XSS 보호 헤더/비밀번호 자동완성 지적이 반복돼 스캐너
+  버그인가 한참 의심했는데, 실제 원인은 수정 커밋이 재점검 시각보다 늦게 만들어졌고
+  그마저도 push가 안 된 상태였던 것. **배포되는 브랜치는 `main` 하나뿐이다** — 작업
+  브랜치에 push한 것만으로는 `gleap-website.vercel.app`이 바뀌지 않는다(아래
+  [브랜치 구조](#브랜치-구조) 절 참고). 재점검 요청 전에 (1) 수정이 `main`에 머지됐는지,
+  (2) Vercel 배포가 성공했는지, (3) `npm run audit:csrf -- https://gleap-website.vercel.app`
+  가 통과하는지 순서로 확인할 것
+
 ## 개발 시 주의
 
 - **DB**: Neon 브랜치를 따로 만들어 로컬에서 사용. 운영 연결 문자열을 `.env.local`에 두지 않는다. 스키마 변경이 잦으므로 필수
@@ -504,9 +792,31 @@ next-intl은 기본적으로 요청 헤더에서 locale을 읽기 때문에, 아
 
 ## 배포
 
-- **`git push`가 곧 배포.** Vercel CLI 배포(`vercel --prod`)는 커밋되지 않은 로컬 상태가 그대로 나가므로 상시 사용 금지 (GitHub 장애 시 비상용)
+- **`main`에 머지되는 것이 곧 배포.** 프로덕션(`gleap-website.vercel.app`)은 `main`
+  하나만 바라본다. 작업 브랜치에 push하면 Preview 배포만 생기고 프로덕션은 그대로다
+- Vercel CLI 배포(`vercel --prod`)는 커밋되지 않은 로컬 상태가 그대로 나가므로 상시 사용 금지 (GitHub 장애 시 비상용)
 - PR 생성 시 Preview URL 자동 생성
 - 문제 발생 시 Vercel 대시보드에서 이전 배포로 롤백
+
+### 브랜치 구조
+
+여러 명이 동시에 붙어 있어서 브랜치가 나뉘어 있다(2026-08-30 기준).
+**작업 전에 지금 어느 브랜치에 있는지 반드시 확인할 것** — 아래 작업 브랜치들은
+서로 다른 사람이 쓰고 있고, 프로덕션에 반영되려면 `main`으로 머지되어야 한다.
+
+| 브랜치 | 용도 |
+|---|---|
+| `main` | **프로덕션.** 여기 머지된 것만 `gleap-website.vercel.app`에 배포된다 |
+| `main-structure` | 백엔드/구조 작업 (사이트 담당자 본인) |
+| `feature/member-neon-auth` | 회원 공간(Better Auth + Neon) 작업 |
+| `codex/gleap-unified-frontend` | 통합 프론트엔드 작업 |
+| `frontend` | 옛 프론트엔드 브랜치 (위 브랜치로 대체됨 — 정리 대상) |
+
+- 작업 브랜치에서 `main`으로 머지하기 전에는 **다른 사람에게 공지**한다 — 같은 파일을
+  건드리는 브랜치가 여러 개라 충돌 가능성이 있다
+- **"고쳤는데 사이트에 반영이 안 된다"의 원인은 거의 항상 이것이다.** 작업 브랜치에
+  push한 상태로 재점검·확인을 돌리면 옛 코드를 보게 된다. `git log origin/main --oneline`
+  에 해당 커밋이 있는지부터 볼 것
 
 ---
 

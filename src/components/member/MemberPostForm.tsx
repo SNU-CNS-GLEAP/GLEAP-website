@@ -1,10 +1,11 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { CsrfInputs } from "@/components/CsrfInputs";
 
 type Props = {
-  locale: string;
   mode: "create" | "edit";
   isAdmin: boolean;
   defaultValues?: {
@@ -13,15 +14,17 @@ type Props = {
     content?: string;
   };
   action: (formData: FormData) => Promise<void>;
+  csrfToken: string;
 };
 
 export function MemberPostForm({
-  locale,
   mode,
   isAdmin,
   defaultValues,
   action,
+  csrfToken,
 }: Props) {
+  const t = useTranslations("MemberArea");
   const [category, setCategory] = useState(defaultValues?.category || "free");
   const [title, setTitle] = useState(defaultValues?.title || "");
   const [content, setContent] = useState(defaultValues?.content || "");
@@ -31,8 +34,8 @@ export function MemberPostForm({
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     const confirmMessage = isEdit
-      ? "게시글을 수정하시겠습니까?"
-      : "게시글을 등록하시겠습니까?";
+      ? t("postFormConfirmEdit")
+      : t("postFormConfirmCreate");
 
     if (!window.confirm(confirmMessage)) {
       event.preventDefault();
@@ -46,36 +49,37 @@ export function MemberPostForm({
     <form
       action={action}
       onSubmit={handleSubmit}
-      className="flex flex-col gap-5 rounded-2xl border border-border bg-background p-6 shadow-sm sm:p-8"
+      className="flex flex-col gap-7 border-x border-b border-border bg-white p-6 sm:p-10"
     >
+      <CsrfInputs token={csrfToken} />
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-semibold text-foreground">게시판 분류</label>
+        <label className="text-sm font-semibold text-foreground">{t("postCategory")}</label>
         <select
           name="category"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm font-medium focus:border-primary focus:outline-none"
+          className="min-h-12 border border-border bg-white px-4 text-sm font-medium focus:border-primary focus:outline-none"
         >
-          <option value="free">자유글</option>
-          {isAdmin && <option value="notice">회원 공지</option>}
+          <option value="free">{t("freePost")}</option>
+          {isAdmin && <option value="notice">{t("notice")}</option>}
         </select>
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-semibold text-foreground">제목</label>
+        <label className="text-sm font-semibold text-foreground">{t("postTitle")}</label>
         <input
           name="title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
           maxLength={200}
-          placeholder="제목을 입력해 주세요"
-          className="rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm focus:border-primary focus:outline-none"
+          placeholder={t("postTitlePlaceholder")}
+          className="min-h-12 border border-border bg-white px-4 text-sm focus:border-primary focus:outline-none"
         />
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-semibold text-foreground">내용</label>
+        <label className="text-sm font-semibold text-foreground">{t("postContent")}</label>
         <textarea
           name="content"
           value={content}
@@ -83,8 +87,8 @@ export function MemberPostForm({
           required
           maxLength={20000}
           rows={12}
-          placeholder="내용을 입력해 주세요..."
-          className="rounded-xl border border-border bg-background p-3.5 text-sm leading-relaxed focus:border-primary focus:outline-none"
+          placeholder={t("postContentPlaceholder")}
+          className="border border-border bg-white p-4 text-sm leading-relaxed focus:border-primary focus:outline-none"
         />
       </div>
 
@@ -93,18 +97,18 @@ export function MemberPostForm({
           href="/member/community"
           className="text-sm font-medium text-muted hover:underline"
         >
-          취소하고 돌아가기
+          {t("cancel")}
         </Link>
         <button
           type="submit"
           disabled={isSubmitting}
-          className="rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50 transition shadow-sm"
+          className="form-button-primary"
         >
           {isSubmitting
-            ? "처리 중…"
+            ? t("postPending")
             : isEdit
-              ? "수정 완료"
-              : "등록하기"}
+              ? t("postUpdate")
+              : t("postCreate")}
         </button>
       </div>
     </form>

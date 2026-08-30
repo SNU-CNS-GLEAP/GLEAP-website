@@ -11,7 +11,7 @@ export type ActivityCategory = {
 export const activityCategories: ActivityCategory[] = [
   {
     id: "social",
-    title: { ko: "사회 공헌", en: "Social Contribution" },
+    title: { ko: "사회 공헌", en: "Social Impact" },
     programs: [
       {
         name: { ko: "톡톡멘토링", en: "Ttok-Ttok Mentoring" },

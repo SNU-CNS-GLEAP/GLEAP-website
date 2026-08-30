@@ -1,4 +1,4 @@
-CREATE TABLE "posts" (
+CREATE TABLE IF NOT EXISTS "posts" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"type" text NOT NULL,
 	"title_ko" text NOT NULL,

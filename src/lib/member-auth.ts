@@ -15,6 +15,8 @@ import {
   isMemberEmailConfigured,
   sendMemberVerificationEmail,
 } from "@/lib/member-email";
+import { verifyCsrfHeaderToken } from "@/lib/csrf";
+import { CSRF_HEADER_NAME } from "@/lib/csrf-shared";
 import {
   authAccounts,
   authSessions,
@@ -91,7 +93,7 @@ export const memberAuth = betterAuth({
     if (env.betterAuthUrl) origins.push(env.betterAuthUrl);
 
     if (origin) {
-      if (origin.endsWith(".vercel.app") || origin.includes("localhost") || origin.includes("127.0.0.1")) {
+      if (origin.endsWith(".vercel.app") || origin.endsWith(".snu.ac.kr") || origin.includes("localhost") || origin.includes("127.0.0.1")) {
         origins.push(origin);
       }
     }
@@ -125,6 +127,21 @@ export const memberAuth = betterAuth({
   // 회원가입 요청은 DB에 실제 계정이 생기기 전에 승인 목록과 대조한다.
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
+      // 로그인/가입 폼은 Server Action이 아니라 클라이언트 fetch로 제출되므로
+      // (MemberAuthForm), CSRF 더블 서브밋 토큰을 여기서 검증한다 — 폼의 hidden
+      // 필드 값이 onSubmit에서 x-csrf-token 헤더로 실려온다 (src/lib/csrf.ts 참고).
+      if (ctx.path === "/sign-up/email" || ctx.path === "/sign-in/email") {
+        const valid = verifyCsrfHeaderToken(
+          ctx.headers?.get("cookie"),
+          ctx.headers?.get(CSRF_HEADER_NAME),
+        );
+        if (!valid) {
+          throw new APIError("BAD_REQUEST", {
+            message: "보안 토큰이 유효하지 않습니다. 페이지를 새로고침한 뒤 다시 시도해 주세요.",
+          });
+        }
+      }
+
       if (ctx.path !== "/sign-up/email") return;
 
       if (!isMemberEmailConfigured()) {
@@ -168,7 +185,7 @@ export const memberAuth = betterAuth({
 
           for (const c of cohorts) {
             const found = c.members.find(
-              (m) => m.name.ko === user.name || m.name.en === user.name,
+              (m) => (m.surname.ko + m.givenName.ko) === user.name || (m.givenName.en + " " + m.surname.en) === user.name,
             );
             if (found) {
               matchedCohort = `${c.id}기`;

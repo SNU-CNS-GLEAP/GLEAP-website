@@ -4,6 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
+import { assertCsrfToken } from "@/lib/csrf";
 import { getMemberInvitationBaseUrl, requireMember } from "@/lib/member-auth";
 import { isMemberEmailConfigured, sendMemberInvitationEmail } from "@/lib/member-email";
 import {
@@ -71,6 +72,7 @@ async function writeActivity(actorId: string, action: string, targetType: string
 }
 
 export async function createPost(locale: string, formData: FormData) {
+  await assertCsrfToken(formData);
   const member = await requireMember(locale);
   const category = formData.get("category") === "notice" ? "notice" : "free";
 
@@ -95,6 +97,7 @@ export async function createPost(locale: string, formData: FormData) {
 }
 
 export async function updatePost(locale: string, postId: string, formData: FormData) {
+  await assertCsrfToken(formData);
   const member = await requireMember(locale);
   const [post] = await db
     .select({ authorId: memberPosts.authorId, category: memberPosts.category })
@@ -126,7 +129,8 @@ export async function updatePost(locale: string, postId: string, formData: FormD
   redirect(`/${locale}/member/community/${postId}`);
 }
 
-export async function deletePost(locale: string, postId: string) {
+export async function deletePost(locale: string, postId: string, formData: FormData) {
+  await assertCsrfToken(formData);
   const member = await requireMember(locale);
   const [post] = await db
     .select({ authorId: memberPosts.authorId })
@@ -145,7 +149,8 @@ export async function deletePost(locale: string, postId: string) {
   redirect(`/${locale}/member/community`);
 }
 
-export async function togglePostLike(locale: string, postId: string) {
+export async function togglePostLike(locale: string, postId: string, formData: FormData) {
+  await assertCsrfToken(formData);
   const member = await requireMember(locale);
   const [existingLike] = await db
     .select({ id: memberPostLikes.id })
@@ -168,7 +173,8 @@ export async function togglePostLike(locale: string, postId: string) {
   revalidatePath(`/${locale}/member/community/${postId}`);
 }
 
-export async function togglePostDislike(locale: string, postId: string) {
+export async function togglePostDislike(locale: string, postId: string, formData: FormData) {
+  await assertCsrfToken(formData);
   const member = await requireMember(locale);
   const [existingDislike] = await db
     .select({ id: memberPostDislikes.id })
@@ -192,6 +198,7 @@ export async function togglePostDislike(locale: string, postId: string) {
 }
 
 export async function createComment(locale: string, postId: string, formData: FormData) {
+  await assertCsrfToken(formData);
   const member = await requireMember(locale);
   // 댓글 작성 전 게시글 존재 여부를 확인해, 삭제된 글에 댓글이 남지 않게 한다.
   const [post] = await db.select({ id: memberPosts.id }).from(memberPosts).where(eq(memberPosts.id, postId)).limit(1);
@@ -210,7 +217,13 @@ export async function createComment(locale: string, postId: string, formData: Fo
   revalidatePath(`/${locale}/member/community/${postId}`);
 }
 
-export async function deleteComment(locale: string, postId: string, commentId: string) {
+export async function deleteComment(
+  locale: string,
+  postId: string,
+  commentId: string,
+  formData: FormData,
+) {
+  await assertCsrfToken(formData);
   const member = await requireMember(locale);
   const [comment] = await db
     .select({ authorId: memberComments.authorId, postId: memberComments.postId })
@@ -231,6 +244,7 @@ export async function deleteComment(locale: string, postId: string, commentId: s
 }
 
 export async function updateMyProfile(locale: string, formData: FormData) {
+  await assertCsrfToken(formData);
   const member = await requireMember(locale);
 
   const name = requiredText(formData, "name", 80);
@@ -305,6 +319,7 @@ export async function updateMyProfile(locale: string, formData: FormData) {
  * 이름, 기수, 이메일, 역할을 함께 등록하여 프로필 및 구성원 데이터와 안전하게 연동한다.
  */
 export async function approveMemberEmail(locale: string, formData: FormData) {
+  await assertCsrfToken(formData);
   const member = await requireMember(locale);
   if (member.role !== "admin") throw new Error("운영진 권한이 필요합니다.");
 
@@ -377,7 +392,8 @@ export async function approveMemberEmail(locale: string, formData: FormData) {
 /**
  * 운영진이 특정 회원에게 초대 메일을 다시 발송한다.
  */
-export async function resendMemberInvitation(locale: string, email: string) {
+export async function resendMemberInvitation(locale: string, email: string, formData: FormData) {
+  await assertCsrfToken(formData);
   const member = await requireMember(locale);
   if (member.role !== "admin") throw new Error("운영진 권한이 필요합니다.");
 
@@ -420,7 +436,8 @@ export async function resendMemberInvitation(locale: string, email: string) {
 /**
  * 운영진이 승인 명단에서 회원을 삭제(접근 권한 회수 및 계정 정리)한다.
  */
-export async function removeMemberAccess(locale: string, email: string) {
+export async function removeMemberAccess(locale: string, email: string, formData: FormData) {
+  await assertCsrfToken(formData);
   const member = await requireMember(locale);
   if (member.role !== "admin") throw new Error("운영진 권한이 필요합니다.");
 

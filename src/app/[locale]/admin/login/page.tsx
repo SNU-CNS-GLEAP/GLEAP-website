@@ -1,5 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 import { TurnstileWidget } from "@/components/TurnstileWidget";
+import { CsrfField } from "@/components/CsrfField";
 import { env } from "@/lib/env";
 import { login } from "./actions";
 
@@ -17,12 +18,14 @@ export default async function AdminLoginPage({ params, searchParams }: Props) {
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-4 px-6">
       <h1 className="text-2xl font-semibold">관리자 로그인</h1>
       <form action={login.bind(null, locale)} className="flex flex-col gap-3">
+        <CsrfField />
         <input
           type="password"
           name="password"
           placeholder="비밀번호"
           required
           autoFocus
+          autoComplete="off"
           className="rounded border border-border px-3 py-2"
         />
         <TurnstileWidget siteKey={env.turnstileSiteKey} language={locale} />

@@ -7,8 +7,7 @@ import { MemberCard } from "@/components/MemberCard";
 
 type Labels = {
   email: string;
-  tistory: string;
-  naverblog: string;
+  blog: string;
   instagram: string;
   github: string;
   linkedin: string;
@@ -34,13 +33,13 @@ export function AlumniCohortBrowser({ cohorts, locale, defaultCohortId, selectLa
   const options = useMemo(() => [...cohorts].reverse(), [cohorts]);
 
   return (
-    <div className="flex flex-col gap-6">
-      <label className="flex flex-col gap-2 text-sm sm:flex-row sm:items-center sm:gap-3">
-        <span className="text-muted">{selectLabel}</span>
+    <div className="flex flex-col gap-10">
+      <label className="flex flex-col gap-3 border-y border-border py-5 text-sm sm:flex-row sm:items-center sm:justify-between">
+        <span className="font-medium text-primary-deep">{selectLabel}</span>
         <select
           value={selectedId}
           onChange={(e) => setSelectedId(Number(e.target.value))}
-          className="w-fit rounded-md border border-border bg-surface px-3 py-1.5 text-sm text-foreground"
+          className="min-h-11 w-full border border-border bg-background px-4 py-2 text-sm text-foreground sm:w-56"
         >
           {options.map((cohort) => {
             const label = localize(cohort.label, locale);
@@ -53,16 +52,21 @@ export function AlumniCohortBrowser({ cohorts, locale, defaultCohortId, selectLa
         </select>
       </label>
       {selected && (
-        <section className="flex flex-col gap-4">
+        <section className="flex flex-col gap-8" aria-live="polite">
           {description && (
-            <p className="text-sm text-muted" lang={description.lang}>
+            <p className="max-w-3xl text-sm leading-7 text-muted" lang={description.lang}>
               {description.text}
             </p>
           )}
           {selected.members.length > 0 ? (
-            <ul className="grid grid-cols-2 gap-6 sm:grid-cols-3">
-              {selected.members.map((member, i) => (
-                <MemberCard key={i} member={member} locale={locale} labels={labels} />
+            <ul className="grid grid-cols-2 gap-x-5 gap-y-12 sm:grid-cols-3 lg:grid-cols-4 lg:gap-x-7">
+              {selected.members.map((member) => (
+                <MemberCard
+                  key={`${member.surname.ko}${member.givenName.ko}`}
+                  member={member}
+                  locale={locale}
+                  labels={labels}
+                />
               ))}
             </ul>
           ) : (

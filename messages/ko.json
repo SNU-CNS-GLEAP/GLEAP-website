@@ -9,29 +9,157 @@
     "news": "소식",
     "community": "회원 공간",
     "menu": "메뉴",
-    "close": "닫기"
+    "primaryNavigation": "주요 메뉴",
+    "close": "닫기",
+    "logout": "로그아웃"
   },
   "HomePage": {
     "title": "GLEAP",
     "subtitle": "서울대학교 자연과학대학 우수학생단체",
-    "description": "이 사이트는 현재 준비 중입니다."
+    "description": "서울대학교 자연과학대학 GLEAP 공식 웹사이트입니다.",
+    "hero": {
+      "eyebrow": "서울대학교 자연과학대학 공식 우수학생단체",
+      "lineOne": "Connect",
+      "lineTwo": "Science,",
+      "lineThree": "Illuminate",
+      "lineFour": "the World.",
+      "description": "GLEAP은 탁월한 자연과학도들이 지식의 경계를 넘어 배우고, 사회와 나누며, 세계와 연결되는 학생 주도 Honor Society입니다.",
+      "primaryCta": "GLEAP 알아보기",
+      "secondaryCta": "활동 탐색하기",
+      "proofOfficial": "자연과학대학 공식 단체",
+      "proofStudentLed": "학생 주도",
+      "proofGlobal": "글로벌 네트워크",
+      "mediaKicker": "Global Fieldwork",
+      "mediaTitle": "과학으로 세계와 연결되는 사람들",
+      "mediaYear": "Singapore · 2025",
+      "signal": "Curiosity in motion",
+      "scroll": "Discover GLEAP"
+    },
+    "intro": {
+      "eyebrow": "Who we are",
+      "title": "GLEAP",
+      "description": "GLEAP(Global Leadership Program)은 2012년 서울대학교 자연과학대학이 설립한 공인된 학부생 단체로, ‘Connect Science, Illuminate the World’라는 모토 아래 학생들이 직접 모든 활동을 기획하고 실행하는 학생자치단체입니다.",
+      "cta": "GLEAP의 사람들 만나기"
+    },
+    "stats": {
+      "founded": "GLEAP 창설",
+      "pillars": "학술 · 사회공헌 · 교류",
+      "reach": "자연과학콘서트 참여 학생"
+    },
+    "programs": {
+      "eyebrow": "What we do",
+      "title": "자연과학의 가능성을 세계로 확장하는 세 가지 궤도",
+      "description": "깊이 탐구하고, 아낌없이 나누며, 더 넓은 세계와 연결됩니다. GLEAP의 모든 프로그램은 이 세 방향에서 출발합니다.",
+      "academic": {
+        "tag": "Explore",
+        "title": "학술",
+        "description": "전공의 경계를 넘나드는 다양한 활동을 통해 학술적 역량을 강화합니다. 자연과학의 경계를 넓히는 창의적인 연구 활동을 장려합니다."
+      },
+      "social": {
+        "tag": "Illuminate",
+        "title": "사회 공헌",
+        "description": "과학적 지식을 활용하여 지역 사회의 문제를 해결합니다. 자연과학 콘서트와 같은 프로젝트를 통해 지식 나눔을 실천하며 사회적 가치를 창출합니다."
+      },
+      "exchange": {
+        "tag": "Connect",
+        "title": "교류",
+        "description": "서울대학교 커뮤니티 내외부의 파트너 및 동문(Alumni)과 강력한 네트워크를 구축합니다. 다양한 교류 행사를 통해 미래 리더로서의 유대감을 형성합니다."
+      }
+    },
+    "global": {
+      "eyebrow": "Beyond boundaries",
+      "title": "캠퍼스에서 세계의 연구 현장으로.",
+      "description": "GLEAP은 매년 해외 연구소와 대학을 직접 찾고, 현지 과학도들과 지식과 문화를 교류합니다. 탐방의 국가 선정부터 기관 섭외와 현장 운영까지, 모든 여정을 학생들이 주도합니다.",
+      "cta": "글로벌 교류 살펴보기",
+      "mediaKicker": "Research Exchange",
+      "mediaTitle": "싱가포르 양자기술센터 연구 교류"
+    },
+    "closing": {
+      "eyebrow": "The minds of tomorrow",
+      "title": "GLEAP의 구성원을 소개합니다.",
+      "description": "서로 다른 전공과 시선이 만날 때 과학은 더 멀리 나아갑니다. 세상을 밝힐 GLEAP의 사람들과 여정을 만나보세요.",
+      "primaryCta": "구성원 만나기",
+      "secondaryCta": "최근 소식 보기"
+    },
+    "motion": {
+      "scroll": "Scroll to explore",
+      "discover": "Discover",
+      "openProgram": "Explore",
+      "chapterNavigation": "홈페이지 섹션 바로가기",
+      "chapters": {
+        "hero": "시작",
+        "identity": "정체성",
+        "programs": "활동",
+        "global": "세계",
+        "future": "미래"
+      }
+    },
+    "media": {
+      "heroAlt": "싱가포르 해외학술문화탐방에 참여한 GLEAP 구성원들",
+      "campusAlt": "서울대학교 자연과학대학 건물",
+      "academicAlt": "학술 세미나에서 이징 모델을 발표하는 GLEAP 구성원",
+      "socialAlt": "2025 부산 자연과학콘서트를 함께 만든 GLEAP 구성원들",
+      "exchangeAlt": "국내 학생 단체 교류 프로그램에 참여한 학생들",
+      "globalAlt": "싱가포르 양자기술센터에서 연구 설명을 듣는 GLEAP 구성원들"
+    }
   },
   "AboutPage": {
-    "title": "글립 소개"
+    "title": "글립 소개",
+    "eyebrow": "About GLEAP",
+    "lede": "탁월한 자연과학도들이 학문의 경계를 넘어 탐구하고, 배운 것을 사회와 나누며, 세계의 과학도들과 연결되는 학생 주도 공동체입니다.",
+    "storyKicker": "Our foundation",
+    "storyTitle": "과학의 탁월함에 책임과 연결을 더합니다.",
+    "imageAlt": "서울대학교 자연과학대학 건물",
+    "pillarsKicker": "Our principles",
+    "pillarsTitle": "GLEAP을 움직이는 세 가지 방향",
+    "stats": {
+      "founded": "설립",
+      "identity": "학생 주도",
+      "pillars": "활동 축"
+    },
+    "values": {
+      "academic": {
+        "title": "Explore",
+        "description": "전공의 경계를 넘어 질문하고 서로의 지식을 깊게 만듭니다."
+      },
+      "social": {
+        "title": "Illuminate",
+        "description": "배운 과학을 더 많은 사람과 나누고 새로운 가능성을 밝힙니다."
+      },
+      "exchange": {
+        "title": "Connect",
+        "description": "캠퍼스와 전공, 세대를 넘어 더 넓은 과학 공동체와 연결됩니다."
+      }
+    },
+    "metaDescription": "서울대학교 자연과학대학 공식 학부생 우수학생단체 GLEAP의 설립 배경과 학생 주도 운영 철학을 소개합니다."
   },
   "MembersPage": {
-    "title": "구성원"
+    "title": "구성원",
+    "eyebrow": "Our people",
+    "lede": "서로 다른 자연과학 전공과 시선이 만나 더 큰 질문을 만드는 GLEAP의 현재 구성원입니다.",
+    "rosterKicker": "Current cohorts",
+    "activeMembers": "현재 구성원",
+    "activeCohorts": "활동 기수",
+    "peopleCount": "{count}명",
+    "cohortCount": "{count}개",
+    "metaDescription": "GLEAP에서 학술·사회공헌·교류 활동을 함께 만드는 현재 구성원을 소개합니다."
   },
   "AlumniPage": {
     "title": "Alumni",
     "viewCohort": "명단 보기",
-    "empty": "아직 등록된 명단이 없습니다.",
     "backToAll": "← 전체 기수 보기",
     "otherCohorts": "기수 선택",
-    "contactMessage": "정보 수정이 필요하시면 snucnsgleap@gmail.com 으로 요청해 주세요."
+    "contactMessage": "정보 수정이 필요하시면 snucnsgleap@gmail.com 으로 요청해 주세요.",
+    "eyebrow": "GLEAP network",
+    "lede": "GLEAP에서 시작된 연결은 활동이 끝난 뒤에도 이어집니다. 기수별 Alumni 명단을 살펴보세요.",
+    "rosterKicker": "Cohort archive",
+    "selectCohort": "기수 선택",
+    "empty": "아직 등록된 명단이 없습니다.",
+    "metaDescription": "기수별 GLEAP Alumni 명단과 이어지는 공동체를 소개합니다."
   },
   "MemberCard": {
     "email": "이메일",
+    "blog": "블로그",
     "tistory": "티스토리",
     "naverblog": "네이버 블로그",
     "instagram": "인스타그램",
@@ -40,27 +168,496 @@
   },
   "ActivitiesPage": {
     "title": "활동 소개",
+    "eyebrow": "What we do",
+    "lede": "깊이 탐구하고, 아낌없이 나누며, 더 넓은 세계와 연결됩니다. GLEAP의 모든 프로그램은 세 가지 활동 축에서 출발합니다.",
+    "overviewKicker": "Three pillars",
+    "overviewTitle": "GLEAP의 3가지 활동.",
+    "programCount": "{count}개 프로그램",
+    "detailEyebrow": "Program {number}",
     "learnMore": "자세히 보기",
-    "backToAll": "← 활동 소개로"
+    "backToAll": "← 활동 소개로",
+    "metaDescription": "GLEAP의 학술, 사회공헌, 국내외 교류 활동과 주요 프로그램을 소개합니다."
   },
   "NewsPage": {
     "title": "소식",
-    "sectionAll": "전체",
+    "eyebrow": "News & stories",
+    "lede": "GLEAP의 새로운 활동과 공지, 과학을 향한 구성원들의 이야기를 전합니다.",
+    "sectionAll": "전체 소식",
     "filterAll": "전체",
+    "filterLabel": "소식 분류",
+    "searchLabel": "제목 검색어",
     "searchPlaceholder": "제목 검색",
     "search": "검색",
+    "reset": "필터 초기화",
     "empty": "게시물이 없습니다.",
     "totalCount": "총 {count}건",
     "prev": "이전",
     "next": "다음",
     "pageOf": "{page} / {totalPages}",
     "backToList": "← 목록으로",
-    "noEnglishNotice": "이 글은 아직 영어로 번역되지 않았습니다. 한국어 원문을 보여드립니다."
+    "noEnglishNotice": "이 글은 아직 영어로 번역되지 않았습니다. 한국어 원문을 보여드립니다.",
+    "metaDescription": "GLEAP의 최신 공지, 활동 기록, 월간 GLEAP과 과학 이야기를 확인하세요."
+  },
+  "MemberLoginPage": {
+    "title": "회원 로그인",
+    "description": "GLEAP 운영진에게 초대받은 회원만 로그인할 수 있습니다.",
+    "email": "이메일",
+    "password": "비밀번호",
+    "submit": "로그인",
+    "pending": "로그인 중…",
+    "invalid": "이메일 또는 비밀번호를 확인해 주세요.",
+    "invitationOnly": "계정이 없다면 운영진에게 초대 이메일을 요청해 주세요. 공개 회원가입은 제공하지 않습니다."
+  },
+  "CommunityPage": {
+    "title": "회원 공간",
+    "description": "GLEAP 회원만 이용할 수 있는 자유게시판입니다.",
+    "members": "회원 프로필",
+    "write": "글쓰기",
+    "writeNotice": "공지 작성",
+    "notice": "공지",
+    "free": "자유",
+    "unknownAuthor": "이름 미설정",
+    "comments": "댓글 {count}개",
+    "likes": "좋아요 {count}개",
+    "empty": "아직 작성된 글이 없습니다."
+  },
+  "NewPostPage": {
+    "title": "자유게시판 글쓰기",
+    "back": "← 회원 공간으로",
+    "fieldTitle": "제목",
+    "fieldContent": "내용",
+    "submit": "등록",
+    "pending": "등록 중…",
+    "error": "글을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요."
+  },
+  "NewNoticePage": {
+    "title": "공지사항 작성",
+    "description": "운영진만 공지를 작성할 수 있습니다. 공개로 등록하면 로그인하지 않은 방문자도 소식에서 볼 수 있습니다.",
+    "back": "← 회원 공간으로",
+    "fieldTitle": "제목",
+    "fieldContent": "내용",
+    "publishPublicly": "로그인하지 않은 방문자에게도 소식으로 공개",
+    "submit": "공지 등록",
+    "pending": "등록 중…",
+    "error": "공지를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요."
+  },
+  "PostPage": {
+    "back": "← 회원 공간으로",
+    "edit": "내 글 수정",
+    "notice": "공지",
+    "free": "자유",
+    "unknownAuthor": "이름 미설정",
+    "like": "좋아요",
+    "unlike": "좋아요 취소",
+    "likes": "좋아요 {count}개",
+    "comment": "댓글 작성",
+    "commentPlaceholder": "댓글을 남겨 주세요.",
+    "submitComment": "댓글 등록",
+    "interactionError": "요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    "comments": "댓글 {count}개",
+    "noComments": "첫 댓글을 남겨 보세요."
+  },
+  "EditPostPage": {
+    "title": "내 글 수정",
+    "back": "← 글로 돌아가기",
+    "fieldTitle": "제목",
+    "fieldContent": "내용",
+    "save": "저장",
+    "saving": "저장 중…",
+    "delete": "글 삭제",
+    "confirmDelete": "이 글을 삭제할까요? 삭제하면 되돌릴 수 없습니다.",
+    "error": "요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요."
+  },
+  "CommunityMembersPage": {
+    "title": "회원 프로필",
+    "description": "로그인한 GLEAP 회원만 볼 수 있는 프로필 목록입니다.",
+    "myProfile": "내 프로필 수정",
+    "unknown": "이름 미설정",
+    "me": "나",
+    "empty": "등록된 회원 프로필이 없습니다."
+  },
+  "MemberProfilePage": {
+    "back": "← 회원 목록으로",
+    "edit": "내 프로필 수정",
+    "unknown": "이름 미설정",
+    "posts": "작성한 글",
+    "notice": "공지",
+    "free": "자유",
+    "noPosts": "작성한 글이 없습니다.",
+    "instagram": "Instagram",
+    "github": "GitHub"
+  },
+  "MyProfilePage": {
+    "title": "내 프로필 수정",
+    "description": "이 정보는 로그인한 GLEAP 회원에게만 보입니다.",
+    "view": "내 프로필 보기",
+    "name": "이름",
+    "cohort": "기수",
+    "bio": "한 줄 소개",
+    "interests": "관심 분야",
+    "interestsHint": "쉼표(,)로 구분해 여러 개를 입력할 수 있습니다.",
+    "instagram": "Instagram 주소",
+    "github": "GitHub 주소",
+    "save": "프로필 저장",
+    "saving": "저장 중…",
+    "password": "비밀번호 변경",
+    "passwordHint": "초대 이메일로 처음 들어온 회원은 여기에서 개인 비밀번호를 설정해 주세요.",
+    "updatePassword": "비밀번호 변경",
+    "error": "저장하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    "saved": "저장되었습니다."
+  },
+  "MemberArea": {
+    "privateArea": "회원 전용 공간",
+    "admin": "운영진",
+    "greeting": "안녕하세요, {name}님",
+    "hubDescription": "GLEAP 회원 전용 커뮤니티 및 회원 관리 허브입니다.",
+    "boardTitle": "회원 게시판",
+    "boardDescription": "공지사항을 확인하고 부원들과 자유롭게 소통할 수 있습니다.",
+    "boardLink": "게시판 바로가기 →",
+    "profileTitle": "내 프로필",
+    "profileDescription": "기수, 관심 분야, 한 줄 소개와 SNS 링크를 관리합니다.",
+    "profileLink": "프로필 수정 →",
+    "directoryTitle": "회원 목록",
+    "directoryDescription": "동아리 부원들의 프로필과 기수별 소개를 확인합니다.",
+    "directoryLink": "명단 둘러보기 →",
+    "adminPanelTitle": "운영진 전용: 회원 승인 및 권한 관리",
+    "adminPanelDescription": "신규 회원의 가입 허용 이메일을 등록하고 운영진 권한을 설정합니다.",
+    "adminPanelLink": "관리자 페이지 바로가기 →",
+    "logout": "로그아웃",
+    "loginTitle": "회원 로그인",
+    "loginDescription": "승인된 GLEAP 회원만 로그인할 수 있습니다.",
+    "loginPrompt": "처음 오셨나요?",
+    "signupLink": "승인된 이메일로 회원가입",
+    "signupTitle": "GLEAP 회원가입",
+    "signupWelcome": "{cohort} {name}님, 환영합니다! 사용할 비밀번호를 설정해 주세요.",
+    "signupInvited": "초대받으신 이메일로 사용할 비밀번호와 이름을 설정해 주세요.",
+    "signupRestricted": "운영진이 사전에 승인한 이메일 주소만 가입할 수 있습니다.",
+    "signupPrompt": "이미 계정이 있으신가요?",
+    "loginLink": "로그인",
+    "nameLabel": "이름 (실명)",
+    "namePlaceholder": "홍길동",
+    "assignedNameHint": "운영진이 지정한 구성원 이름입니다.",
+    "emailLabel": "이메일 주소",
+    "invitedEmailHint": "초대받은 이메일 주소입니다.",
+    "cohortLabel": "소속 기수:",
+    "passwordNewLabel": "사용할 비밀번호 (8자 이상)",
+    "passwordLabel": "비밀번호",
+    "confirmPasswordLabel": "비밀번호 확인",
+    "passwordMismatch": "비밀번호 확인이 일치하지 않습니다.",
+    "formInvalid": "입력 내용을 다시 확인해 주세요.",
+    "signupSuccess": "회원가입이 완료되었습니다. 로그인 화면으로 이동합니다.",
+    "processing": "처리 중…",
+    "signupSubmit": "비밀번호 설정 및 가입 완료",
+    "loginSubmit": "로그인",
+    "communityPrivate": "회원 전용",
+    "communityTitle": "회원 게시판",
+    "write": "글쓰기",
+    "emptyPostsTitle": "아직 작성된 글이 없습니다.",
+    "emptyPostsDescription": "첫 번째 이야기를 공유해 보세요!",
+    "notice": "회원 공지",
+    "freePost": "자유글",
+    "commentsCount": "댓글 {count}개",
+    "likesCount": "좋아요 {count}",
+    "dislikesCount": "싫어요 {count}",
+    "newPostKicker": "회원 전용 커뮤니티",
+    "newPostTitle": "새 글 작성",
+    "newPostDescription": "GLEAP 부원들과 공유하고 싶은 이야기를 자유롭게 작성해 보세요.",
+    "editPostTitle": "글 수정",
+    "editPostDescription": "게시글 내용을 수정한 뒤 저장해 주세요.",
+    "postBack": "← 회원 게시판",
+    "like": "좋아요",
+    "dislike": "싫어요",
+    "edit": "수정",
+    "delete": "삭제",
+    "deleteAdmin": "삭제 (운영진)",
+    "commentsTitle": "댓글 ({count})",
+    "emptyComments": "아직 작성된 댓글이 없습니다. 첫 번째 댓글을 남겨보세요!",
+    "commentConfirm": "댓글을 등록하시겠습니까?",
+    "commentLabel": "댓글 작성하기",
+    "commentPlaceholder": "댓글을 입력해 주세요...",
+    "commentPending": "등록 중…",
+    "commentSubmit": "댓글 등록",
+    "postFormConfirmCreate": "게시글을 등록하시겠습니까?",
+    "postFormConfirmEdit": "게시글을 수정하시겠습니까?",
+    "postCategory": "게시판 분류",
+    "postTitle": "제목",
+    "postTitlePlaceholder": "제목을 입력해 주세요",
+    "postContent": "내용",
+    "postContentPlaceholder": "내용을 입력해 주세요...",
+    "cancel": "취소하고 돌아가기",
+    "postPending": "처리 중…",
+    "postCreate": "등록하기",
+    "postUpdate": "수정 완료",
+    "profilePageTitle": "내 프로필 관리",
+    "profilePageDescription": "동아리 부원들에게 공개되는 프로필 정보를 수정합니다. 연락처 등 민감 정보는 기재하지 마세요.",
+    "profileSaveConfirm": "프로필을 저장하시겠습니까?",
+    "profileName": "이름 (실명)",
+    "profileCohort": "기수",
+    "profileCohortPlaceholder": "예: 14기",
+    "position": "직책 / 소속 팀",
+    "positionPlaceholder": "예: 회장단, 사회공헌팀, 교류팀, 학술팀, 홍보팀",
+    "academic": "관심 분야 (전공·학술)",
+    "academicPlaceholder": "예: AI, 생화학, 수리과학, 천문학, 유기화학, 통계",
+    "commaHint": "쉼표(,)로 구분해 여러 개를 입력할 수 있습니다.",
+    "hobbies": "취미 및 관심사",
+    "hobbiesPlaceholder": "예: 만화, 게임, 밴드 음악, 축구",
+    "bio": "한 줄 소개",
+    "bioPlaceholder": "자신을 소개하는 한 줄을 자유롭게 입력해 주세요.",
+    "instagramOptional": "Instagram 아이디 (선택)",
+    "githubOptional": "GitHub 주소 (선택)",
+    "saving": "저장 중…",
+    "saveProfile": "프로필 저장",
+    "directoryPageTitle": "GLEAP 구성원 명단",
+    "directoryPageDescription": "동아리 부원을 선택하면 상세 프로필을 확인할 수 있습니다.",
+    "editMyProfile": "내 프로필 수정",
+    "backMemberHome": "← 회원 홈",
+    "emptyProfiles": "아직 등록된 회원 프로필이 없습니다.",
+    "emptyProfilesHint": "운영진 관리 페이지에서 회원을 초대하면 프로필이 연동됩니다.",
+    "official": "공식",
+    "details": "상세 →",
+    "adminGroup": "운영진 (Admin)",
+    "activeMembers": "현재 활동 기수 (Active Members)",
+    "juniorCohort": "15기 (Junior)",
+    "seniorCohort": "14기 (Senior)",
+    "memberCount": "총 {count}명",
+    "alumni": "역대 회원 (Alumni)",
+    "close": "닫기",
+    "officialAccount": "공식 계정",
+    "positionLabel": "직책 / 소속 팀",
+    "academicLabel": "학술 / 전공 관심 분야",
+    "hobbiesLabel": "취미 및 관심사",
+    "bioLabel": "한 줄 소개",
+    "accessDenied": "접근 권한 없음",
+    "accessDeniedDescription": "이 화면은 운영진만 사용할 수 있습니다.",
+    "returnMemberHome": "회원 홈으로 돌아가기",
+    "adminKicker": "운영진 전용",
+    "adminTitle": "회원 승인 및 초대 관리",
+    "adminDescription": "부원의 이름, 기수, 이메일을 등록하고 전용 가입 초대 링크를 발송합니다.",
+    "emailConnected": "이메일 발송 연결됨",
+    "emailPending": "이메일 발송 설정 대기 중",
+    "emailConnectedDescription": "Gmail SMTP가 연결되어 신규 회원 등록 시 맞춤 초대장이 자동 발송됩니다.",
+    "emailPendingDescription": "메일 환경변수가 등록되면 초대 메일이 자동 발송됩니다.",
+    "inviteTitle": "신규 회원 등록 및 구성원 연동 초대장 발송",
+    "cohort": "기수",
+    "cohortPlaceholder": "예: 15기",
+    "cohortDefault": "15기",
+    "role": "권한",
+    "memberRole": "일반 회원",
+    "adminRole": "운영진",
+    "sendInvitation": "등록 즉시 가입 초대 메일 발송하기",
+    "approveInvitation": "승인 및 초대장 발송",
+    "approvedList": "승인된 회원 명단 ({count}명)",
+    "emptyApproved": "등록된 승인 회원이 없습니다.",
+    "notRegistered": "미가입",
+    "registered": "가입 완료 (프로필 연동됨)",
+    "waiting": "가입 대기 중 (초대 발송됨)",
+    "resend": "초대장 재발송",
+    "remove": "삭제",
+    "removeConfirm": "{email} 회원의 접근 권한과 계정을 삭제할까요? 이 작업은 되돌릴 수 없습니다."
+  },
+  "AdminArea": {
+    "loginTitle": "관리자 로그인",
+    "loginKicker": "GLEAP CMS",
+    "loginDescription": "공개 소식과 사이트 콘텐츠를 관리하는 운영 담당자 전용 화면입니다.",
+    "passwordLabel": "관리자 비밀번호",
+    "passwordPlaceholder": "비밀번호",
+    "login": "로그인",
+    "invalidPassword": "비밀번호가 올바르지 않습니다.",
+    "dashboardTitle": "관리자",
+    "signedIn": "로그인되었습니다.",
+    "managePosts": "게시물 관리",
+    "newPost": "새 글 쓰기",
+    "logout": "로그아웃",
+    "emptyPosts": "게시물이 없습니다.",
+    "edit": "편집",
+    "delete": "삭제",
+    "deleteConfirm": "정말 삭제하시겠습니까? 되돌릴 수 없습니다.",
+    "previous": "이전",
+    "next": "다음",
+    "editPost": "글 편집",
+    "publish": "게시하기",
+    "save": "저장하기",
+    "requiredError": "분류·한국어 제목·한국어 본문은 필수입니다.",
+    "section": "게시글 구분",
+    "category": "세부 태그",
+    "categoryPlaceholder": "예: 월간 GLEAP, 교류, 사회공헌",
+    "sectionHint": "원격 저장소의 공지·학술 소식·활동 소식 체계를 사용합니다. 활동 소식의 세부 태그를 ‘교류’ 또는 ‘사회공헌’으로 입력하면 해당 활동 페이지에 자동으로 연결됩니다.",
+    "titleKo": "제목 (한국어)",
+    "titleEn": "제목 (English, 선택)",
+    "bodyKo": "본문 (한국어)",
+    "bodyEn": "본문 (English, 선택)",
+    "authorName": "작성자 표시명 (선택)",
+    "publishedAt": "게시일",
+    "editorPlaceholder": "내용을 입력하세요...",
+    "linkPrompt": "링크 URL",
+    "uploadFailed": "업로드 실패",
+    "uploadFailedDetail": "이미지 업로드 실패: {error}",
+    "networkError": "네트워크 오류",
+    "heading2": "제목1",
+    "heading3": "제목2",
+    "heading4": "제목3",
+    "bold": "굵게",
+    "italic": "기울임",
+    "bulletList": "목록",
+    "orderedList": "번호 목록",
+    "blockquote": "인용문",
+    "link": "링크",
+    "uploading": "업로드 중...",
+    "image": "이미지",
+    "selectedImageWidth": "선택한 이미지 폭"
+  },
+  "AdminContent": {
+    "workspace": "Content Atelier",
+    "overview": "개요",
+    "contentHub": "사이트 콘텐츠",
+    "home": "홈",
+    "about": "소개",
+    "members": "구성원",
+    "activities": "활동",
+    "news": "소식",
+    "settings": "사이트 설정",
+    "footer": "푸터",
+    "newPost": "새 소식 작성",
+    "viewSite": "사이트 보기",
+    "open": "열기",
+    "workspaceDescription": "GLEAP의 정체성과 공개 콘텐츠를 한 곳에서 관리합니다.",
+    "hubTitle": "사이트 콘텐츠 스튜디오",
+    "hubDescription": "한국어·영어 문구, 사진, 숫자, 프로그램과 구성원 명단을 관리합니다. 저장 즉시 공개 화면에 반영됩니다.",
+    "editHome": "홈 편집",
+    "editAbout": "소개 편집",
+    "editMembers": "구성원 편집",
+    "editActivities": "활동 편집",
+    "editNews": "소식 페이지 편집",
+    "editSettings": "설정 편집",
+    "save": "변경사항 저장",
+    "saving": "저장 중…",
+    "saved": "저장되었습니다.",
+    "saveHint": "저장하면 한국어·영어 공개 페이지에 즉시 반영됩니다.",
+    "korean": "한국어",
+    "english": "English",
+    "shortText": "짧은 문구",
+    "longText": "설명 문구",
+    "image": "이미지",
+    "imageUrl": "이미지 경로 또는 URL",
+    "upload": "이미지 업로드",
+    "uploading": "업로드 중…",
+    "uploadFailed": "이미지를 업로드하지 못했습니다.",
+    "add": "추가",
+    "remove": "삭제",
+    "moveUp": "위로",
+    "moveDown": "아래로",
+    "identity": "브랜드 메시지",
+    "hero": "첫 화면",
+    "statistics": "핵심 숫자",
+    "programs": "활동 소개",
+    "global": "글로벌 섹션",
+    "closing": "마무리",
+    "distinction": "Honor 원칙",
+    "pageCopy": "페이지 문구",
+    "story": "설립 이야기",
+    "charter": "GLEAP 헌장",
+    "paragraphs": "본문 문단",
+    "cohorts": "기수와 구성원",
+    "currentCohortCount": "현재 활동 기수 수",
+    "cohort": "기수",
+    "member": "구성원",
+    "addCohort": "기수 추가",
+    "addMember": "구성원 추가",
+    "category": "활동 축",
+    "program": "프로그램",
+    "addProgram": "프로그램 추가",
+    "contact": "연락처와 운영 정보",
+    "metadata": "검색·공유 설명",
+    "contentFallback": "DB 문서가 없으면 코드에 보관된 현재 콘텐츠가 안전한 기본값으로 사용됩니다.",
+    "homeDescription": "홈의 모든 주요 문구, 사진, 숫자와 Honor 원칙을 편집합니다.",
+    "aboutDescription": "소개 페이지의 헤드라인, 본문, 이미지와 헌장 메시지를 편집합니다.",
+    "membersDescription": "현재 구성원·Alumni를 결정하는 기수와 개인 프로필을 관리합니다.",
+    "activitiesDescription": "세 활동 축의 제목, 설명, 대표 이미지와 세부 프로그램을 관리합니다.",
+    "newsDescription": "소식 목록과 상세 화면의 제목, 안내, 검색·페이지 이동 문구를 관리합니다.",
+    "settingsDescription": "기관 표기, 전체 내비게이션, 푸터, 문의 정보와 검색·소셜 공유 설명을 관리합니다."
+    ,"fieldEyebrow": "상단 라벨"
+    ,"fieldTitle": "제목"
+    ,"fieldDescription": "설명"
+    ,"fieldPrimaryCta": "주요 버튼"
+    ,"fieldSecondaryCta": "보조 버튼"
+    ,"fieldHeadlineOne": "헤드라인 1"
+    ,"fieldHeadlineTwo": "헤드라인 2"
+    ,"fieldHeadlineThree": "헤드라인 3"
+    ,"fieldHeadlineFour": "헤드라인 4"
+    ,"fieldMediaKicker": "사진 라벨"
+    ,"fieldMediaTitle": "사진 제목"
+    ,"fieldMediaYear": "사진 연도·장소"
+    ,"fieldFounded": "설립 연도"
+    ,"fieldPillars": "활동 축 수"
+    ,"fieldReach": "사회공헌 도달 인원"
+    ,"fieldMotto": "모토"
+    ,"fieldName": "이름"
+    ,"fieldRole": "역할"
+    ,"fieldDepartment": "소속 학과"
+    ,"fieldPhoto": "프로필 사진"
+    ,"fieldEmail": "이메일"
+    ,"fieldBlog": "블로그"
+    ,"fieldInstagram": "Instagram"
+    ,"fieldGithub": "GitHub"
+    ,"fieldLinkedin": "LinkedIn"
+    ,"fieldLabel": "표시 이름"
+    ,"fieldContactEmail": "대표 문의 이메일"
+    ,"fieldDeveloperName": "개발팀 이름"
+    ,"fieldDeveloperLink": "개발팀 링크"
+    ,"fieldLocation": "소속·위치"
+    ,"fieldCopyright": "저작권 문구"
+    ,"fieldMetaDescription": "검색 설명"
+    ,"fieldSocialAlt": "공유 이미지 대체 텍스트"
+    ,"fieldImageAlt": "이미지 대체 텍스트"
+    ,"institution": "기관 정체성과 인장"
+    ,"institutionDescription": "상단 공식 표기와 푸터의 GLEAP 인장 문구를 관리합니다."
+    ,"navigation": "전체 내비게이션"
+    ,"navigationDescription": "데스크톱·모바일 메뉴에 공통으로 쓰이는 모든 항목을 관리합니다."
+    ,"fieldBandLabel": "상단 기관 표기"
+    ,"fieldBandMeta": "상단 Honor 원칙"
+    ,"fieldSealTop": "인장 상단 문구"
+    ,"fieldSealBottom": "인장 하단 문구"
+    ,"fieldSealSubtitle": "인장 중심 원칙"
+    ,"fieldCurrentMembers": "현재 구성원 메뉴"
+    ,"fieldAlumni": "Alumni 메뉴"
+    ,"fieldMemberSpace": "회원 공간 메뉴"
+    ,"fieldMenuLabel": "모바일 메뉴 제목"
+    ,"fieldCloseLabel": "닫기 접근성 문구"
+    ,"fieldLogoutLabel": "로그아웃 문구"
+    ,"fieldAriaNavigation": "주요 메뉴 접근성 문구"
+    ,"fieldFooterExplore": "푸터 둘러보기 제목"
+    ,"fieldDeveloperLabel": "푸터 개발 표기"
+    ,"fieldAdminLabel": "푸터 관리자 표기"
+    ,"newsCopy": "소식 화면 문구"
+    ,"fieldStudentLed": "학생 주도 비율"
+    ,"fieldImageCaption": "이미지 캡션"
+    ,"fieldPrinciple": "헌장 원칙"
+  },
+  "Metadata": {
+    "description": "서울대학교 자연과학대학 공식 학부생 우수학생단체 GLEAP",
+    "socialImageAlt": "싱가포르 해외학술문화탐방에 참여한 GLEAP 구성원들"
+  },
+  "Accessibility": {
+    "skipToContent": "본문으로 바로가기"
+  },
+  "Errors": {
+    "notFoundEyebrow": "404 · Not found",
+    "notFoundTitle": "페이지를 찾을 수 없습니다.",
+    "notFoundDescription": "주소가 바뀌었거나 페이지가 삭제되었을 수 있습니다. 홈에서 다시 둘러보세요.",
+    "errorEyebrow": "Something went wrong",
+    "errorTitle": "잠시 문제가 생겼습니다.",
+    "errorDescription": "요청을 처리하지 못했습니다. 잠시 뒤 다시 시도해 주세요.",
+    "home": "홈으로 돌아가기",
+    "retry": "다시 시도"
   },
   "Footer": {
     "rights": "© {year} GLEAP. All rights reserved.",
     "contact": "문의",
     "developer": "개발",
-    "admin": "관리자"
+    "admin": "관리자",
+    "motto": "Connect Science, Illuminate the World.",
+    "organization": "서울대학교 자연과학대학이 설립한 공식 학부생 우수학생단체. 학문의 경계를 넘어 탐구하고, 사회와 나누며, 세계와 연결됩니다.",
+    "explore": "둘러보기",
+    "location": "서울대학교 자연과학대학"
   }
 }

@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { MemberAuthForm } from "@/components/member/MemberAuthForm";
 import { env } from "@/lib/env";
 import { getCsrfToken } from "@/lib/csrf";
@@ -7,27 +9,38 @@ type Props = {
   params: Promise<{ locale: string }>;
 };
 
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "MemberArea" });
+  return { title: t("loginTitle"), description: t("loginDescription") };
+}
+
 export default async function MemberLoginPage({ params }: Props) {
   const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations("MemberArea");
   // 폼의 anti-CSRF hidden 필드를 서버에서 미리 채운다(JS 없이도 값이 보이도록).
   // 이 호출로 두 페이지는 동적 렌더링(ƒ)이 되는데, 로그인/가입 화면이라 영향 없음.
   const csrfToken = await getCsrfToken();
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center px-6 py-16">
-      <div className="mb-6 w-full max-w-sm">
-        <h1 className="text-2xl font-semibold">회원 로그인</h1>
-        <p className="mt-2 text-sm text-muted">승인된 GLEAP 회원만 로그인할 수 있습니다.</p>
-      </div>
-      <MemberAuthForm
-        locale={locale}
-        mode="sign-in"
-        turnstileSiteKey={env.turnstileSiteKey}
-        initialCsrfToken={csrfToken}
+    <main className="flex flex-1 items-center bg-[radial-gradient(circle_at_80%_10%,rgba(105,216,255,.14),transparent_24rem),linear-gradient(180deg,#fff,#fbfdff)] px-6 py-16">
+      <div className="mx-auto flex w-full max-w-md flex-col items-center">
+        <div className="mb-8 w-full">
+          <p className="page-kicker"><span aria-hidden />{t("privateArea")}</p>
+          <h1 className="mt-5 text-4xl font-semibold tracking-[-.055em] text-primary-deep sm:text-5xl">{t("loginTitle")}</h1>
+          <p className="mt-4 text-sm leading-7 text-muted">{t("loginDescription")}</p>
+        </div>
+        <MemberAuthForm
+          locale={locale}
+          mode="sign-in"
+          turnstileSiteKey={env.turnstileSiteKey}
+          initialCsrfToken={csrfToken}
       />
-      <p className="mt-5 text-sm text-muted">
-        처음 오셨나요? <Link href="/member/signup" className="text-primary underline">승인된 이메일로 회원가입</Link>
-      </p>
+        <p className="mt-5 text-sm text-muted">
+          {t("loginPrompt")} <Link href="/member/signup" className="text-primary underline">{t("signupLink")}</Link>
+        </p>
+      </div>
     </main>
   );
 }

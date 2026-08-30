@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { memberAuthClient } from "@/lib/member-auth-client";
 import {
@@ -31,6 +32,7 @@ export function MemberAuthForm({
   initialCohort = "",
   initialCsrfToken = "",
 }: Props) {
+  const t = useTranslations("MemberArea");
   const router = useRouter();
   const [name, setName] = useState(initialName);
   const [email, setEmail] = useState(initialEmail);
@@ -53,7 +55,7 @@ export function MemberAuthForm({
     // 여기서는 혹시 이 페이지가 캐시된 HTML로 서빙돼 토큰이 낡았을 경우를 대비해
     // 한 번 더 최신 값으로 덮어쓴다 (src/app/api/session-status/route.ts 참고).
     fetch("/api/session-status")
-      .then((res) => res.json())
+      .then((response) => response.json())
       .then((data) => {
         if (typeof data.csrfToken === "string" && data.csrfToken) {
           setCsrfToken(data.csrfToken);
@@ -69,7 +71,7 @@ export function MemberAuthForm({
     if (isSignup && password !== confirmPassword) {
       setMessage({
         tone: "error",
-        text: "비밀번호 확인이 일치하지 않습니다.",
+        text: t("passwordMismatch"),
       });
       return;
     }
@@ -86,7 +88,6 @@ export function MemberAuthForm({
 
     setIsSubmitting(true);
     const callbackURL = `/${locale}/member`;
-
     const authHeaders = {
       "x-captcha-response": turnstileToken,
       [CSRF_HEADER_NAME]: csrfToken,
@@ -112,38 +113,36 @@ export function MemberAuthForm({
       turnstileRef.current?.reset();
       setMessage({
         tone: "error",
-        text: result.error.message ?? "입력 내용을 다시 확인해 주세요.",
+        text: result.error.message ?? t("formInvalid"),
       });
       return;
     }
 
-    // Better Auth의 회원가입 응답도 세션을 설정하므로 단회용 토큰으로
-    // 별도의 로그인 요청을 반복하지 않고 곧바로 회원 영역으로 이동한다.
     router.replace(callbackURL);
     router.refresh();
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex w-full max-w-sm flex-col gap-4 rounded-xl border border-border bg-background p-6 shadow-sm">
+    <form onSubmit={onSubmit} className="form-panel form-panel-accent flex w-full max-w-md flex-col gap-5 p-6 sm:p-8">
       <CsrfInputs token={csrfToken} />
       {isSignup && (
         <label className="flex flex-col gap-1.5 text-sm font-medium">
-          이름 (실명)
+          {t("nameLabel")}
           <input
             value={name}
             onChange={(event) => setName(event.target.value)}
-            placeholder="홍길동"
+            placeholder={t("namePlaceholder")}
             required
-            className="rounded-lg border border-border px-3 py-2 font-normal focus:border-primary focus:outline-none"
+            className="min-h-12 border border-border px-4 font-normal focus:border-primary focus:outline-none"
           />
           {initialName && (
-            <span className="text-xs text-muted">운영진이 지정한 구성원 이름입니다.</span>
+            <span className="text-xs text-muted">{t("assignedNameHint")}</span>
           )}
         </label>
       )}
 
       <label className="flex flex-col gap-1.5 text-sm font-medium">
-        이메일 주소
+        {t("emailLabel")}
         <input
           type="email"
           autoComplete="email"
@@ -151,22 +150,22 @@ export function MemberAuthForm({
           onChange={(event) => setEmail(event.target.value)}
           placeholder="member@snu.ac.kr"
           required
-          className="rounded-lg border border-border px-3 py-2 font-normal focus:border-primary focus:outline-none"
+          className="min-h-12 border border-border px-4 font-normal focus:border-primary focus:outline-none"
         />
         {isSignup && initialEmail && (
-          <span className="text-xs text-muted">초대받은 이메일 주소입니다.</span>
+          <span className="text-xs text-muted">{t("invitedEmailHint")}</span>
         )}
       </label>
 
       {isSignup && initialCohort && (
-        <div className="rounded-lg bg-surface p-2.5 text-xs text-muted flex items-center justify-between">
-          <span>소속 기수:</span>
+        <div className="flex items-center justify-between border border-border bg-surface p-3 text-xs text-muted">
+          <span>{t("cohortLabel")}</span>
           <span className="font-semibold text-primary">{initialCohort}</span>
         </div>
       )}
 
       <label className="flex flex-col gap-1.5 text-sm font-medium">
-        {isSignup ? "사용할 비밀번호 (8자 이상)" : "비밀번호"}
+        {isSignup ? t("passwordNewLabel") : t("passwordLabel")}
         <input
           type="password"
           autoComplete="off"
@@ -175,13 +174,13 @@ export function MemberAuthForm({
           onChange={(event) => setPassword(event.target.value)}
           placeholder="••••••••"
           required
-          className="rounded-lg border border-border px-3 py-2 font-normal focus:border-primary focus:outline-none"
+          className="min-h-12 border border-border px-4 font-normal focus:border-primary focus:outline-none"
         />
       </label>
 
       {isSignup && (
         <label className="flex flex-col gap-1.5 text-sm font-medium">
-          비밀번호 확인
+          {t("confirmPasswordLabel")}
           <input
             type="password"
             autoComplete="off"
@@ -190,15 +189,16 @@ export function MemberAuthForm({
             onChange={(event) => setConfirmPassword(event.target.value)}
             placeholder="••••••••"
             required
-            className="rounded-lg border border-border px-3 py-2 font-normal focus:border-primary focus:outline-none"
+            className="min-h-12 border border-border px-4 font-normal focus:border-primary focus:outline-none"
           />
         </label>
       )}
 
       {message && (
         <p
-          className={`text-sm rounded-lg p-2.5 ${
-            message.tone === "error" ? "bg-red-50 text-red-700" : "bg-emerald-50 text-emerald-700"
+          aria-live="polite"
+          className={`border p-3 text-sm ${
+            message.tone === "error" ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"
           }`}
         >
           {message.text}
@@ -223,9 +223,9 @@ export function MemberAuthForm({
       <button
         type="submit"
         disabled={isSubmitting}
-        className="mt-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 transition"
+        className="form-button-primary mt-1 w-full"
       >
-        {isSubmitting ? "처리 중…" : isSignup ? "비밀번호 설정 및 가입 완료" : "로그인"}
+        {isSubmitting ? t("processing") : isSignup ? t("signupSubmit") : t("loginSubmit")}
       </button>
     </form>
   );

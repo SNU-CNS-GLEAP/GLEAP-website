@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 
 // CLAUDE.md "공개 페이지에서의 수정 진입점" 패턴: 공개 페이지(서버 컴포넌트)는 세션을
@@ -14,6 +15,7 @@ type Props = {
 };
 
 export function AdminEditButton({ postId, className }: Props) {
+  const t = useTranslations("AdminArea");
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
@@ -33,7 +35,7 @@ export function AdminEditButton({ postId, className }: Props) {
         "rounded border border-admin px-2 py-0.5 text-xs text-admin hover:bg-admin hover:text-white"
       }
     >
-      수정
+      {t("edit")}
     </Link>
   );
 }

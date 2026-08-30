@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useTranslations } from "next-intl";
 import { CsrfInputs } from "@/components/CsrfInputs";
 
 type Props = {
@@ -9,6 +10,7 @@ type Props = {
 };
 
 export function MemberCommentForm({ action, csrfToken }: Props) {
+  const t = useTranslations("MemberArea");
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -18,7 +20,7 @@ export function MemberCommentForm({ action, csrfToken }: Props) {
       return;
     }
 
-    if (!window.confirm("댓글을 등록하시겠습니까?")) {
+    if (!window.confirm(t("commentConfirm"))) {
       event.preventDefault();
       return;
     }
@@ -34,10 +36,10 @@ export function MemberCommentForm({ action, csrfToken }: Props) {
         setIsSubmitting(false);
       }}
       onSubmit={handleSubmit}
-      className="flex flex-col gap-3 rounded-xl border border-border bg-background p-4 sm:p-5 shadow-sm"
+      className="flex flex-col gap-3 border border-border bg-white p-4 sm:p-5"
     >
       <CsrfInputs token={csrfToken} />
-      <label className="text-xs font-semibold text-muted">댓글 작성하기</label>
+      <label className="text-xs font-semibold text-muted">{t("commentLabel")}</label>
       <textarea
         name="content"
         value={content}
@@ -45,16 +47,16 @@ export function MemberCommentForm({ action, csrfToken }: Props) {
         required
         maxLength={2000}
         rows={3}
-        placeholder="댓글을 입력해 주세요..."
-        className="w-full rounded-lg border border-border p-3 text-sm focus:border-primary focus:outline-none"
+        placeholder={t("commentPlaceholder")}
+        className="w-full border border-border p-3 text-sm focus:border-primary focus:outline-none"
       />
       <div className="flex justify-end">
         <button
           type="submit"
           disabled={isSubmitting || !content.trim()}
-          className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50 transition shadow-sm"
+          className="form-button-primary min-h-10 px-5 py-2"
         >
-          {isSubmitting ? "등록 중…" : "댓글 등록"}
+          {isSubmitting ? t("commentPending") : t("commentSubmit")}
         </button>
       </div>
     </form>

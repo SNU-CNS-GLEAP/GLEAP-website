@@ -9,29 +9,157 @@
     "news": "News",
     "community": "Member Space",
     "menu": "Menu",
-    "close": "Close"
+    "primaryNavigation": "Primary navigation",
+    "close": "Close",
+    "logout": "Sign out"
   },
   "HomePage": {
     "title": "GLEAP",
     "subtitle": "Honors Student Council, College of Natural Sciences, Seoul National University",
-    "description": "This site is currently under construction."
+    "description": "The official website of GLEAP at the SNU College of Natural Sciences.",
+    "hero": {
+      "eyebrow": "Official Honor Society · SNU College of Natural Sciences",
+      "lineOne": "Connect",
+      "lineTwo": "Science,",
+      "lineThree": "Illuminate",
+      "lineFour": "the World.",
+      "description": "GLEAP is a student-led Honor Society whose outstanding natural science students learn beyond disciplinary boundaries, share what they learn with society, and connect with the world.",
+      "primaryCta": "Discover GLEAP",
+      "secondaryCta": "Explore our work",
+      "proofOfficial": "College-recognized",
+      "proofStudentLed": "Student-led",
+      "proofGlobal": "Globally connected",
+      "mediaKicker": "Global Fieldwork",
+      "mediaTitle": "Young scientists connected to the world",
+      "mediaYear": "Singapore · 2025",
+      "signal": "Curiosity in motion",
+      "scroll": "Discover GLEAP"
+    },
+    "intro": {
+      "eyebrow": "Who we are",
+      "title": "GLEAP",
+      "description": "GLEAP (Global Leadership Program) is an officially recognized undergraduate organization established by the SNU College of Natural Sciences in 2012. Guided by the motto ‘Connect Science, Illuminate the World,’ students plan and carry out every initiative themselves as a self-governing organization.",
+      "cta": "Meet the people of GLEAP"
+    },
+    "stats": {
+      "founded": "Year founded",
+      "pillars": "Academic · Impact · Exchange",
+      "reach": "Students reached through science concerts"
+    },
+    "programs": {
+      "eyebrow": "What we do",
+      "title": "Three Pathways Expanding the Possibilities of Natural Science Worldwide",
+      "description": "We explore deeply, share generously, and connect globally. Every GLEAP initiative begins along one of these three paths.",
+      "academic": {
+        "tag": "Explore",
+        "title": "Academic",
+        "description": "We strengthen our academic capabilities through activities that cross disciplinary boundaries and encourage creative research that expands the frontiers of natural science."
+      },
+      "social": {
+        "tag": "Illuminate",
+        "title": "Social Impact",
+        "description": "We apply scientific knowledge to challenges in local communities. Projects such as the Natural Science Concert put knowledge-sharing into practice and create social value."
+      },
+      "exchange": {
+        "tag": "Connect",
+        "title": "Exchange",
+        "description": "We build strong networks with partners and alumni within and beyond the Seoul National University community. Through a range of exchange programs, we foster the bonds that connect future leaders."
+      }
+    },
+    "global": {
+      "eyebrow": "Beyond boundaries",
+      "title": "From campus to the frontiers of research.",
+      "description": "Every year, GLEAP visits leading laboratories and universities abroad to exchange ideas and cultures with fellow young scientists. Members lead the entire journey, from selecting the destination to arranging institutions and running the program.",
+      "cta": "Explore global exchange",
+      "mediaKicker": "Research Exchange",
+      "mediaTitle": "Inside Singapore's Centre for Quantum Technologies"
+    },
+    "closing": {
+      "eyebrow": "The minds of tomorrow",
+      "title": "Meet the people of GLEAP.",
+      "description": "Science travels further when disciplines and perspectives meet. Discover the people and the journey behind GLEAP.",
+      "primaryCta": "Meet our members",
+      "secondaryCta": "Read the latest"
+    },
+    "motion": {
+      "scroll": "Scroll to explore",
+      "discover": "Discover",
+      "openProgram": "Explore",
+      "chapterNavigation": "Jump to a homepage section",
+      "chapters": {
+        "hero": "Opening",
+        "identity": "Identity",
+        "programs": "Programs",
+        "global": "Global",
+        "future": "Future"
+      }
+    },
+    "media": {
+      "heroAlt": "GLEAP members on an academic and cultural exploration in Singapore",
+      "campusAlt": "A building at the SNU College of Natural Sciences",
+      "academicAlt": "A GLEAP member presenting the Ising model at an academic seminar",
+      "socialAlt": "GLEAP members who organized the 2025 Natural Science Concert in Busan",
+      "exchangeAlt": "Students participating in a domestic student organization exchange",
+      "globalAlt": "GLEAP members listening to a research briefing at Singapore's Centre for Quantum Technologies"
+    }
   },
   "AboutPage": {
-    "title": "About Us"
+    "title": "About GLEAP",
+    "eyebrow": "About GLEAP",
+    "lede": "A student-led community where outstanding young scientists cross disciplinary boundaries, share what they learn with society, and connect with peers around the world.",
+    "storyKicker": "Our foundation",
+    "storyTitle": "We pair scientific excellence with responsibility and connection.",
+    "imageAlt": "A building at the SNU College of Natural Sciences",
+    "pillarsKicker": "Our principles",
+    "pillarsTitle": "Three directions that move GLEAP forward",
+    "stats": {
+      "founded": "Founded",
+      "identity": "Student-led",
+      "pillars": "Pillars"
+    },
+    "values": {
+      "academic": {
+        "title": "Explore",
+      "description": "We ask questions across disciplines and deepen one another's knowledge."
+      },
+      "social": {
+        "title": "Illuminate",
+        "description": "We share science widely and help illuminate new possibilities."
+      },
+      "exchange": {
+        "title": "Connect",
+        "description": "We connect across campuses, disciplines, generations, and borders."
+      }
+    },
+    "metaDescription": "Discover the foundation and student-led philosophy of GLEAP, the official undergraduate Honor Society of the SNU College of Natural Sciences."
   },
   "MembersPage": {
-    "title": "Members"
+    "title": "Members",
+    "eyebrow": "Our people",
+    "lede": "Meet the current GLEAP members whose different scientific disciplines and perspectives create bigger questions together.",
+    "rosterKicker": "Current cohorts",
+    "activeMembers": "Current members",
+    "activeCohorts": "Active cohorts",
+    "peopleCount": "{count} people",
+    "cohortCount": "{count} cohorts",
+    "metaDescription": "Meet the current members building GLEAP's academic, social-impact, and exchange programs."
   },
   "AlumniPage": {
     "title": "Alumni",
     "viewCohort": "View roster",
-    "empty": "No roster has been added yet.",
     "backToAll": "← Back to Alumni",
     "otherCohorts": "Generations",
-    "contactMessage": "If you need to update your information, please contact us at snucnsgleap@gmail.com"
+    "contactMessage": "If you need to update your information, please contact us at snucnsgleap@gmail.com",
+    "eyebrow": "GLEAP network",
+    "lede": "The connections formed at GLEAP continue long after active membership. Explore our alumni by cohort.",
+    "rosterKicker": "Cohort archive",
+    "selectCohort": "Select a cohort",
+    "empty": "No roster has been added yet.",
+    "metaDescription": "Explore GLEAP's alumni community and rosters by cohort."
   },
   "MemberCard": {
     "email": "Email",
+    "blog": "Blog",
     "tistory": "Tistory",
     "naverblog": "Naver Blog",
     "instagram": "Instagram",
@@ -40,27 +168,496 @@
   },
   "ActivitiesPage": {
     "title": "Activities",
+    "eyebrow": "What we do",
+    "lede": "We explore deeply, share generously, and connect globally. Every GLEAP program begins along one of these three paths.",
+    "overviewKicker": "Three pillars",
+    "overviewTitle": "GLEAP's Three Activities.",
+    "programCount": "{count} programs",
+    "detailEyebrow": "Program {number}",
     "learnMore": "Learn more",
-    "backToAll": "← Back to Activities"
+    "backToAll": "← Back to Activities",
+    "metaDescription": "Explore GLEAP's academic, social-impact, and domestic and global exchange programs."
   },
   "NewsPage": {
     "title": "News",
-    "sectionAll": "All",
+    "eyebrow": "News & stories",
+    "lede": "Updates, announcements, and stories from GLEAP members pursuing science with curiosity and purpose.",
+    "sectionAll": "All posts",
     "filterAll": "All",
+    "filterLabel": "News category",
+    "searchLabel": "Search titles",
     "searchPlaceholder": "Search by title",
     "search": "Search",
+    "reset": "Clear filters",
     "empty": "No posts yet.",
     "totalCount": "{count} posts",
     "prev": "Previous",
     "next": "Next",
     "pageOf": "{page} / {totalPages}",
     "backToList": "← Back to list",
-    "noEnglishNotice": "This post hasn't been translated into English yet. Showing the original Korean version below."
+    "noEnglishNotice": "This post hasn't been translated into English yet. Showing the original Korean version below.",
+    "metaDescription": "Read the latest GLEAP announcements, activity stories, Monthly GLEAP features, and science writing."
+  },
+  "MemberLoginPage": {
+    "title": "Member sign in",
+    "description": "Only members invited by GLEAP administrators can sign in.",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "pending": "Signing in…",
+    "invalid": "Check your email address and password.",
+    "invitationOnly": "If you do not have an account, ask an administrator to send you an invitation. Public sign-up is not available."
+  },
+  "CommunityPage": {
+    "title": "Member area",
+    "description": "A community board available only to GLEAP members.",
+    "members": "Member profiles",
+    "write": "Write a post",
+    "writeNotice": "Write a notice",
+    "notice": "Notice",
+    "free": "General",
+    "unknownAuthor": "Name not set",
+    "comments": "{count} comments",
+    "likes": "{count} likes",
+    "empty": "There are no posts yet."
+  },
+  "NewPostPage": {
+    "title": "Write a post",
+    "back": "← Back to member area",
+    "fieldTitle": "Title",
+    "fieldContent": "Content",
+    "submit": "Publish",
+    "pending": "Publishing…",
+    "error": "We could not save your post. Please try again."
+  },
+  "NewNoticePage": {
+    "title": "Write a notice",
+    "description": "Only administrators can write notices. Public notices also appear in News for visitors who are not signed in.",
+    "back": "← Back to member area",
+    "fieldTitle": "Title",
+    "fieldContent": "Content",
+    "publishPublicly": "Show this notice in News for visitors who are not signed in",
+    "submit": "Publish notice",
+    "pending": "Publishing…",
+    "error": "We could not save your notice. Please try again."
+  },
+  "PostPage": {
+    "back": "← Back to member area",
+    "edit": "Edit my post",
+    "notice": "Notice",
+    "free": "General",
+    "unknownAuthor": "Name not set",
+    "like": "Like",
+    "unlike": "Unlike",
+    "likes": "{count} likes",
+    "comment": "Write a comment",
+    "commentPlaceholder": "Leave a comment.",
+    "submitComment": "Post comment",
+    "interactionError": "We could not complete that request. Please try again.",
+    "comments": "{count} comments",
+    "noComments": "Be the first to leave a comment."
+  },
+  "EditPostPage": {
+    "title": "Edit my post",
+    "back": "← Back to post",
+    "fieldTitle": "Title",
+    "fieldContent": "Content",
+    "save": "Save",
+    "saving": "Saving…",
+    "delete": "Delete post",
+    "confirmDelete": "Delete this post? This cannot be undone.",
+    "error": "We could not complete that request. Please try again."
+  },
+  "CommunityMembersPage": {
+    "title": "Member profiles",
+    "description": "This member list is available only to signed-in GLEAP members.",
+    "myProfile": "Edit my profile",
+    "unknown": "Name not set",
+    "me": "Me",
+    "empty": "There are no member profiles yet."
+  },
+  "MemberProfilePage": {
+    "back": "← Back to members",
+    "edit": "Edit my profile",
+    "unknown": "Name not set",
+    "posts": "Posts",
+    "notice": "Notice",
+    "free": "General",
+    "noPosts": "There are no posts yet.",
+    "instagram": "Instagram",
+    "github": "GitHub"
+  },
+  "MyProfilePage": {
+    "title": "Edit my profile",
+    "description": "This information is visible only to signed-in GLEAP members.",
+    "view": "View my profile",
+    "name": "Name",
+    "cohort": "Cohort",
+    "bio": "Short bio",
+    "interests": "Interests",
+    "interestsHint": "Separate multiple interests with commas.",
+    "instagram": "Instagram URL",
+    "github": "GitHub URL",
+    "save": "Save profile",
+    "saving": "Saving…",
+    "password": "Change password",
+    "passwordHint": "Members entering from an invitation should set a personal password here.",
+    "updatePassword": "Change password",
+    "error": "We could not save your changes. Please try again.",
+    "saved": "Saved."
+  },
+  "MemberArea": {
+    "privateArea": "Members only",
+    "admin": "Admin",
+    "greeting": "Welcome, {name}",
+    "hubDescription": "Your hub for the GLEAP member community and member tools.",
+    "boardTitle": "Member board",
+    "boardDescription": "Read notices and share ideas freely with fellow members.",
+    "boardLink": "Open the board →",
+    "profileTitle": "My profile",
+    "profileDescription": "Manage your cohort, interests, introduction, and social links.",
+    "profileLink": "Edit profile →",
+    "directoryTitle": "Member directory",
+    "directoryDescription": "Explore member profiles and introductions by cohort.",
+    "directoryLink": "Browse members →",
+    "adminPanelTitle": "Admin: member approval and roles",
+    "adminPanelDescription": "Approve member emails and assign administrative roles.",
+    "adminPanelLink": "Open admin tools →",
+    "logout": "Log out",
+    "loginTitle": "Member sign in",
+    "loginDescription": "Only approved GLEAP members can sign in.",
+    "loginPrompt": "New here?",
+    "signupLink": "Create an account with an approved email",
+    "signupTitle": "Join GLEAP",
+    "signupWelcome": "Welcome, {name} of {cohort}. Set your password to continue.",
+    "signupInvited": "Set a password and name for your invited email address.",
+    "signupRestricted": "Only email addresses pre-approved by the team can register.",
+    "signupPrompt": "Already have an account?",
+    "loginLink": "Sign in",
+    "nameLabel": "Full name",
+    "namePlaceholder": "Your name",
+    "assignedNameHint": "This member name was assigned by the team.",
+    "emailLabel": "Email address",
+    "invitedEmailHint": "This is your invited email address.",
+    "cohortLabel": "Cohort:",
+    "passwordNewLabel": "Choose a password (8+ characters)",
+    "passwordLabel": "Password",
+    "confirmPasswordLabel": "Confirm password",
+    "passwordMismatch": "The password confirmation does not match.",
+    "formInvalid": "Please review the information you entered.",
+    "signupSuccess": "Your account is ready. Redirecting to sign in.",
+    "processing": "Processing…",
+    "signupSubmit": "Set password and create account",
+    "loginSubmit": "Sign in",
+    "communityPrivate": "Members only",
+    "communityTitle": "Member board",
+    "write": "Write a post",
+    "emptyPostsTitle": "No posts yet.",
+    "emptyPostsDescription": "Share the first story with the community.",
+    "notice": "Member notice",
+    "freePost": "Community post",
+    "commentsCount": "{count} comments",
+    "likesCount": "{count} likes",
+    "dislikesCount": "{count} dislikes",
+    "newPostKicker": "Member community",
+    "newPostTitle": "New post",
+    "newPostDescription": "Share an idea or story with fellow GLEAP members.",
+    "editPostTitle": "Edit post",
+    "editPostDescription": "Update the post and save your changes.",
+    "postBack": "← Member board",
+    "like": "Like",
+    "dislike": "Dislike",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteAdmin": "Delete (admin)",
+    "commentsTitle": "Comments ({count})",
+    "emptyComments": "No comments yet. Start the conversation.",
+    "commentConfirm": "Post this comment?",
+    "commentLabel": "Write a comment",
+    "commentPlaceholder": "Add your comment...",
+    "commentPending": "Posting…",
+    "commentSubmit": "Post comment",
+    "postFormConfirmCreate": "Publish this post?",
+    "postFormConfirmEdit": "Save these changes?",
+    "postCategory": "Category",
+    "postTitle": "Title",
+    "postTitlePlaceholder": "Enter a title",
+    "postContent": "Content",
+    "postContentPlaceholder": "Write your post...",
+    "cancel": "Cancel and return",
+    "postPending": "Processing…",
+    "postCreate": "Publish",
+    "postUpdate": "Save changes",
+    "profilePageTitle": "Manage my profile",
+    "profilePageDescription": "Edit the profile shared with other members. Do not include sensitive contact information.",
+    "profileSaveConfirm": "Save this profile?",
+    "profileName": "Full name",
+    "profileCohort": "Cohort",
+    "profileCohortPlaceholder": "e.g. 14th cohort",
+    "position": "Role / team",
+    "positionPlaceholder": "e.g. Executive, Academic, Outreach, Exchange",
+    "academic": "Academic interests",
+    "academicPlaceholder": "e.g. AI, biochemistry, mathematics, astronomy",
+    "commaHint": "Separate multiple entries with commas.",
+    "hobbies": "Hobbies and interests",
+    "hobbiesPlaceholder": "e.g. games, music, football",
+    "bio": "Short introduction",
+    "bioPlaceholder": "Introduce yourself in a sentence.",
+    "instagramOptional": "Instagram username (optional)",
+    "githubOptional": "GitHub URL (optional)",
+    "saving": "Saving…",
+    "saveProfile": "Save profile",
+    "directoryPageTitle": "GLEAP member directory",
+    "directoryPageDescription": "Select a member to see their full profile.",
+    "editMyProfile": "Edit my profile",
+    "backMemberHome": "← Member home",
+    "emptyProfiles": "No member profiles have been registered yet.",
+    "emptyProfilesHint": "Profiles appear after an administrator invites members.",
+    "official": "Official",
+    "details": "Details →",
+    "adminGroup": "Leadership (Admin)",
+    "activeMembers": "Active members",
+    "juniorCohort": "15th cohort (Junior)",
+    "seniorCohort": "14th cohort (Senior)",
+    "memberCount": "{count} members",
+    "alumni": "Alumni",
+    "close": "Close",
+    "officialAccount": "Official account",
+    "positionLabel": "Role / team",
+    "academicLabel": "Academic interests",
+    "hobbiesLabel": "Hobbies and interests",
+    "bioLabel": "Introduction",
+    "accessDenied": "Access denied",
+    "accessDeniedDescription": "This area is available to administrators only.",
+    "returnMemberHome": "Return to member home",
+    "adminKicker": "Administrators only",
+    "adminTitle": "Member approvals and invitations",
+    "adminDescription": "Register a member's name, cohort, and email, then send a private invitation.",
+    "emailConnected": "Email delivery connected",
+    "emailPending": "Email delivery setup pending",
+    "emailConnectedDescription": "Gmail SMTP is connected and personalized invitations are sent automatically.",
+    "emailPendingDescription": "Invitations will be sent automatically after the email environment variables are configured.",
+    "inviteTitle": "Register a member and send an invitation",
+    "cohort": "Cohort",
+    "cohortPlaceholder": "e.g. 15th cohort",
+    "cohortDefault": "15th cohort",
+    "role": "Role",
+    "memberRole": "Member",
+    "adminRole": "Admin",
+    "sendInvitation": "Send an invitation immediately after approval",
+    "approveInvitation": "Approve and send invitation",
+    "approvedList": "Approved members ({count})",
+    "emptyApproved": "No approved members have been registered.",
+    "notRegistered": "Not registered",
+    "registered": "Registration complete (profile connected)",
+    "waiting": "Waiting for registration (invitation sent)",
+    "resend": "Resend invitation",
+    "remove": "Remove",
+    "removeConfirm": "Remove access and delete the account for {email}? This action cannot be undone."
+  },
+  "AdminArea": {
+    "loginTitle": "Admin sign in",
+    "loginKicker": "GLEAP CMS",
+    "loginDescription": "A private workspace for the team responsible for public news and site content.",
+    "passwordLabel": "Admin password",
+    "passwordPlaceholder": "Password",
+    "login": "Sign in",
+    "invalidPassword": "The password is incorrect.",
+    "dashboardTitle": "Admin",
+    "signedIn": "You are signed in.",
+    "managePosts": "Manage posts",
+    "newPost": "New post",
+    "logout": "Sign out",
+    "emptyPosts": "No posts yet.",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteConfirm": "Delete this post? This action cannot be undone.",
+    "previous": "Previous",
+    "next": "Next",
+    "editPost": "Edit post",
+    "publish": "Publish",
+    "save": "Save",
+    "requiredError": "Category, Korean title, and Korean body are required.",
+    "section": "Post section",
+    "category": "Detail tag",
+    "categoryPlaceholder": "e.g. Monthly GLEAP, Exchange, Social Contribution",
+    "sectionHint": "This follows the Notice · Academic News · Activity News structure from the upstream repository. Activity News tagged ‘Exchange’ or ‘Social Contribution’ is linked to the corresponding activity page automatically.",
+    "titleKo": "Title (Korean)",
+    "titleEn": "Title (English, optional)",
+    "bodyKo": "Body (Korean)",
+    "bodyEn": "Body (English, optional)",
+    "authorName": "Display author (optional)",
+    "publishedAt": "Publication date",
+    "editorPlaceholder": "Write your content...",
+    "linkPrompt": "Link URL",
+    "uploadFailed": "Upload failed",
+    "uploadFailedDetail": "Image upload failed: {error}",
+    "networkError": "Network error",
+    "heading2": "Heading 1",
+    "heading3": "Heading 2",
+    "heading4": "Heading 3",
+    "bold": "Bold",
+    "italic": "Italic",
+    "bulletList": "Bullets",
+    "orderedList": "Numbered list",
+    "blockquote": "Quote",
+    "link": "Link",
+    "uploading": "Uploading...",
+    "image": "Image",
+    "selectedImageWidth": "Selected image width"
+  },
+  "AdminContent": {
+    "workspace": "Content Atelier",
+    "overview": "Overview",
+    "contentHub": "Site content",
+    "home": "Home",
+    "about": "About",
+    "members": "Members",
+    "activities": "Activities",
+    "news": "News",
+    "settings": "Site settings",
+    "footer": "Footer",
+    "newPost": "Write news",
+    "viewSite": "View site",
+    "open": "Open",
+    "workspaceDescription": "Manage GLEAP's identity and public content in one place.",
+    "hubTitle": "Site Content Studio",
+    "hubDescription": "Manage Korean and English copy, imagery, figures, programs, and member rosters. Saved changes appear on the public site immediately.",
+    "editHome": "Edit home",
+    "editAbout": "Edit about",
+    "editMembers": "Edit members",
+    "editActivities": "Edit activities",
+    "editNews": "Edit news page",
+    "editSettings": "Edit settings",
+    "save": "Save changes",
+    "saving": "Saving…",
+    "saved": "Changes saved.",
+    "saveHint": "Saving updates both Korean and English public pages immediately.",
+    "korean": "한국어",
+    "english": "English",
+    "shortText": "Short copy",
+    "longText": "Description",
+    "image": "Image",
+    "imageUrl": "Image path or URL",
+    "upload": "Upload image",
+    "uploading": "Uploading…",
+    "uploadFailed": "The image could not be uploaded.",
+    "add": "Add",
+    "remove": "Remove",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "identity": "Brand message",
+    "hero": "Opening",
+    "statistics": "Key figures",
+    "programs": "Programs",
+    "global": "Global section",
+    "closing": "Closing section",
+    "distinction": "Honor principles",
+    "pageCopy": "Page copy",
+    "story": "Foundation story",
+    "charter": "GLEAP charter",
+    "paragraphs": "Body paragraphs",
+    "cohorts": "Cohorts and members",
+    "currentCohortCount": "Number of active cohorts",
+    "cohort": "Cohort",
+    "member": "Member",
+    "addCohort": "Add cohort",
+    "addMember": "Add member",
+    "category": "Program pillar",
+    "program": "Program",
+    "addProgram": "Add program",
+    "contact": "Contact and operations",
+    "metadata": "Search and sharing copy",
+    "contentFallback": "If no database document exists, the current content stored in code remains the safe default.",
+    "homeDescription": "Edit all major homepage copy, images, figures, and Honor principles.",
+    "aboutDescription": "Edit the About page headline, narrative, imagery, and charter statement.",
+    "membersDescription": "Manage cohorts and individual profiles that determine current members and alumni.",
+    "activitiesDescription": "Manage the three pillars, representative images, and detailed programs.",
+    "newsDescription": "Manage the news index and detail page titles, guidance, search, and pagination copy.",
+    "settingsDescription": "Manage the institutional masthead, global navigation, footer, contact details, and search and social sharing copy."
+    ,"fieldEyebrow": "Eyebrow"
+    ,"fieldTitle": "Title"
+    ,"fieldDescription": "Description"
+    ,"fieldPrimaryCta": "Primary action"
+    ,"fieldSecondaryCta": "Secondary action"
+    ,"fieldHeadlineOne": "Headline line 1"
+    ,"fieldHeadlineTwo": "Headline line 2"
+    ,"fieldHeadlineThree": "Headline line 3"
+    ,"fieldHeadlineFour": "Headline line 4"
+    ,"fieldMediaKicker": "Media label"
+    ,"fieldMediaTitle": "Media title"
+    ,"fieldMediaYear": "Media year and place"
+    ,"fieldFounded": "Year founded"
+    ,"fieldPillars": "Number of pillars"
+    ,"fieldReach": "People reached"
+    ,"fieldMotto": "Motto"
+    ,"fieldName": "Name"
+    ,"fieldRole": "Role"
+    ,"fieldDepartment": "Department"
+    ,"fieldPhoto": "Profile photo"
+    ,"fieldEmail": "Email"
+    ,"fieldBlog": "Blog"
+    ,"fieldInstagram": "Instagram"
+    ,"fieldGithub": "GitHub"
+    ,"fieldLinkedin": "LinkedIn"
+    ,"fieldLabel": "Display label"
+    ,"fieldContactEmail": "Public contact email"
+    ,"fieldDeveloperName": "Developer name"
+    ,"fieldDeveloperLink": "Developer link"
+    ,"fieldLocation": "Affiliation and location"
+    ,"fieldCopyright": "Copyright line"
+    ,"fieldMetaDescription": "Search description"
+    ,"fieldSocialAlt": "Social image alternative text"
+    ,"fieldImageAlt": "Image alternative text"
+    ,"institution": "Institutional identity and seal"
+    ,"institutionDescription": "Manage the official masthead and language displayed in the footer seal."
+    ,"navigation": "Global navigation"
+    ,"navigationDescription": "Manage every item shared by the desktop and mobile navigation."
+    ,"fieldBandLabel": "Institutional masthead"
+    ,"fieldBandMeta": "Honor principles"
+    ,"fieldSealTop": "Seal top line"
+    ,"fieldSealBottom": "Seal bottom line"
+    ,"fieldSealSubtitle": "Seal principles"
+    ,"fieldCurrentMembers": "Current members menu"
+    ,"fieldAlumni": "Alumni menu"
+    ,"fieldMemberSpace": "Member space menu"
+    ,"fieldMenuLabel": "Mobile menu title"
+    ,"fieldCloseLabel": "Close accessibility label"
+    ,"fieldLogoutLabel": "Log out label"
+    ,"fieldAriaNavigation": "Primary navigation accessibility label"
+    ,"fieldFooterExplore": "Footer explore heading"
+    ,"fieldDeveloperLabel": "Footer developer label"
+    ,"fieldAdminLabel": "Footer admin label"
+    ,"newsCopy": "News interface copy"
+    ,"fieldStudentLed": "Student-led percentage"
+    ,"fieldImageCaption": "Image caption"
+    ,"fieldPrinciple": "Charter principle"
+  },
+  "Metadata": {
+    "description": "The official undergraduate Honor Society of the SNU College of Natural Sciences",
+    "socialImageAlt": "GLEAP members on an academic and cultural exploration in Singapore"
+  },
+  "Accessibility": {
+    "skipToContent": "Skip to main content"
+  },
+  "Errors": {
+    "notFoundEyebrow": "404 · Not found",
+    "notFoundTitle": "We could not find that page.",
+    "notFoundDescription": "The address may have changed or the page may no longer exist. Start again from the homepage.",
+    "errorEyebrow": "Something went wrong",
+    "errorTitle": "We hit a temporary problem.",
+    "errorDescription": "We could not complete your request. Please try again in a moment.",
+    "home": "Return home",
+    "retry": "Try again"
   },
   "Footer": {
     "rights": "© {year} GLEAP. All rights reserved.",
     "contact": "Contact",
-    "developer": "Dev by",
-    "admin": "Admin"
+    "developer": "Developed by",
+    "admin": "Admin",
+    "motto": "Connect Science, Illuminate the World.",
+    "organization": "The official undergraduate Honor Society established by the SNU College of Natural Sciences. We explore beyond disciplines, give back to society, and connect with the world.",
+    "explore": "Explore",
+    "location": "SNU College of Natural Sciences"
   }
 }

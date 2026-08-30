@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Link } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 
 type Profile = {
   userId: string;
@@ -91,6 +91,7 @@ function parseInterestsAndHobbies(rawInterests?: string[] | null): {
 }
 
 export function MemberDirectoryView({ profiles }: Props) {
+  const t = useTranslations("MemberArea");
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
 
   // ESC 키로 모달 닫기
@@ -152,10 +153,10 @@ export function MemberDirectoryView({ profiles }: Props) {
         key={profile.userId}
         type="button"
         onClick={() => setSelectedProfile(profile)}
-        className="group flex items-center gap-3.5 rounded-2xl border border-border bg-background p-4 text-left shadow-sm transition duration-150 hover:-translate-y-0.5 hover:border-primary/50 hover:bg-surface/50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/20"
+        className="group flex items-center gap-4 border border-border bg-white p-4 text-left transition hover:border-primary/40 hover:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
       >
         {isOfficialAdmin ? (
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-border bg-surface p-2">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center border border-border bg-surface p-2">
             <Image
               src="/logo_gleap.png"
               alt="GLEAP"
@@ -165,7 +166,7 @@ export function MemberDirectoryView({ profiles }: Props) {
             />
           </div>
         ) : photoPath ? (
-          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-border bg-surface">
+          <div className="relative h-12 w-12 shrink-0 overflow-hidden border border-border bg-surface">
             <Image
               src={photoPath}
               alt={profile.name}
@@ -175,7 +176,7 @@ export function MemberDirectoryView({ profiles }: Props) {
             />
           </div>
         ) : (
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/20 text-base font-bold text-primary">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center border border-primary/20 bg-primary/5 font-serif text-base text-primary">
             {profile.name.slice(0, 2)}
           </div>
         )}
@@ -186,12 +187,12 @@ export function MemberDirectoryView({ profiles }: Props) {
               {profile.name}
             </span>
             {isOfficialAdmin ? (
-              <span className="shrink-0 whitespace-nowrap rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-900">
-                공식
+              <span className="shrink-0 whitespace-nowrap border border-[#b49347] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#826a31]">
+                {t("official")}
               </span>
             ) : profile.role === "admin" ? (
-              <span className="shrink-0 whitespace-nowrap rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-900">
-                운영진
+              <span className="shrink-0 whitespace-nowrap border border-[#b49347] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#826a31]">
+                {t("admin")}
               </span>
             ) : null}
           </div>
@@ -203,7 +204,7 @@ export function MemberDirectoryView({ profiles }: Props) {
         </div>
 
         <span className="text-xs text-muted opacity-0 group-hover:opacity-100 transition">
-          상세 →
+          {t("details")}
         </span>
       </button>
     );
@@ -231,14 +232,14 @@ export function MemberDirectoryView({ profiles }: Props) {
 
   return (
     <>
-      <div className="flex flex-col gap-10">
+      <div className="flex flex-col gap-12 border-x border-b border-border px-6 py-9 sm:px-9">
         {/* 1. 운영진 / 공식 계정 */}
         {adminProfiles.length > 0 && (
           <section className="flex flex-col gap-4">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">👑</span>
-              <h2 className="text-lg font-bold text-foreground">운영진 (Admin)</h2>
-              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-900">
+            <div className="flex items-center gap-3 border-b border-border pb-3">
+              <span className="font-serif text-xl text-[#b49347]">I</span>
+              <h2 className="font-serif text-xl text-primary-deep">{t("adminGroup")}</h2>
+              <span className="ml-auto text-xs font-semibold text-muted">
                 {adminProfiles.length}
               </span>
             </div>
@@ -252,9 +253,9 @@ export function MemberDirectoryView({ profiles }: Props) {
         {(active15Profiles.length > 0 || active14Profiles.length > 0) && (
           <section className="flex flex-col gap-6">
             <div className="flex items-center gap-2 border-b border-border pb-3">
-              <span className="text-lg">✨</span>
-              <h2 className="text-lg font-bold text-foreground">
-                현재 활동 기수 (Active Members)
+              <span className="font-serif text-xl text-primary/50">II</span>
+              <h2 className="font-serif text-xl text-primary-deep">
+                {t("activeMembers")}
               </h2>
             </div>
 
@@ -262,11 +263,11 @@ export function MemberDirectoryView({ profiles }: Props) {
             {active15Profiles.length > 0 && (
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-2">
-                  <span className="rounded-lg bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">
-                    15기 (Junior)
+                  <span className="border-l-2 border-primary pl-3 text-xs font-bold uppercase tracking-[.12em] text-primary">
+                    {t("juniorCohort")}
                   </span>
                   <span className="text-xs text-muted">
-                    총 {active15Profiles.length}명
+                    {t("memberCount", { count: active15Profiles.length })}
                   </span>
                 </div>
                 <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
@@ -279,11 +280,11 @@ export function MemberDirectoryView({ profiles }: Props) {
             {active14Profiles.length > 0 && (
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-2">
-                  <span className="rounded-lg bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-blue-700">
-                    14기 (Senior)
+                  <span className="border-l-2 border-primary/40 pl-3 text-xs font-bold uppercase tracking-[.12em] text-primary-deep">
+                    {t("seniorCohort")}
                   </span>
                   <span className="text-xs text-muted">
-                    총 {active14Profiles.length}명
+                    {t("memberCount", { count: active14Profiles.length })}
                   </span>
                 </div>
                 <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
@@ -298,11 +299,11 @@ export function MemberDirectoryView({ profiles }: Props) {
         {alumniProfiles.length > 0 && (
           <section className="flex flex-col gap-4">
             <div className="flex items-center gap-2 border-b border-border pb-3">
-              <span className="text-lg">🎓</span>
-              <h2 className="text-lg font-bold text-foreground">
-                역대 회원 (Alumni)
+              <span className="font-serif text-xl text-primary/50">III</span>
+              <h2 className="font-serif text-xl text-primary-deep">
+                {t("alumni")}
               </h2>
-              <span className="rounded-full bg-surface px-2 py-0.5 text-xs font-bold text-muted">
+              <span className="ml-auto text-xs font-semibold text-muted">
                 {alumniProfiles.length}
               </span>
             </div>
@@ -322,15 +323,15 @@ export function MemberDirectoryView({ profiles }: Props) {
           onClick={() => setSelectedProfile(null)}
         >
           <div
-            className="relative flex w-full max-w-lg flex-col gap-6 rounded-3xl border border-border bg-background p-6 shadow-2xl sm:p-8 animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh]"
+            className="relative flex max-h-[90vh] w-full max-w-lg animate-in flex-col gap-6 overflow-y-auto border border-white/20 bg-white p-6 shadow-2xl duration-200 zoom-in-95 sm:p-8"
             onClick={(e) => e.stopPropagation()}
           >
             {/* 닫기 버튼 */}
             <button
               type="button"
-              aria-label="닫기"
+              aria-label={t("close")}
               onClick={() => setSelectedProfile(null)}
-              className="absolute right-5 top-5 flex h-8 w-8 items-center justify-center rounded-full bg-surface text-muted hover:bg-border hover:text-foreground transition text-lg"
+              className="absolute right-5 top-5 flex h-8 w-8 items-center justify-center border border-border bg-white text-muted transition hover:bg-surface hover:text-foreground"
             >
               ✕
             </button>
@@ -338,7 +339,7 @@ export function MemberDirectoryView({ profiles }: Props) {
             {/* 프로필 헤더 */}
             <div className="flex items-center gap-5 border-b border-border pb-6">
               {isSelectedAdmin ? (
-                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border border-border bg-surface p-3">
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center border border-border bg-surface p-3">
                   <Image
                     src="/logo_gleap.png"
                     alt="GLEAP"
@@ -348,7 +349,7 @@ export function MemberDirectoryView({ profiles }: Props) {
                   />
                 </div>
               ) : selectedPhotoPath ? (
-                <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
+                <div className="relative h-20 w-20 shrink-0 overflow-hidden border border-border bg-surface">
                   <Image
                     src={selectedPhotoPath}
                     alt={selectedProfile.name}
@@ -358,29 +359,29 @@ export function MemberDirectoryView({ profiles }: Props) {
                   />
                 </div>
               ) : (
-                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/20 text-2xl font-bold text-primary">
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center border border-primary/20 bg-primary/5 font-serif text-2xl text-primary">
                   {selectedProfile.name.slice(0, 2)}
                 </div>
               )}
 
               <div className="flex flex-col gap-1.5">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="break-keep text-2xl font-bold text-foreground">
+                  <h3 className="break-keep font-serif text-3xl font-normal text-primary-deep">
                     {selectedProfile.name}
                   </h3>
                   {isSelectedAdmin ? (
-                    <span className="shrink-0 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-900">
-                      공식 계정
+                    <span className="shrink-0 border border-[#b49347] px-2.5 py-0.5 text-xs font-semibold text-[#826a31]">
+                      {t("officialAccount")}
                     </span>
                   ) : selectedProfile.role === "admin" ? (
-                    <span className="shrink-0 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-900">
-                      운영진
+                    <span className="shrink-0 border border-[#b49347] px-2.5 py-0.5 text-xs font-semibold text-[#826a31]">
+                      {t("admin")}
                     </span>
                   ) : null}
                 </div>
 
                 {selectedProfile.cohort && (
-                  <span className="inline-block w-fit rounded-lg bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">
+                  <span className="inline-block w-fit border-l-2 border-primary pl-2.5 text-xs font-bold text-primary">
                     {selectedProfile.cohort}
                   </span>
                 )}
@@ -391,9 +392,9 @@ export function MemberDirectoryView({ profiles }: Props) {
             <div className="flex flex-col gap-4 text-sm">
               {/* 직책 / 소속 팀 */}
               {selectedBioAndPos.position && (
-                <div className="flex flex-col gap-1 rounded-xl bg-surface/60 p-3.5">
+                <div className="flex flex-col gap-1 border-l-2 border-border bg-surface/60 p-3.5">
                   <span className="text-xs font-semibold text-muted">
-                    🏢 직책 / 소속 팀
+                    {t("positionLabel")}
                   </span>
                   <span className="font-semibold text-foreground">
                     {selectedBioAndPos.position}
@@ -403,15 +404,15 @@ export function MemberDirectoryView({ profiles }: Props) {
 
               {/* 학술 / 전공 관심 분야 */}
               {selectedInterestsAndHobbies.academic.length > 0 && (
-                <div className="flex flex-col gap-1.5 rounded-xl bg-surface/60 p-3.5">
+                <div className="flex flex-col gap-1.5 border-l-2 border-border bg-surface/60 p-3.5">
                   <span className="text-xs font-semibold text-muted">
-                    🔬 학술 / 전공 관심 분야
+                    {t("academicLabel")}
                   </span>
                   <div className="flex flex-wrap gap-1.5">
                     {selectedInterestsAndHobbies.academic.map((item, idx) => (
                       <span
                         key={idx}
-                        className="rounded-lg bg-background px-2.5 py-1 text-xs font-medium text-primary border border-border shadow-2xs"
+                        className="border border-border bg-white px-2.5 py-1 text-xs font-medium text-primary"
                       >
                         #{item}
                       </span>
@@ -422,15 +423,15 @@ export function MemberDirectoryView({ profiles }: Props) {
 
               {/* 취미 및 개인 관심사 */}
               {selectedInterestsAndHobbies.hobbies.length > 0 && (
-                <div className="flex flex-col gap-1.5 rounded-xl bg-surface/60 p-3.5">
+                <div className="flex flex-col gap-1.5 border-l-2 border-border bg-surface/60 p-3.5">
                   <span className="text-xs font-semibold text-muted">
-                    🎮 취미 및 관심사
+                    {t("hobbiesLabel")}
                   </span>
                   <div className="flex flex-wrap gap-1.5">
                     {selectedInterestsAndHobbies.hobbies.map((item, idx) => (
                       <span
                         key={idx}
-                        className="rounded-lg bg-background px-2.5 py-1 text-xs font-medium text-foreground border border-border shadow-2xs"
+                        className="border border-border bg-white px-2.5 py-1 text-xs font-medium text-foreground"
                       >
                         #{item}
                       </span>
@@ -441,9 +442,9 @@ export function MemberDirectoryView({ profiles }: Props) {
 
               {/* 한 줄 소개 */}
               {selectedBioAndPos.bio && (
-                <div className="flex flex-col gap-1 rounded-xl bg-surface/60 p-3.5">
+                <div className="flex flex-col gap-1 border-l-2 border-border bg-surface/60 p-3.5">
                   <span className="text-xs font-semibold text-muted">
-                    💬 한 줄 소개
+                    {t("bioLabel")}
                   </span>
                   <p className="whitespace-pre-wrap leading-relaxed text-foreground/90 font-normal">
                     {selectedBioAndPos.bio}
@@ -459,9 +460,9 @@ export function MemberDirectoryView({ profiles }: Props) {
                       href={selectedInstagram.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-4 py-2 text-xs font-semibold text-primary hover:bg-surface transition shadow-xs"
+                      className="inline-flex items-center gap-1.5 border border-border bg-white px-4 py-2 text-xs font-semibold text-primary transition hover:bg-surface"
                     >
-                      <span>📷 Instagram ({selectedInstagram.display})</span>
+                      <span>Instagram ({selectedInstagram.display})</span>
                     </a>
                   )}
                   {selectedProfile.githubUrl && (
@@ -469,9 +470,9 @@ export function MemberDirectoryView({ profiles }: Props) {
                       href={selectedProfile.githubUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-4 py-2 text-xs font-semibold text-foreground hover:bg-surface transition shadow-xs"
+                      className="inline-flex items-center gap-1.5 border border-border bg-white px-4 py-2 text-xs font-semibold text-foreground transition hover:bg-surface"
                     >
-                      <span>🐙 GitHub</span>
+                      <span>GitHub</span>
                     </a>
                   )}
                 </div>
@@ -483,9 +484,9 @@ export function MemberDirectoryView({ profiles }: Props) {
               <button
                 type="button"
                 onClick={() => setSelectedProfile(null)}
-                className="rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white hover:opacity-90 transition shadow-sm"
+                className="bg-primary-deep px-5 py-2.5 text-xs font-semibold uppercase tracking-[.14em] text-white transition hover:bg-primary"
               >
-                닫기
+                {t("close")}
               </button>
             </div>
           </div>

@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useEffect, useRef, useState } from "react";
 import { Link, usePathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import { activityCategories } from "@/content/activities";
+import type { ActivityNavItem } from "@/components/Nav";
+import type { NavCopy } from "@/content/managed-site";
+import { aboutNavigationItems } from "@/content/about-navigation";
 import { localize } from "@/lib/localized-text";
+import { CSRF_FIELD_NAME } from "@/lib/csrf-shared";
 import { POST_SECTIONS, POST_SECTION_LABELS } from "@/lib/post-sections";
 import { logout } from "@/app/[locale]/admin/(dashboard)/actions";
 import { DEFAULT_ALUMNI_COHORT_ID } from "@/content/members";
@@ -20,24 +22,74 @@ export function MobileNav({
   locale,
   isAdminMode,
   csrfToken,
+  activityItems,
+  navigation,
 }: {
   locale: string;
   isAdminMode: boolean;
   csrfToken: string;
+  activityItems: ActivityNavItem[];
+  navigation: NavCopy;
 }) {
-  const t = useTranslations("Nav");
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const closeNav = () => setOpen(false);
+  const isActive = (href: string) =>
+    href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
+        return;
+      }
+
+      if (event.key !== "Tab" || !dialogRef.current) return;
+      const focusable = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      );
+      const first = focusable[0];
+      const last = focusable.at(-1);
+      if (!first || !last) return;
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", onKeyDown);
+    closeRef.current?.focus();
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
 
   return (
-    <div className="md:hidden">
+    <div className="lg:hidden">
       <button
+        ref={triggerRef}
         type="button"
-        aria-label={t("menu")}
+        aria-label={navigation.menu}
         aria-expanded={open}
+        aria-controls="mobile-site-menu"
         onClick={() => setOpen(true)}
-        className="flex h-9 w-9 flex-col items-center justify-center gap-1.5"
+        className="flex h-10 w-10 flex-col items-center justify-center gap-1.5 border border-border bg-background"
       >
         <span className="h-0.5 w-5 bg-foreground" />
         <span className="h-0.5 w-5 bg-foreground" />
@@ -45,74 +97,97 @@ export function MobileNav({
       </button>
 
       <div
-        className={`fixed inset-0 z-50 flex flex-col bg-background transition-all duration-200 ease-out ${
-          open ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-2 opacity-0"
+        ref={dialogRef}
+        id="mobile-site-menu"
+        role="dialog"
+        aria-modal="true"
+        aria-label={navigation.menu}
+        aria-hidden={!open}
+        inert={!open}
+        className={`fixed inset-0 z-50 flex flex-col bg-background transition-all duration-300 ease-out ${
+          open ? "visible translate-y-0 opacity-100" : "invisible pointer-events-none -translate-y-2 opacity-0"
         }`}
       >
-        <div className="flex items-center justify-between border-b border-border px-6 py-4">
-          <span className="text-sm font-medium text-muted">{t("menu")}</span>
+        <div className="flex h-[72px] items-center justify-between border-b border-border px-6">
+          <span className="text-xs font-semibold uppercase tracking-[.2em] text-muted">{navigation.menu}</span>
           <button
+            ref={closeRef}
             type="button"
-            aria-label={t("close")}
-            onClick={() => setOpen(false)}
-            className="flex h-9 w-9 items-center justify-center text-2xl leading-none"
+            aria-label={navigation.close}
+            onClick={() => {
+              setOpen(false);
+              triggerRef.current?.focus();
+            }}
+            className="flex h-10 w-10 items-center justify-center border border-border text-2xl leading-none"
           >
             ×
           </button>
         </div>
 
-        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-6 py-6 text-lg">
-          <Link href="/" onClick={closeNav} className="py-2 font-medium hover:text-primary">
-            {t("home")}
+        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-6 py-8 text-2xl tracking-[-.03em]">
+          <Link href="/about" onClick={closeNav} className={`pt-2 font-medium hover:text-primary ${isActive("/about") ? "text-primary" : ""}`}>
+            {navigation.about}
           </Link>
-          <Link href="/about" onClick={closeNav} className="py-2 font-medium hover:text-primary">
-            {t("about")}
-          </Link>
-
-          <span className="pt-2 font-medium">{t("members")}</span>
-          <Link href="/members" onClick={closeNav} className="py-2 pl-4 text-base text-muted hover:text-primary">
-            {t("membersCurrent")}
-          </Link>
-          <Link href={`/members/alumni/${DEFAULT_ALUMNI_COHORT_ID}`} onClick={closeNav} className="py-2 pl-4 text-base text-muted hover:text-primary">
-            {t("membersAlumni")}
-          </Link>
-
-          <span className="pt-2 font-medium">{t("activities")}</span>
-          {activityCategories.map((category) => {
-            const title = localize(category.title, locale);
+          {aboutNavigationItems.map((item) => {
+            const label = localize(item.label, locale);
             return (
               <Link
-                key={category.id}
-                href={`/activities/${category.id}`}
+                key={item.id}
+                href={item.href}
                 onClick={closeNav}
+                aria-current={pathname === item.href ? "page" : undefined}
                 className="py-2 pl-4 text-base text-muted hover:text-primary"
-                lang={title.lang}
+                lang={label.lang}
               >
-                {title.text}
+                {label.text}
               </Link>
             );
           })}
 
-          <span className="pt-2 font-medium">{t("news")}</span>
-          {POST_SECTIONS.map((s) => (
+          <Link href="/members" onClick={closeNav} className={`pt-2 font-medium hover:text-primary ${isActive("/members") ? "text-primary" : ""}`}>{navigation.members}</Link>
+          <Link href="/members" onClick={closeNav} aria-current={pathname === "/members" ? "page" : undefined} className="py-2 pl-4 text-base text-muted hover:text-primary">
+            {navigation.membersCurrent}
+          </Link>
+          <Link href="/members/alumni" onClick={closeNav} className="py-2 pl-4 text-base text-muted hover:text-primary">
+            {navigation.membersAlumni}
+          </Link>
+
+          <Link href="/activities" onClick={closeNav} className={`pt-2 font-medium hover:text-primary ${isActive("/activities") ? "text-primary" : ""}`}>{navigation.activities}</Link>
+          {activityItems.map((item) => {
+            return (
+              <Link
+                key={item.id}
+                href={`/activities/${item.id}`}
+                onClick={closeNav}
+                className="py-2 pl-4 text-base text-muted hover:text-primary"
+                lang={item.lang}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+
+          <Link href="/news" onClick={closeNav} aria-current={isActive("/news") ? "page" : undefined} className={`py-2 font-medium hover:text-primary ${isActive("/news") ? "text-primary" : ""}`}>
+            {navigation.news}
+          </Link>
+          {POST_SECTIONS.map((section) => (
             <Link
-              key={s}
-              href={`/news?section=${s}`}
+              key={section}
+              href={`/news?section=${section}`}
               onClick={closeNav}
               className="py-2 pl-4 text-base text-muted hover:text-primary"
             >
-              {locale === "ko" ? POST_SECTION_LABELS[s].ko : POST_SECTION_LABELS[s].en}
+              {POST_SECTION_LABELS[section][locale === "en" ? "en" : "ko"]}
             </Link>
           ))}
-
-          <Link href="/member" onClick={closeNav} className="py-2 font-medium hover:text-primary">
-            {t("community")}
+          <Link href="/member" onClick={closeNav} aria-current={isActive("/member") ? "page" : undefined} className={`py-2 font-medium hover:text-primary ${isActive("/member") ? "text-primary" : ""}`}>
+            {navigation.community}
           </Link>
         </nav>
 
         <div className="flex items-center gap-4 border-t border-border px-6 py-4 text-sm text-muted">
           {routing.locales.map((l) => (
-            <Link key={l} href={pathname} locale={l} onClick={closeNav} className="hover:text-primary">
+            <Link key={l} href={pathname} locale={l} hrefLang={l} aria-current={locale === l ? "page" : undefined} onClick={closeNav} className={locale === l ? "font-semibold text-primary" : "hover:text-primary"}>
               {localeLabels[l]}
             </Link>
           ))}
@@ -120,7 +195,7 @@ export function MobileNav({
             <form action={logout.bind(null, locale)} className="ml-auto">
               <CsrfInputs token={csrfToken} />
               <button type="submit" className="text-admin hover:underline">
-                로그아웃
+              {navigation.logout}
               </button>
             </form>
           )}

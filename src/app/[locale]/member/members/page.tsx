@@ -1,51 +1,49 @@
 import { Link } from "@/i18n/navigation";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { requireMember } from "@/lib/member-auth";
 import { getMemberProfiles } from "@/lib/member-community";
 import { MemberDirectoryView } from "@/components/member/MemberDirectoryView";
+import { MemberPortalHeader } from "@/components/member/MemberPortalHeader";
 
 type Props = { params: Promise<{ locale: string }> };
 
 export default async function MemberDirectoryPage({ params }: Props) {
   const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations("MemberArea");
   await requireMember(locale);
   const profiles = await getMemberProfiles();
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-10 px-6 py-12">
-      {/* 상단 헤더 */}
-      <div className="flex flex-col gap-3 border-b border-border pb-6 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <span className="rounded bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
-            회원 전용 공간
-          </span>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            GLEAP 구성원 명단
-          </h1>
-          <p className="mt-1 text-sm text-muted">
-            동아리 부원을 클릭하면 상세 프로필 정보를 확인할 수 있습니다.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 py-10 sm:py-14">
+      <MemberPortalHeader
+        kicker={t("privateArea")}
+        title={t("directoryPageTitle")}
+        description={t("directoryPageDescription")}
+        index="03"
+        actions={(
+          <>
           <Link
             href="/member/profile"
-            className="rounded-xl border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-surface transition shadow-sm"
+            className="border border-white/30 bg-white px-4 py-3 text-[.68rem] font-semibold uppercase tracking-[.16em] text-primary-deep transition hover:bg-accent"
           >
-            내 프로필 수정
+            {t("editMyProfile")}
           </Link>
           <Link
             href="/member"
-            className="text-sm font-medium text-primary hover:underline"
+            className="px-2 py-3 text-[.68rem] font-semibold uppercase tracking-[.16em] text-white/70 hover:text-accent"
           >
-            ← 회원 홈
+            {t("backMemberHome")}
           </Link>
-        </div>
-      </div>
+          </>
+        )}
+      />
 
       {profiles.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border p-12 text-center text-muted">
-          <p className="text-base font-medium">아직 등록된 회원 프로필이 없습니다.</p>
+        <div className="border-x border-b border-border p-16 text-center text-muted">
+          <p className="font-serif text-xl text-primary-deep">{t("emptyProfiles")}</p>
           <p className="mt-1 text-sm">
-            운영진 관리 페이지에서 회원을 초대하면 프로필이 연동됩니다.
+            {t("emptyProfilesHint")}
           </p>
         </div>
       ) : (

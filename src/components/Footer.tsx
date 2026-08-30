@@ -68,7 +68,7 @@ export function Footer({ settings }: { settings: SiteSettingsDocument }) {
               <div className="mt-5 flex flex-col gap-3 text-sm text-muted">
                 <a href={`mailto:${settings.contactEmail}`} className="break-words transition hover:text-primary">{settings.contactEmail}</a>
                 <span>{copy.location}</span>
-                <Link href="/member" className="transition hover:text-primary">{navigation.community}</Link>
+                <a href="https://www.instagram.com/gleap_snucns/" target="_blank" rel="noopener noreferrer" className="transition hover:text-primary">GLEAP Instagram</a>
               </div>
             </div>
 
@@ -127,3 +127,4 @@ export function Footer({ settings }: { settings: SiteSettingsDocument }) {
     </footer>
   );
 }
+

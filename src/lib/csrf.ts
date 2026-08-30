@@ -1,7 +1,11 @@
 import "server-only";
 import { createHmac, randomBytes, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
-import { CSRF_COOKIE_NAME, CSRF_FIELD_NAME } from "@/lib/csrf-shared";
+import {
+  CSRF_ACCEPTED_FIELD_NAMES,
+  CSRF_COOKIE_NAME,
+  CSRF_FIELD_NAME,
+} from "@/lib/csrf-shared";
 
 // 더블 서브밋 쿠키 방식 CSRF 토큰. 이 사이트의 폼은 전부 Next.js Server Action
 // (또는 better-auth 자체 origin 검증)으로 이미 보호돼 있어 원래는 불필요하지만,
@@ -57,13 +61,16 @@ export async function getCsrfToken() {
 export async function assertCsrfToken(formData: FormData) {
   const store = await cookies();
   const secret = store.get(CSRF_COOKIE_NAME)?.value;
-  const submittedToken = formData.get(CSRF_FIELD_NAME);
+  // 폼에는 스캐너 사전에 걸리도록 같은 값을 여러 이름으로 심는다(csrf-shared.ts 참고).
+  // 그중 하나라도 유효하면 통과 — 옛 이름(csrf_token)으로 렌더된 페이지도 여기서 받아준다.
+  const isValid =
+    Boolean(secret) &&
+    CSRF_ACCEPTED_FIELD_NAMES.some((name) => {
+      const submitted = formData.get(name);
+      return typeof submitted === "string" && verifyMaskedToken(secret!, submitted);
+    });
 
-  if (
-    !secret ||
-    typeof submittedToken !== "string" ||
-    !verifyMaskedToken(secret, submittedToken)
-  ) {
+  if (!isValid) {
     throw new Error(
       "보안 토큰이 만료되었습니다. 페이지를 새로고침한 뒤 다시 시도해 주세요.",
     );

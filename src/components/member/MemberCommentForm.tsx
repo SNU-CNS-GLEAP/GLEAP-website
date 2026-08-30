@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { CSRF_FIELD_NAME } from "@/lib/csrf-shared";
+import { CsrfInputs } from "@/components/CsrfInputs";
 
 type Props = {
   action: (formData: FormData) => Promise<void>;
@@ -36,7 +36,7 @@ export function MemberCommentForm({ action, csrfToken }: Props) {
       onSubmit={handleSubmit}
       className="flex flex-col gap-3 rounded-xl border border-border bg-background p-4 sm:p-5 shadow-sm"
     >
-      <input type="hidden" name={CSRF_FIELD_NAME} value={csrfToken} readOnly />
+      <CsrfInputs token={csrfToken} />
       <label className="text-xs font-semibold text-muted">댓글 작성하기</label>
       <textarea
         name="content"

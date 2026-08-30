@@ -7,7 +7,8 @@ import {
   TurnstileWidget,
   type TurnstileWidgetHandle,
 } from "@/components/TurnstileWidget";
-import { CSRF_FIELD_NAME, CSRF_HEADER_NAME } from "@/lib/csrf-shared";
+import { CSRF_HEADER_NAME } from "@/lib/csrf-shared";
+import { CsrfInputs } from "@/components/CsrfInputs";
 
 type Props = {
   locale: string;
@@ -16,6 +17,9 @@ type Props = {
   initialEmail?: string;
   initialName?: string;
   initialCohort?: string;
+  /** 페이지(서버 컴포넌트)에서 미리 발급해 넘긴 CSRF 토큰. 비어 있으면 아래 useEffect가
+   * /api/session-status로 받아온다. */
+  initialCsrfToken?: string;
 };
 
 export function MemberAuthForm({
@@ -25,6 +29,7 @@ export function MemberAuthForm({
   initialEmail = "",
   initialName = "",
   initialCohort = "",
+  initialCsrfToken = "",
 }: Props) {
   const router = useRouter();
   const [name, setName] = useState(initialName);
@@ -37,18 +42,23 @@ export function MemberAuthForm({
   } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
-  const [csrfToken, setCsrfToken] = useState("");
+  const [csrfToken, setCsrfToken] = useState(initialCsrfToken);
   const turnstileRef = useRef<TurnstileWidgetHandle>(null);
 
   const isSignup = mode === "sign-up";
 
   useEffect(() => {
-    // 이 페이지(/member/login, /member/signup)는 정적 렌더링(SSG)이라 서버에서 쿠키를
-    // 읽어 폼에 심을 수 없다 — 이미 CSR로 호출 중인 session-status 엔드포인트에 얹힌
-    // 토큰을 재사용한다 (src/lib/csrf.ts, src/app/api/session-status/route.ts 참고).
+    // 토큰은 페이지(서버 컴포넌트)에서 initialCsrfToken으로 미리 받아온다 — 그래야
+    // JS를 실행하지 않는 크롤러/스캐너가 보는 HTML에도 값이 실제로 들어있다.
+    // 여기서는 혹시 이 페이지가 캐시된 HTML로 서빙돼 토큰이 낡았을 경우를 대비해
+    // 한 번 더 최신 값으로 덮어쓴다 (src/app/api/session-status/route.ts 참고).
     fetch("/api/session-status")
       .then((res) => res.json())
-      .then((data) => setCsrfToken(typeof data.csrfToken === "string" ? data.csrfToken : ""))
+      .then((data) => {
+        if (typeof data.csrfToken === "string" && data.csrfToken) {
+          setCsrfToken(data.csrfToken);
+        }
+      })
       .catch(() => {});
   }, []);
 
@@ -115,7 +125,7 @@ export function MemberAuthForm({
 
   return (
     <form onSubmit={onSubmit} className="flex w-full max-w-sm flex-col gap-4 rounded-xl border border-border bg-background p-6 shadow-sm">
-      <input type="hidden" name={CSRF_FIELD_NAME} value={csrfToken} readOnly />
+      <CsrfInputs token={csrfToken} />
       {isSignup && (
         <label className="flex flex-col gap-1.5 text-sm font-medium">
           이름 (실명)

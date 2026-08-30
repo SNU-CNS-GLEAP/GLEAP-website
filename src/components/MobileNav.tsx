@@ -9,7 +9,7 @@ import { localize } from "@/lib/localized-text";
 import { POST_SECTIONS, POST_SECTION_LABELS } from "@/lib/post-sections";
 import { logout } from "@/app/[locale]/admin/(dashboard)/actions";
 import { DEFAULT_ALUMNI_COHORT_ID } from "@/content/members";
-import { CSRF_FIELD_NAME } from "@/lib/csrf-shared";
+import { CsrfInputs } from "@/components/CsrfInputs";
 
 const localeLabels: Record<string, string> = {
   ko: "한국어",
@@ -118,7 +118,7 @@ export function MobileNav({
           ))}
           {isAdminMode && (
             <form action={logout.bind(null, locale)} className="ml-auto">
-              <input type="hidden" name={CSRF_FIELD_NAME} value={csrfToken} readOnly />
+              <CsrfInputs token={csrfToken} />
               <button type="submit" className="text-admin hover:underline">
                 로그아웃
               </button>

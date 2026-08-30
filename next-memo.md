@@ -184,3 +184,43 @@ next-intl도 기본적으로 요청 헤더에서 언어를 읽으려고 해서, 
 - **`next lint` 명령 삭제됨**: 린트는 `eslint.config.mjs`를 직접 쓰는 ESLint CLI로
   실행 (`package.json`의 `lint` 스크립트 확인)
 - **Node.js 20.9+ 필수**: 18은 더 이상 지원 안 함 (배포 환경 확인 시 참고)
+
+---
+
+## 10. 빌드 시점 DB 마이그레이션 — `prebuild`와 Neon 브랜치 (2026-08-28)
+
+`/news`가 특정 프리뷰 배포에서만 500 나던 사고(`posts.section` 컬럼 없음)를 고치면서
+알게 된 것들. 자세한 조사 과정과 원인은 [CLAUDE.md](CLAUDE.md)의 "게시물 스키마" 절
+참고 — 여기는 Next.js/Vercel 프로젝트 구조 관점에서만 정리.
+
+- **`prebuild`는 Next.js 기능이 아니라 npm 자체의 관례다.** `npm run build`를 실행하면
+  npm이 `build` 스크립트보다 먼저 `prebuild`라는 이름의 스크립트를(있으면) 자동으로
+  실행해준다. Vercel이 배포마다 정확히 `npm run build`를 돌리기 때문에, 여기 걸어두면
+  "이 배포가 빌드되기 직전에 항상 실행되는 훅"이 된다. 이 프로젝트는 `package.json`의
+  `prebuild`에 DB 마이그레이션(`scripts/migrate.mjs`)을 걸어서, 배포마다 그 배포가
+  연결된 DB부터 최신 스키마로 자동으로 맞추게 했다.
+
+- **Vercel 빌드 샌드박스와 런타임(서버리스 함수)은 네트워크 정책이 다르다.**
+  `drizzle-kit migrate` CLI가 Neon 호스트를 인식하면 내부적으로 웹소켓 연결로
+  전환하는데, 로컬에서는 되지만 Vercel **빌드** 단계에서는 이게 막혀서 실패했다
+  (반대로 **런타임**에서는 문제없음 — 이 앱이 실제로 쓰는 `drizzle-orm/neon-http`는
+  순수 HTTPS라 애초에 웹소켓을 안 쓰기 때문). "로컬에서는 되는데 Vercel에서만 안 된다"는
+  증상을 만나면 빌드 시점 네트워크 제약부터 의심해볼 것.
+
+- **Neon 브랜치 ↔ Vercel 배포 환경은 git처럼 "머지"되는 관계가 아니다.** 처음엔 헷갈릴
+  수 있는 구조:
+  - `npm run dev`(로컬) → `.env.local`이 가리키는 **`vercel-dev`라는 영구 DB 브랜치**
+    (Vercel "Development" 환경)
+  - PR 프리뷰 배포 → 그 git 브랜치 전용으로 **자동 생성되는 임시 DB 브랜치**
+    (Vercel "Preview" 환경) — PR이 닫히면 자동 삭제되도록 설정돼 있음
+  - production(`main-structure`에 push된 뒤) → **별도의 영구 production DB 브랜치**
+    (Vercel "Production" 환경)
+
+  git 브랜치는 머지하면 변경 내용이 합쳐지지만, **DB 브랜치는 처음 포크된 시점 이후로는
+  서로 완전히 독립된 복사본**이다 — feature 브랜치에서 뭘 하든(글을 쓰든 컬럼을
+  추가하든) production에는 전혀 영향이 없고, 반대로 production이 그 사이 바뀌어도
+  이미 포크된 프리뷰 브랜치엔 자동으로 반영 안 된다. 그래서 "로컬에서 연 건 dev DB,
+  프리뷰는 그 브랜치 전용 DB, merge 후엔 다시 production DB" — 이 셋은 실질적으로
+  서로 다른 데이터베이스다. **스키마는 이제 `prebuild`로 항상 자동 동기화되지만
+  (그래서 이번 사고 같은 건 재발 안 함), 데이터가 셋 다 다른 건 원래 의도된 정상
+  동작**이다 — 그래야 프리뷰에서 마음껏 테스트해도 실제 서비스 데이터가 안 망가진다.

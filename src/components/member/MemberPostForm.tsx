@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { Link } from "@/i18n/navigation";
-import { CSRF_FIELD_NAME } from "@/lib/csrf-shared";
+import { CsrfInputs } from "@/components/CsrfInputs";
 
 type Props = {
   locale: string;
@@ -51,7 +51,7 @@ export function MemberPostForm({
       onSubmit={handleSubmit}
       className="flex flex-col gap-5 rounded-2xl border border-border bg-background p-6 shadow-sm sm:p-8"
     >
-      <input type="hidden" name={CSRF_FIELD_NAME} value={csrfToken} readOnly />
+      <CsrfInputs token={csrfToken} />
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-semibold text-foreground">게시판 분류</label>
         <select

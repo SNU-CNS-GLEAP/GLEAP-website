@@ -1,6 +1,8 @@
 import { MemberLogoutButton } from "@/components/member/MemberLogoutButton";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { requireMember } from "@/lib/member-auth";
+import { MemberPortalHeader } from "@/components/member/MemberPortalHeader";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -8,123 +10,88 @@ type Props = {
 
 export default async function MemberHomePage({ params }: Props) {
   const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations("MemberArea");
   const member = await requireMember(locale);
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-8 px-6 py-12">
-      {/* 상단 웰컴 헤더 */}
-      <div className="flex flex-col gap-2 border-b border-border pb-6 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="rounded bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
-              회원 전용 공간
-            </span>
-            {member.role === "admin" && (
-              <span className="rounded bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-900">
-                운영진
-              </span>
-            )}
-          </div>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            안녕하세요, {member.user.name}님
-          </h1>
-          <p className="mt-1 text-sm text-muted">
-            GLEAP 회원 전용 커뮤니티 및 회원 관리 허브입니다.
-          </p>
-        </div>
-        <div className="pt-2 sm:pt-0">
-          <MemberLogoutButton locale={locale} />
-        </div>
-      </div>
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 py-10 sm:py-14">
+      <MemberPortalHeader
+        kicker={`${t("privateArea")}${member.role === "admin" ? ` · ${t("admin")}` : ""}`}
+        title={t("greeting", { name: member.user.name })}
+        description={t("hubDescription")}
+        actions={<MemberLogoutButton locale={locale} />}
+      />
 
-      {/* 대시보드 카드 그리드 */}
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {/* 회원 게시판 */}
+      <div className="grid border-x border-b border-border sm:grid-cols-2 lg:grid-cols-3">
         <Link
           href="/member/community"
-          className="group flex flex-col justify-between rounded-xl border border-border bg-background p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md"
+          className="group flex min-h-72 flex-col justify-between border-b border-border bg-white p-7 transition hover:bg-surface sm:border-r lg:border-b-0"
         >
           <div>
-            <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition">
-              <span className="text-xl">📝</span>
-            </div>
-            <h2 className="text-lg font-semibold text-foreground group-hover:text-primary transition">
-              회원 게시판
+            <span className="font-serif text-4xl text-primary/30">01</span>
+            <h2 className="mt-10 font-serif text-2xl text-primary-deep transition group-hover:text-primary">
+              {t("boardTitle")}
             </h2>
-            <p className="mt-2 text-sm text-muted">
-              공지사항 확인 및 부원들과 자유롭게 소통하고 글을 작성할 수 있습니다.
+            <p className="mt-3 max-w-xs text-sm leading-7 text-muted">
+              {t("boardDescription")}
             </p>
           </div>
-          <span className="mt-4 inline-flex items-center text-xs font-medium text-primary">
-            게시판 바로가기 →
+          <span className="mt-8 flex items-center justify-between border-t border-border pt-4 text-[.68rem] font-semibold uppercase tracking-[.18em] text-primary">
+            {t("boardLink")} <span aria-hidden>→</span>
           </span>
         </Link>
 
-        {/* 내 프로필 */}
         <Link
           href="/member/profile"
-          className="group flex flex-col justify-between rounded-xl border border-border bg-background p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md"
+          className="group flex min-h-72 flex-col justify-between border-b border-border bg-white p-7 transition hover:bg-surface lg:border-b-0 lg:border-r"
         >
           <div>
-            <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition">
-              <span className="text-xl">📇</span>
-            </div>
-            <h2 className="text-lg font-semibold text-foreground group-hover:text-primary transition">
-              내 프로필
+            <span className="font-serif text-4xl text-primary/30">02</span>
+            <h2 className="mt-10 font-serif text-2xl text-primary-deep transition group-hover:text-primary">
+              {t("profileTitle")}
             </h2>
-            <p className="mt-2 text-sm text-muted">
-              기수, 관심 분야, 한 줄 소개, SNS 링크 등 내 프로필 정보를 관리합니다.
+            <p className="mt-3 max-w-xs text-sm leading-7 text-muted">
+              {t("profileDescription")}
             </p>
           </div>
-          <span className="mt-4 inline-flex items-center text-xs font-medium text-primary">
-            프로필 수정 →
+          <span className="mt-8 flex items-center justify-between border-t border-border pt-4 text-[.68rem] font-semibold uppercase tracking-[.18em] text-primary">
+            {t("profileLink")} <span aria-hidden>→</span>
           </span>
         </Link>
 
-        {/* 회원 목록 */}
         <Link
           href="/member/members"
-          className="group flex flex-col justify-between rounded-xl border border-border bg-background p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md"
+          className="group flex min-h-72 flex-col justify-between bg-white p-7 transition hover:bg-surface sm:col-span-2 lg:col-span-1"
         >
           <div>
-            <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition">
-              <span className="text-xl">👥</span>
-            </div>
-            <h2 className="text-lg font-semibold text-foreground group-hover:text-primary transition">
-              회원 목록
+            <span className="font-serif text-4xl text-primary/30">03</span>
+            <h2 className="mt-10 font-serif text-2xl text-primary-deep transition group-hover:text-primary">
+              {t("directoryTitle")}
             </h2>
-            <p className="mt-2 text-sm text-muted">
-              동아리 부원들의 프로필과 기수별 소개 정보를 확인합니다.
+            <p className="mt-3 max-w-xs text-sm leading-7 text-muted">
+              {t("directoryDescription")}
             </p>
           </div>
-          <span className="mt-4 inline-flex items-center text-xs font-medium text-primary">
-            명단 둘러보기 →
+          <span className="mt-8 flex items-center justify-between border-t border-border pt-4 text-[.68rem] font-semibold uppercase tracking-[.18em] text-primary">
+            {t("directoryLink")} <span aria-hidden>→</span>
           </span>
         </Link>
-
-        {/* 운영진 전용: 회원 승인 관리 */}
-        {member.role === "admin" && (
-          <Link
-            href="/member/admin"
-            className="group flex flex-col justify-between rounded-xl border border-amber-200 bg-amber-50/40 p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-amber-400 hover:shadow-md sm:col-span-2 lg:col-span-3"
-          >
-            <div>
-              <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 text-amber-900 group-hover:bg-amber-600 group-hover:text-white transition">
-                <span className="text-xl">⚙️</span>
-              </div>
-              <h2 className="text-lg font-semibold text-amber-950 group-hover:text-amber-700 transition">
-                운영진 전용: 회원 승인 및 권한 관리
-              </h2>
-              <p className="mt-2 text-sm text-amber-900/80">
-                신규 회원의 가입 허용 이메일(화이트리스트)을 등록하고 운영진 권한을 설정합니다.
-              </p>
-            </div>
-            <span className="mt-4 inline-flex items-center text-xs font-medium text-amber-800">
-              관리자 페이지 바로가기 →
-            </span>
-          </Link>
-        )}
       </div>
+
+      {member.role === "admin" && (
+        <Link
+          href="/member/admin"
+          className="group grid gap-5 bg-[#b49347] px-7 py-7 text-primary-deep transition hover:bg-[#c7a755] sm:grid-cols-[auto_1fr_auto] sm:items-center"
+        >
+          <span className="font-serif text-3xl">A</span>
+          <span>
+            <strong className="block font-serif text-xl font-normal">{t("adminPanelTitle")}</strong>
+            <span className="mt-1 block text-sm text-primary-deep/70">{t("adminPanelDescription")}</span>
+          </span>
+          <span className="text-[.68rem] font-bold uppercase tracking-[.18em]">{t("adminPanelLink")} →</span>
+        </Link>
+      )}
     </main>
   );
 }

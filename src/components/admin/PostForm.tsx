@@ -1,6 +1,9 @@
+import { getTranslations } from "next-intl/server";
 import { PostEditor } from "./PostEditor";
 import { CsrfField } from "@/components/CsrfField";
 import { POST_SECTIONS, POST_SECTION_LABELS, type PostSection } from "@/lib/post-sections";
+
+const ACTIVITY_TYPE_PRESETS = ["교류", "사회공헌"] as const;
 
 type Props = {
   action: (formData: FormData) => void;
@@ -23,103 +26,94 @@ function todayDateString() {
   return new Date().toISOString().slice(0, 10);
 }
 
-export function PostForm({ action, types, submitLabel, errorMessage, defaultValues = {} }: Props) {
+export async function PostForm({ action, types, submitLabel, errorMessage, defaultValues = {} }: Props) {
+  const t = await getTranslations("AdminArea");
+
   return (
     <>
-      {errorMessage && <p className="text-sm text-red-600">{errorMessage}</p>}
+      {errorMessage && <p role="alert" className="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{errorMessage}</p>}
       <form action={action} className="flex flex-col gap-6">
         <CsrfField />
-        <div className="flex flex-row gap-10">
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium" htmlFor="section">
-              구분
-            </label>
-            <select
-              id="section"
-              name="section"
-              required
-              defaultValue={defaultValues.section ?? "notice"}
-              className="w-fit rounded border border-border px-3 py-2 text-sm"
-            >
-              {POST_SECTIONS.map((s) => (
-                <option key={s} value={s}>
-                  {POST_SECTION_LABELS[s].ko}
-                </option>
+        <div className="grid gap-5 sm:grid-cols-2">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium" htmlFor="section">{t("section")}</label>
+            <select id="section" name="section" required defaultValue={defaultValues.section ?? "notice"}>
+              {POST_SECTIONS.map((section) => (
+                <option key={section} value={section}>{POST_SECTION_LABELS[section].ko}</option>
               ))}
             </select>
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium" htmlFor="type">
-              태그 (자유 입력)
-            </label>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium" htmlFor="type">{t("category")}</label>
             <input
               id="type"
               name="type"
               list="post-types"
               required
+              maxLength={80}
               defaultValue={defaultValues.type}
-              placeholder="예: 월간 글립 등"
-              className="w-fit rounded border border-border px-3 py-2 text-sm"
+              placeholder={t("categoryPlaceholder")}
             />
             <datalist id="post-types">
-              {types.map((t) => (
-                <option key={t} value={t} />
-              ))}
+              {[...new Set([...types, ...ACTIVITY_TYPE_PRESETS])].map((type) => <option key={type} value={type} />)}
             </datalist>
           </div>
         </div>
+        <p className="-mt-3 text-xs leading-5 text-muted">{t("sectionHint")}</p>
 
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium" htmlFor="title_ko">
-            제목 (한국어)
+            {t("titleKo")}
           </label>
           <input
             id="title_ko"
             name="title_ko"
             required
+            maxLength={200}
             defaultValue={defaultValues.titleKo}
-            className="rounded border border-border px-3 py-2 text-sm"
+            className="min-h-11 border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none"
           />
         </div>
 
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium" htmlFor="title_en">
-            제목 (English, 선택)
+            {t("titleEn")}
           </label>
           <input
             id="title_en"
             name="title_en"
+            maxLength={200}
             defaultValue={defaultValues.titleEn}
-            className="rounded border border-border px-3 py-2 text-sm"
+            className="min-h-11 border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none"
           />
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium">본문 (한국어)</label>
+          <label className="text-sm font-medium">{t("bodyKo")}</label>
           <PostEditor name="body_ko" defaultValue={defaultValues.bodyKo} />
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium">본문 (English, 선택)</label>
+          <label className="text-sm font-medium">{t("bodyEn")}</label>
           <PostEditor name="body_en" defaultValue={defaultValues.bodyEn} />
         </div>
 
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium" htmlFor="author_name">
-            작성자 표시명 (선택)
+            {t("authorName")}
           </label>
           <input
             id="author_name"
             name="author_name"
             defaultValue={defaultValues.authorName}
-            className="w-fit rounded border border-border px-3 py-2 text-sm"
+            className="min-h-11 w-full border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none sm:w-72"
           />
         </div>
 
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium" htmlFor="published_at">
-            게시일
+            {t("publishedAt")}
           </label>
           <input
             id="published_at"
@@ -127,13 +121,13 @@ export function PostForm({ action, types, submitLabel, errorMessage, defaultValu
             type="date"
             required
             defaultValue={defaultValues.publishedAt ?? todayDateString()}
-            className="w-fit rounded border border-border px-3 py-2 text-sm"
+            className="min-h-11 w-full border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none sm:w-72"
           />
         </div>
 
         <button
           type="submit"
-          className="w-fit rounded bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+          className="form-button-primary w-fit"
         >
           {submitLabel}
         </button>

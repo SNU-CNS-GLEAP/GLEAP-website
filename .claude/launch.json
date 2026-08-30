@@ -7,6 +7,7 @@
       "runtimeArgs": ["run", "dev"],
       "port": 3000,
       "autoPort": true
+      // 최근 버그 발생이 잦아, 앱 내장 Preview 페인은 쓰지 않는다. 대신 Playwright로 사용자의 Chrome을 띄운다.
     },
     {
       "name": "gleap-prod",

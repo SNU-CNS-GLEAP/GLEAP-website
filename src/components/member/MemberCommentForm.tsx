@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useTranslations } from "next-intl";
-import { CSRF_FIELD_NAME } from "@/lib/csrf-shared";
+import { CsrfInputs } from "@/components/CsrfInputs";
 
 type Props = {
   action: (formData: FormData) => Promise<void>;
@@ -38,7 +38,7 @@ export function MemberCommentForm({ action, csrfToken }: Props) {
       onSubmit={handleSubmit}
       className="flex flex-col gap-3 border border-border bg-white p-4 sm:p-5"
     >
-      <input type="hidden" name={CSRF_FIELD_NAME} value={csrfToken} readOnly />
+      <CsrfInputs token={csrfToken} />
       <label className="text-xs font-semibold text-muted">{t("commentLabel")}</label>
       <textarea
         name="content"

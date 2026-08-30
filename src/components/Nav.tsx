@@ -10,7 +10,7 @@ import { logout } from "@/app/[locale]/admin/(dashboard)/actions";
 import type { SiteSettingsDocument } from "@/content/managed-site";
 import { aboutNavigationItems } from "@/content/about-navigation";
 import { localize } from "@/lib/localized-text";
-import { CSRF_FIELD_NAME } from "@/lib/csrf-shared";
+import { CsrfInputs } from "@/components/CsrfInputs";
 import { POST_SECTIONS, POST_SECTION_LABELS } from "@/lib/post-sections";
 
 const localeLabels: Record<string, string> = {
@@ -334,7 +334,7 @@ export function Nav({ activityItems, settings }: { activityItems: ActivityNavIte
               ))}
               {isAdminMode && (
                 <form action={logout.bind(null, locale)} className="mt-1 border-t border-border pt-1">
-                  <input type="hidden" name={CSRF_FIELD_NAME} value={csrfToken} readOnly />
+                  <CsrfInputs token={csrfToken} />
                   <button type="submit" className="w-full px-3 py-2 text-left text-[12px] text-admin hover:bg-surface">
                     {navigation.logout}
                   </button>

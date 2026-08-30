@@ -56,10 +56,14 @@ CSRF 마스킹 토큰 작업 도중 세션이 끊겨 로컬에 미푸시 상태�
 이유였다 — **그 두 항목의 수정 커밋(`900c41c`)이 재점검 시각(16:3x~16:4x)보다 나중인
 17:21에 만들어졌고, 이 글을 쓰는 시점까지도 `origin/main-structure`에 push되지 않은
 상태였다.** 즉 스캐너는 그 시각의 실제 배포본(수정 이전 코드)을 정확하게 스캔한 것이고,
-"오탐"이 아니라 "아직 배포 안 된 수정"이었다. Vercel의 Production 브랜치는
-`main-structure`이고(GitHub 저장소 자체의 default 브랜치는 `main`이라 헷갈리기 쉬움 —
-`git remote show origin`으로 확인), `git push`가 곧 배포([배포](../CLAUDE.md#배포) 절
-참고)라는 원칙대로 push해야만 재점검에 반영된다.
+"오탐"이 아니라 "아직 배포 안 된 수정"이었다.
+
+> **2026-08-30 정정**: 위에서 "Vercel의 Production 브랜치는 `main-structure`"라고 적었던
+> 것은 **틀렸다.** 프로덕션은 `main` 하나뿐이고, `main-structure`는 여러 작업 브랜치 중
+> 하나다(당시엔 `main-structure`가 `main`에 머지된 직후라 프로덕션과 내용이 같았을 뿐).
+> 이 오기 때문에 8-30 CSRF 작업에서도 `main-structure`에 push해놓고 프로덕션이 안 바뀐다고
+> 한참 헤맸다. 브랜치 목록과 역할은 [CLAUDE.md의 "브랜치 구조"](../CLAUDE.md#브랜치-구조)
+> 절 참고 — **수정이 재점검에 반영되려면 `main`에 머지되어야 한다.**
 
 - **비밀번호 자동 완성** — `admin/login`, `MemberAuthForm`(로그인/가입 양쪽)에
   `autoComplete="off"` 적용은 이미 `900c41c`에 커밋되어 있음. push만 하면 해결됨

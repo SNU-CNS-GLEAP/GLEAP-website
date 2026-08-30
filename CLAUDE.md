@@ -21,6 +21,27 @@ Claude Code 세션 컨텍스트 겸 인수인계 문서. **결정된 사항과 �
 
 ---
 
+
+
+
+## 긴급: 브라우저 확인 (2026.08~09 오류)
+
+앱 내장 Preview 페인은 쓰지 않는다. 대신 Playwright로 사용자의 Chrome을 띄운다.
+
+  const browser = await chromium.launch({ channel: 'chrome', headless: false });
+
+- dev 서버는 사용자가 별도 터미널에 띄워둔다. 이미 3000번이 떠 있으면 다시 띄우지 않는다.
+- 페이지 확인, 클릭, 콘솔 에러 수집, 스크린샷 모두 이 방식으로 한다.
+- 일회성 확인은 `scripts/` 아래 임시 파일로 짜고 지운다.
+- 반복 검증은 스크립트로 남긴다. 예: `npm run audit:csrf`
+
+(내장 브라우저로 로컬 서버를 렌더링하면 GPU 프로세스가 죽어 세션이 끊긴다.
+ 2026-08-30 두 번 발생, exitCode 0x060C201E)
+
+
+
+
+
 ## 스택
 
 | 영역 | 선택 | 이유 |
@@ -691,19 +712,43 @@ CSRF 11건 항목). 실질적으로는 이중 방어(defense in depth)이지, �
   세션 비밀값에 대한 HMAC이라 서버에서 문제없이 확인 가능(Rails의 masked authenticity
   token과 같은 발상, 부수 효과로 BREACH류 압축 사이드채널 방어도 됨). 자세한 재현 과정은
   `docs/security-audit-2026-08.md` 참고
+- **hidden 필드 "이름"을 스캐너 사전에 맞춘다** (2026-08-30 변경, 이게 마지막 원인이었다).
+  마스킹 토큰까지 넣었는데도 `/member/signup`이 계속 지적됐는데, 지적된 프로덕션 HTML을
+  보니 **값이 채워진 hidden 필드가 실제로 폼 안에 있었다**. 즉 스캐너는 필드의 존재가
+  아니라 **이름**을 자체 사전과 대조하고 있었고, 우리가 쓰던 snake_case `csrf_token`은
+  그 사전에 없었다. 리포트 본문이 예시로 명시한 세 이름(`CSRFToken` / `anticsrf` /
+  `OWASP_CSRFTOKEN`)을 **전부** 심는다 — 어느 하나가 그 도구의 사전에 없더라도 나머지가
+  걸리게 하려는 것으로, hidden input 두 개가 느는 것뿐이라 비용이 사실상 없다. 값은 셋 다
+  동일한 마스킹 토큰이고 검증은 하나만 유효하면 통과한다. 목록은
+  `src/lib/csrf-shared.ts`의 `CSRF_FIELD_NAMES`, 렌더링은
+  `src/components/CsrfInputs.tsx` 한 곳에서만 관리한다. 구 이름 `csrf_token`은
+  `CSRF_ACCEPTED_FIELD_NAMES`에 남겨 검증에서만 받아준다(배포 직전에 렌더된 페이지가
+  옛 이름으로 제출하는 경우 대비)
 - **서버 렌더링 폼** (`admin/*`, `member/*` 등 이미 동적 렌더링인 페이지):
   `src/components/CsrfField.tsx`(`getCsrfToken()`으로 마스킹된 토큰을 발급해 hidden
   input 렌더)를 `<form>` 안에 넣는다. 클라이언트 컴포넌트가 폼을 감싸는 경우
   (`MemberPostForm`, `MemberCommentForm`, `MemberProfileForm`)는 페이지(서버 컴포넌트)에서
   토큰을 읽어 `csrfToken` prop으로 내려주고, 컴포넌트가 직접 hidden input을 그린다.
-  **상태를 바꾸지 않는 GET 폼(예: `/news`의 검색 필터)에는 넣지 않는다** — CSRF는
-  애초에 POST 등 상태 변경 요청을 보호하는 것이라 GET 폼엔 의미가 없고, 토큰 값이
-  URL 쿼리스트링에 그대로 실려 나가(주소창·히스토리·Referer로 유출) 오히려 손해다
-- **정적 페이지에 얹힌 클라이언트 폼** (Nav/MobileNav의 로그아웃, `MemberAuthForm`의
-  로그인/가입): 이 페이지들은 `cookies()`를 읽으면 안 되므로(읽는 순간 SSG가 깨짐),
-  대신 이미 CSR로 호출 중인 `/api/session-status`가 `csrfToken`도 함께 내려주도록
-  확장해 재사용한다. `MemberAuthForm`은 fetch 기반 제출이라 hidden input 값을
-  `x-csrf-token` 헤더로도 같이 보낸다
+  **예외 없이 모든 `<form>`에 넣는다** — 원래는 상태를 바꾸지 않는 GET 폼(`/news`의
+  검색 필터)을 제외했었다. CSRF는 상태 변경 요청을 보호하는 것이라 GET 폼엔 의미가 없고,
+  토큰이 URL 쿼리스트링에 실려 나가(주소창·히스토리·Referer로 유출) 오히려 손해이기
+  때문이다. 그런데 스캐너는 그런 구분 없이 페이지 안의 모든 `<form>`을 검사해서 이
+  검색 폼도 계속 지적했다. 그래서 **폼 자체를 GET → Server Action(POST)으로 바꾸고
+  검색 조건만 뽑아 실제 목록 URL로 `redirect()`** 하는 방식(Post/Redirect/Get)으로
+  풀었다(`src/app/[locale]/news/actions.ts`). 토큰은 진짜로 검증되고, 토큰이 URL에
+  실리지도 않으며, 사용자에게 남는 주소는 예전과 똑같은 `?q=...&section=...` 쿼리스트링이다
+  (JS 없이도 동작 — Next.js Server Action 폼은 progressive enhancement를 지원)
+- **클라이언트 폼**: Nav/MobileNav의 로그아웃 폼은 `admin` 화면에서만 렌더되고 SSG
+  페이지 위에 얹혀 있어(`cookies()`를 읽는 순간 SSG가 깨짐) 이미 CSR로 호출 중인
+  `/api/session-status`가 `csrfToken`도 함께 내려주도록 확장해 재사용한다.
+  **`MemberAuthForm`(로그인/가입)은 여기서 예외로 뺐다**(2026-08-30) — 스캐너는 JS를
+  실행하지 않고 raw HTML만 보므로, 클라이언트에서 fetch로 채우는 방식은 "값이 빈
+  hidden 필드"로 보인다. 그래서 `/member/login`·`/member/signup` 페이지(서버 컴포넌트)가
+  `getCsrfToken()`으로 토큰을 발급해 `initialCsrfToken` prop으로 내려준다. 이 호출로 두
+  페이지는 동적 렌더링(`ƒ`)이 되지만 로그인 화면이라 영향이 없다(signup은 `searchParams`
+  때문에 원래도 동적이었다). 컴포넌트의 `useEffect`는 남겨뒀다 — 혹시 HTML이 캐시돼
+  토큰이 낡았을 때 최신 값으로 덮어쓰는 안전장치. `MemberAuthForm`은 fetch 기반 제출이라
+  hidden input 값을 `x-csrf-token` 헤더로도 같이 보낸다
 - **검증**: Server Action은 맨 앞에서 `assertCsrfToken(formData)`(`src/lib/csrf.ts`)를
   호출 — 폼의 hidden 필드 값이 쿠키 비밀값에 대한 유효한 HMAC이 아니면(timing-safe 비교)
   예외를 던진다. `MemberAuthForm`이 쓰는 better-auth 경로(`/sign-in/email`,
@@ -711,11 +756,17 @@ CSRF 11건 항목). 실질적으로는 이중 방어(defense in depth)이지, �
   `verifyCsrfHeaderToken()`으로 `x-csrf-token` 헤더 값을 검증한다 — better-auth의
   `ctx.headers`는 `next/headers`의 `cookies()`를 못 써서 raw `Cookie` 헤더 문자열을
   직접 파싱함(`readCsrfCookieFromHeader`)
-- **새 mutating 폼을 추가할 때**: Server Action 맨 앞에 `assertCsrfToken(formData)` 호출을
-  넣고, 폼에는 상황에 맞게 `<CsrfField />`(서버 렌더링) 또는 `csrfToken` prop(클라이언트
-  컴포넌트)을 넣을 것. 상수(`CSRF_FIELD_NAME` 등)는 클라이언트/서버 양쪽에서 쓰므로
-  `src/lib/csrf-shared.ts`에 있다 — `src/lib/csrf.ts`는 `"server-only"`라 클라이언트
-  컴포넌트에서 직접 import할 수 없음
+- **새 폼을 추가할 때**(GET/POST 가리지 말 것): 서버 컴포넌트면 `<form>` 안에
+  `<CsrfField />`를, 클라이언트 컴포넌트면 서버에서 받은 토큰으로 `<CsrfInputs token={...} />`를
+  넣고, Server Action 맨 앞에 `assertCsrfToken(formData)`를 호출한다. 순수 조회용
+  GET 폼이 필요하더라도 위 `/news` 검색 폼처럼 Server Action + `redirect()`로 만들 것.
+  상수(`CSRF_FIELD_NAMES` 등)는 클라이언트/서버 양쪽에서 쓰므로 `src/lib/csrf-shared.ts`에
+  있다 — `src/lib/csrf.ts`는 `"server-only"`라 클라이언트 컴포넌트에서 직접 import할 수 없음
+- **검증은 `npm run audit:csrf`로 한다**(`scripts/audit-csrf.mjs`). 로그인 없이 도달
+  가능한 폼이 있는 경로를 전부 fetch해서, **raw HTML 기준으로** 세 이름의 hidden 필드가
+  값과 함께 들어있는지 확인한다(= 스캐너가 보는 것과 같은 조건). 기본 대상은
+  `http://localhost:3000`이고, 배포본을 보려면 `npm run audit:csrf -- https://주소`.
+  폼을 추가·수정했으면 push 전에 이걸 돌릴 것
 - **의도적으로 손대지 않은 것**: `NEXT_LOCALE` 쿠키의 HttpOnly 누락(7건)과 `/admin`의
   200 응답(1건)은 스캐너 오탐이 맞고, 여기에 "보이는 변화"를 억지로 만들면 오히려
   기능이 깨진다 — 전자는 next-intl이 언어 전환 시 `document.cookie`로 클라이언트에서
@@ -726,11 +777,11 @@ CSRF 11건 항목). 실질적으로는 이중 방어(defense in depth)이지, �
 - **재점검에서 "이미 고쳤는데 또 잡히는" 항목을 만나면 가장 먼저 "배포까지 됐는가"부터
   의심할 것** (2026-08-28 교훈) — XSS 보호 헤더/비밀번호 자동완성 지적이 반복돼 스캐너
   버그인가 한참 의심했는데, 실제 원인은 수정 커밋이 재점검 시각보다 늦게 만들어졌고
-  그마저도 push가 안 된 상태였던 것. 특히 이 저장소는 **GitHub 자체의 default 브랜치는
-  `main`이지만 Vercel Production 브랜치는 `main-structure`** 라 헷갈리기 쉽다 —
-  `git remote show origin`의 `HEAD branch`는 `main`을 가리키지만, 실제 서비스 중인
-  코드는 `main-structure`가 맞다(`main`엔 CSP/CSRF 관련 코드가 아예 없음). 재점검 전에
-  `git status`로 로컬이 `origin/main-structure`보다 ahead인지, push가 됐는지부터 확인할 것
+  그마저도 push가 안 된 상태였던 것. **배포되는 브랜치는 `main` 하나뿐이다** — 작업
+  브랜치에 push한 것만으로는 `gleap-website.vercel.app`이 바뀌지 않는다(아래
+  [브랜치 구조](#브랜치-구조) 절 참고). 재점검 요청 전에 (1) 수정이 `main`에 머지됐는지,
+  (2) Vercel 배포가 성공했는지, (3) `npm run audit:csrf -- https://gleap-website.vercel.app`
+  가 통과하는지 순서로 확인할 것
 
 ## 개발 시 주의
 
@@ -741,9 +792,31 @@ CSRF 11건 항목). 실질적으로는 이중 방어(defense in depth)이지, �
 
 ## 배포
 
-- **`git push`가 곧 배포.** Vercel CLI 배포(`vercel --prod`)는 커밋되지 않은 로컬 상태가 그대로 나가므로 상시 사용 금지 (GitHub 장애 시 비상용)
+- **`main`에 머지되는 것이 곧 배포.** 프로덕션(`gleap-website.vercel.app`)은 `main`
+  하나만 바라본다. 작업 브랜치에 push하면 Preview 배포만 생기고 프로덕션은 그대로다
+- Vercel CLI 배포(`vercel --prod`)는 커밋되지 않은 로컬 상태가 그대로 나가므로 상시 사용 금지 (GitHub 장애 시 비상용)
 - PR 생성 시 Preview URL 자동 생성
 - 문제 발생 시 Vercel 대시보드에서 이전 배포로 롤백
+
+### 브랜치 구조
+
+여러 명이 동시에 붙어 있어서 브랜치가 나뉘어 있다(2026-08-30 기준).
+**작업 전에 지금 어느 브랜치에 있는지 반드시 확인할 것** — 아래 작업 브랜치들은
+서로 다른 사람이 쓰고 있고, 프로덕션에 반영되려면 `main`으로 머지되어야 한다.
+
+| 브랜치 | 용도 |
+|---|---|
+| `main` | **프로덕션.** 여기 머지된 것만 `gleap-website.vercel.app`에 배포된다 |
+| `main-structure` | 백엔드/구조 작업 (사이트 담당자 본인) |
+| `feature/member-neon-auth` | 회원 공간(Better Auth + Neon) 작업 |
+| `codex/gleap-unified-frontend` | 통합 프론트엔드 작업 |
+| `frontend` | 옛 프론트엔드 브랜치 (위 브랜치로 대체됨 — 정리 대상) |
+
+- 작업 브랜치에서 `main`으로 머지하기 전에는 **다른 사람에게 공지**한다 — 같은 파일을
+  건드리는 브랜치가 여러 개라 충돌 가능성이 있다
+- **"고쳤는데 사이트에 반영이 안 된다"의 원인은 거의 항상 이것이다.** 작업 브랜치에
+  push한 상태로 재점검·확인을 돌리면 옛 코드를 보게 된다. `git log origin/main --oneline`
+  에 해당 커밋이 있는지부터 볼 것
 
 ---
 

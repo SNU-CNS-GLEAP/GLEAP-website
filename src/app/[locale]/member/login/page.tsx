@@ -3,6 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { MemberAuthForm } from "@/components/member/MemberAuthForm";
 import { env } from "@/lib/env";
+import { getCsrfToken } from "@/lib/csrf";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -18,6 +19,9 @@ export default async function MemberLoginPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("MemberArea");
+  // 폼의 anti-CSRF hidden 필드를 서버에서 미리 채운다(JS 없이도 값이 보이도록).
+  // 이 호출로 두 페이지는 동적 렌더링(ƒ)이 되는데, 로그인/가입 화면이라 영향 없음.
+  const csrfToken = await getCsrfToken();
 
   return (
     <main className="flex flex-1 items-center bg-[radial-gradient(circle_at_80%_10%,rgba(105,216,255,.14),transparent_24rem),linear-gradient(180deg,#fff,#fbfdff)] px-6 py-16">
@@ -31,7 +35,8 @@ export default async function MemberLoginPage({ params }: Props) {
           locale={locale}
           mode="sign-in"
           turnstileSiteKey={env.turnstileSiteKey}
-        />
+          initialCsrfToken={csrfToken}
+      />
         <p className="mt-5 text-sm text-muted">
           {t("loginPrompt")} <Link href="/member/signup" className="text-primary underline">{t("signupLink")}</Link>
         </p>

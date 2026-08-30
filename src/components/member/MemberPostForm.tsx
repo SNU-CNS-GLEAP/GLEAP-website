@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { CSRF_FIELD_NAME } from "@/lib/csrf-shared";
+import { CsrfInputs } from "@/components/CsrfInputs";
 
 type Props = {
   mode: "create" | "edit";
@@ -51,7 +51,7 @@ export function MemberPostForm({
       onSubmit={handleSubmit}
       className="flex flex-col gap-7 border-x border-b border-border bg-white p-6 sm:p-10"
     >
-      <input type="hidden" name={CSRF_FIELD_NAME} value={csrfToken} readOnly />
+      <CsrfInputs token={csrfToken} />
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-semibold text-foreground">{t("postCategory")}</label>
         <select

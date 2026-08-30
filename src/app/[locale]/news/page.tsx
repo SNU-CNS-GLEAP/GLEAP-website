@@ -9,6 +9,8 @@ import { PageHero } from "@/components/PageHero";
 import { localizedAlternates } from "@/lib/site-metadata";
 import { defaultNewsContent } from "@/content/managed-site";
 import { isPostSection, POST_SECTIONS, POST_SECTION_LABELS, type PostSection } from "@/lib/post-sections";
+import { CsrfField } from "@/components/CsrfField";
+import { searchNews } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -82,8 +84,9 @@ export default async function NewsPage({ params, searchParams }: Props) {
           ))}
         </nav>
 
-        <form action={`/${locale}/news`} className="grid gap-3 border-y border-border py-5 sm:grid-cols-[12rem_minmax(0,1fr)_auto]">
-          {section && <input type="hidden" name="section" value={section} />}
+        <form action={searchNews.bind(null, locale)} className="grid gap-3 border-y border-border py-5 sm:grid-cols-[12rem_minmax(0,1fr)_auto]">
+          <CsrfField />
+        {section && <input type="hidden" name="section" value={section} />}
           <label>
             <span className="sr-only">{copy.filterLabel}</span>
             <select name="type" defaultValue={type ?? ""} className="min-h-12 w-full border border-border bg-background px-4 text-sm">

@@ -3,13 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, usePathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import { logout } from "@/app/[locale]/admin/(dashboard)/actions";
 import type { ActivityNavItem } from "@/components/Nav";
 import type { NavCopy } from "@/content/managed-site";
 import { aboutNavigationItems } from "@/content/about-navigation";
 import { localize } from "@/lib/localized-text";
-import { CSRF_FIELD_NAME } from "@/lib/csrf-shared";
 import { POST_SECTIONS, POST_SECTION_LABELS } from "@/lib/post-sections";
+import { logout } from "@/app/[locale]/admin/(dashboard)/actions";
+import { DEFAULT_ALUMNI_COHORT_ID } from "@/content/members";
+import { CsrfInputs } from "@/components/CsrfInputs";
 
 const localeLabels: Record<string, string> = {
   ko: "한국어",
@@ -191,7 +192,7 @@ export function MobileNav({
           ))}
           {isAdminMode && (
             <form action={logout.bind(null, locale)} className="ml-auto">
-              <input type="hidden" name={CSRF_FIELD_NAME} value={csrfToken} readOnly />
+              <CsrfInputs token={csrfToken} />
               <button type="submit" className="text-admin hover:underline">
               {navigation.logout}
               </button>

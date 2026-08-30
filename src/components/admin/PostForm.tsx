@@ -28,6 +28,12 @@ function todayDateString() {
 
 export async function PostForm({ action, types, submitLabel, errorMessage, defaultValues = {} }: Props) {
   const t = await getTranslations("AdminArea");
+  const mappingRules = [
+    { title: t("mappingNotice"), section: "공지", tag: t("mappingFreeTag") },
+    { title: t("mappingAcademic"), section: "학술 소식", tag: t("mappingFreeTag") },
+    { title: t("mappingExchange"), section: "활동 소식", tag: "교류" },
+    { title: t("mappingSocial"), section: "활동 소식", tag: "사회공헌", note: t("mappingNoSpace") },
+  ];
 
   return (
     <>
@@ -60,7 +66,36 @@ export async function PostForm({ action, types, submitLabel, errorMessage, defau
             </datalist>
           </div>
         </div>
-        <p className="-mt-3 text-xs leading-5 text-muted">{t("sectionHint")}</p>
+        <section className="-mt-2 border border-[#cbd8e8] bg-[#f6f8fb] p-4 sm:p-5" aria-labelledby="post-mapping-guide-title">
+          <div className="border-l-2 border-primary pl-3">
+            <h2 id="post-mapping-guide-title" className="text-sm font-semibold text-primary-deep">{t("mappingGuideTitle")}</h2>
+            <p className="mt-1 text-xs leading-5 text-muted">{t("mappingGuideDescription")}</p>
+          </div>
+
+          <ul className="mt-4 grid gap-2 lg:grid-cols-2">
+            {mappingRules.map((rule) => (
+              <li key={rule.title} className="grid gap-2 border border-border bg-white p-3 sm:grid-cols-[5rem_minmax(0,1fr)] sm:items-start sm:gap-3">
+                <span className="text-sm font-semibold text-primary-deep">{rule.title}</span>
+                <div className="flex flex-wrap items-center gap-x-1.5 gap-y-2 text-xs text-muted">
+                  <span className="border border-[#d8e1ec] bg-surface px-2 py-1 font-medium text-foreground">{t("section")}</span>
+                  <span aria-hidden>→</span>
+                  <strong className="font-semibold text-primary">{rule.section}</strong>
+                  <span className="text-[#a9b5c5]" aria-hidden>·</span>
+                  {rule.tag === t("mappingFreeTag") ? (
+                    <span>{rule.tag}</span>
+                  ) : (
+                    <>
+                      <span className="border border-[#d8e1ec] bg-surface px-2 py-1 font-medium text-foreground">{t("category")}</span>
+                      <span aria-hidden>→</span>
+                      <strong className="font-semibold text-primary">{rule.tag}</strong>
+                    </>
+                  )}
+                  {rule.note ? <span className="font-medium text-[#8a5b20]">({rule.note})</span> : null}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
 
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium" htmlFor="title_ko">

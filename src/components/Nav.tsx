@@ -334,7 +334,7 @@ export function Nav({ activityItems, settings }: { activityItems: ActivityNavIte
               ))}
               {isAdminMode && (
                 <form action={logout.bind(null, locale)} className="mt-1 border-t border-border pt-1">
-                  <input type="hidden" name={CSRF_FIELD_NAME} value={csrfToken} readOnly />
+                  <CsrfInputs token={csrfToken} />
                   <button type="submit" className="w-full px-3 py-2 text-left text-[12px] text-admin hover:bg-surface">
                     {navigation.logout}
                   </button>

@@ -7,7 +7,6 @@ import type { ActivityNavItem } from "@/components/Nav";
 import type { NavCopy } from "@/content/managed-site";
 import { aboutNavigationItems } from "@/content/about-navigation";
 import { localize } from "@/lib/localized-text";
-import { CSRF_FIELD_NAME } from "@/lib/csrf-shared";
 import { POST_SECTIONS, POST_SECTION_LABELS } from "@/lib/post-sections";
 import { logout } from "@/app/[locale]/admin/(dashboard)/actions";
 import { DEFAULT_ALUMNI_COHORT_ID } from "@/content/members";

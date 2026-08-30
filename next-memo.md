@@ -213,7 +213,7 @@ next-intl도 기본적으로 요청 헤더에서 언어를 읽으려고 해서, 
     (Vercel "Development" 환경)
   - PR 프리뷰 배포 → 그 git 브랜치 전용으로 **자동 생성되는 임시 DB 브랜치**
     (Vercel "Preview" 환경) — PR이 닫히면 자동 삭제되도록 설정돼 있음
-  - production(`main-structure`에 push된 뒤) → **별도의 영구 production DB 브랜치**
+  - production(`main`에 머지된 뒤 — 프로덕션 브랜치는 `main` 하나다) → **별도의 영구 production DB 브랜치**
     (Vercel "Production" 환경)
 
   git 브랜치는 머지하면 변경 내용이 합쳐지지만, **DB 브랜치는 처음 포크된 시점 이후로는

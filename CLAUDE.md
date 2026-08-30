@@ -777,11 +777,11 @@ CSRF 11건 항목). 실질적으로는 이중 방어(defense in depth)이지, �
 - **재점검에서 "이미 고쳤는데 또 잡히는" 항목을 만나면 가장 먼저 "배포까지 됐는가"부터
   의심할 것** (2026-08-28 교훈) — XSS 보호 헤더/비밀번호 자동완성 지적이 반복돼 스캐너
   버그인가 한참 의심했는데, 실제 원인은 수정 커밋이 재점검 시각보다 늦게 만들어졌고
-  그마저도 push가 안 된 상태였던 것. 특히 이 저장소는 **GitHub 자체의 default 브랜치는
-  `main`이지만 Vercel Production 브랜치는 `main-structure`** 라 헷갈리기 쉽다 —
-  `git remote show origin`의 `HEAD branch`는 `main`을 가리키지만, 실제 서비스 중인
-  코드는 `main-structure`가 맞다(`main`엔 CSP/CSRF 관련 코드가 아예 없음). 재점검 전에
-  `git status`로 로컬이 `origin/main-structure`보다 ahead인지, push가 됐는지부터 확인할 것
+  그마저도 push가 안 된 상태였던 것. **배포되는 브랜치는 `main` 하나뿐이다** — 작업
+  브랜치에 push한 것만으로는 `gleap-website.vercel.app`이 바뀌지 않는다(아래
+  [브랜치 구조](#브랜치-구조) 절 참고). 재점검 요청 전에 (1) 수정이 `main`에 머지됐는지,
+  (2) Vercel 배포가 성공했는지, (3) `npm run audit:csrf -- https://gleap-website.vercel.app`
+  가 통과하는지 순서로 확인할 것
 
 ## 개발 시 주의
 
@@ -792,9 +792,31 @@ CSRF 11건 항목). 실질적으로는 이중 방어(defense in depth)이지, �
 
 ## 배포
 
-- **`git push`가 곧 배포.** Vercel CLI 배포(`vercel --prod`)는 커밋되지 않은 로컬 상태가 그대로 나가므로 상시 사용 금지 (GitHub 장애 시 비상용)
+- **`main`에 머지되는 것이 곧 배포.** 프로덕션(`gleap-website.vercel.app`)은 `main`
+  하나만 바라본다. 작업 브랜치에 push하면 Preview 배포만 생기고 프로덕션은 그대로다
+- Vercel CLI 배포(`vercel --prod`)는 커밋되지 않은 로컬 상태가 그대로 나가므로 상시 사용 금지 (GitHub 장애 시 비상용)
 - PR 생성 시 Preview URL 자동 생성
 - 문제 발생 시 Vercel 대시보드에서 이전 배포로 롤백
+
+### 브랜치 구조
+
+여러 명이 동시에 붙어 있어서 브랜치가 나뉘어 있다(2026-08-30 기준).
+**작업 전에 지금 어느 브랜치에 있는지 반드시 확인할 것** — 아래 작업 브랜치들은
+서로 다른 사람이 쓰고 있고, 프로덕션에 반영되려면 `main`으로 머지되어야 한다.
+
+| 브랜치 | 용도 |
+|---|---|
+| `main` | **프로덕션.** 여기 머지된 것만 `gleap-website.vercel.app`에 배포된다 |
+| `main-structure` | 백엔드/구조 작업 (사이트 담당자 본인) |
+| `feature/member-neon-auth` | 회원 공간(Better Auth + Neon) 작업 |
+| `codex/gleap-unified-frontend` | 통합 프론트엔드 작업 |
+| `frontend` | 옛 프론트엔드 브랜치 (위 브랜치로 대체됨 — 정리 대상) |
+
+- 작업 브랜치에서 `main`으로 머지하기 전에는 **다른 사람에게 공지**한다 — 같은 파일을
+  건드리는 브랜치가 여러 개라 충돌 가능성이 있다
+- **"고쳤는데 사이트에 반영이 안 된다"의 원인은 거의 항상 이것이다.** 작업 브랜치에
+  push한 상태로 재점검·확인을 돌리면 옛 코드를 보게 된다. `git log origin/main --oneline`
+  에 해당 커밋이 있는지부터 볼 것
 
 ---
 

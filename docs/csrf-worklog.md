@@ -12,7 +12,8 @@
 
 **단계 2 — 검증 완료, 커밋/푸시만 남음 (2026-08-30)**
 
-- 브랜치: `main-structure` (= Vercel Production 브랜치. GitHub default인 `main` 아님)
+- 작업 브랜치: `main-structure`. **프로덕션은 `main`이다** — 여기 push한 것만으로는
+  `gleap-website.vercel.app`이 바뀌지 않는다(CLAUDE.md "브랜치 구조" 절 참고)
 - 아래 "단계 1"의 코드 수정이 전부 들어가 있고, 검증까지 끝났다. **아직 미커밋 = 미배포.**
 - 남은 일: `git commit` → `git push` → 배포 확인 → 재점검 요청
 
@@ -127,8 +128,9 @@ npm run audit:csrf
 
 ### 다음에 또 지적되면 확인할 것
 
-1. **정말 배포됐는가** — `git status`로 `origin/main-structure`보다 ahead인지 확인.
-   (2026-08-28에 이걸로 한참 헤맸다. `main`이 아니라 `main-structure`가 프로덕션)
+1. **정말 배포됐는가** — `git log origin/main --oneline`에 해당 커밋이 있는지 확인.
+   프로덕션은 `main` 하나뿐이고, 작업 브랜치(`main-structure` 등)에 push한 것만으로는
+   `gleap-website.vercel.app`이 바뀌지 않는다. 2026-08-28에도, 8-30에도 이걸로 헤맸다
 2. `npm run audit:csrf -- https://<배포주소>` 가 통과하는가 — 통과하는데도 지적되면
    필드 이름 사전이 아니라 **다른 조건**(예: `<form>`에 `method`/`action` 속성이 없는
    경우)을 보는 것일 수 있다. 그 경우 `MemberAuthForm`처럼 `onSubmit`만 쓰는 폼에

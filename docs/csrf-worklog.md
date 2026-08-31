@@ -175,3 +175,74 @@ npm run audit:csrf
    필드 이름 사전이 아니라 **다른 조건**(예: `<form>`에 `method`/`action` 속성이 없는
    경우)을 보는 것일 수 있다. 그 경우 `MemberAuthForm`처럼 `onSubmit`만 쓰는 폼에
    `method="post"`를 명시해보는 것이 다음 후보다.
+
+---
+
+## 4차 재점검 (2026-08-31 10:25) — 세 이름으로도 전수 지적
+
+`gleap-snu.csv` 기준 CSRF 지적 11건. **위 "다음에 또 지적되면 확인할 것"을 순서대로
+돌려본 결과, 1·2번이 모두 통과인데도 지적이 남았다.**
+
+| 확인 항목 | 결과 |
+|---|---|
+| 배포 여부 | `882b2f2`(8/30 15:14) → `main` 머지 8/30 21:34. 스캔(8/31 10:25)보다 앞섬 |
+| 프로덕션 raw HTML | 세 필드 모두 값과 함께 `<form>` 안에 존재 |
+| 정적(SSG) 여부 | `Cache-Control: private, no-store` / `X-Vercel-Cache: MISS` — 매 요청 새로 렌더 |
+| 토큰 값 고정 여부 | 같은 URL 두 번 요청 시 값이 매번 다름 (`5b488103…` → `704b8833…`) |
+| 쿠키 발급 | `Set-Cookie: gleap_csrf=…; HttpOnly` 정상 |
+| 봇 User-Agent | 동일하게 렌더됨 (JS 없이 raw HTML만 봐도 보임) |
+
+### 지적 목록 자체가 단서
+
+11건을 URL별로 풀면 실제 폼은 4종뿐이다:
+
+- `/ko|/en` × `news`(검색), `admin/login`, `member/login`, `member/signup` → 8건
+- `/ko|/en/admin` → `admin/login`으로 307 리다이렉트된 중복 기록 → 2건
+- `/ko/member` → `member/login`으로 307 리다이렉트된 중복 기록 → 1건
+
+**사이트에 존재하는 모든 폼이 하나도 빠짐없이 같은 90% 신뢰도로 올라왔다.** 토큰이
+있는 폼과 없는 폼이 갈린 게 아니라 전수 지적이다. 3차까지는 "지적된 폼 / 안 된 폼"이
+갈려서 원인을 좁힐 수 있었지만 이번엔 그 신호가 없다 — 이 룰이 폼 내용을 보고 판정하는
+게 아닐 가능성이 크다(`이슈 상태: 미지정` / `조치 상태: 검토 대기`, CSV에 `제외 여부`
+컬럼이 있는 것도 "자동 판정 불가 → 수동 검토" 해석과 맞는다).
+
+### 단계 1 — 코드 수정: ZAP 기본 사전 전체로 확대
+
+"혹시 못 맞춘 사전 항목이 남았나"를 한 번에 끝내려는 마지막 코드 대응.
+이름을 하나씩 늘려가며 재점검하는 왕복을 없애는 것이 목적이다.
+
+- `src/lib/csrf-shared.ts` — `CSRF_FIELD_NAMES`를 3개 → **14개**로 확대.
+  OWASP ZAP이 기본값으로 anti-CSRF 토큰으로 인정하는 이름 전체(`CSRFToken`, `anticsrf`,
+  `OWASP_CSRFTOKEN`, `__RequestVerificationToken`, `csrfmiddlewaretoken`,
+  `authenticity_token`, `anoncsrf`, `csrf_token`, `_csrf`, `_csrfSecret`,
+  `__csrf_magic`, `CSRF`, `_token`, `_csrf_token`). 상용 DAST 다수가 이 목록이나
+  그 파생 사전을 쓴다
+- `CSRF_ACCEPTED_FIELD_NAMES = CSRF_FIELD_NAMES`로 단순화 — 구 이름 `csrf_token`이
+  목록에 포함돼 `LEGACY_CSRF_FIELD_NAME` 상수가 불필요해졌다
+- `scripts/audit-csrf.mjs` — `FIELD_NAMES`를 같은 14개로 동기화
+- 렌더링 경로(`CsrfInputs.tsx` / `CsrfField.tsx`)는 배열을 map할 뿐이라 수정 없음
+
+### 단계 2 — 검증
+
+- [x] 타입체크 (`npx tsc --noEmit`) — 통과
+- [x] `npm run audit:csrf` (로컬) — **검사한 폼 12개, 실패 0개**, 각 폼에 토큰 필드 14개
+- [x] 실제 제출로 `assertCsrfToken` 통과 확인 — `/ko/news` 검색 폼을 JS 없이
+      (렌더된 hidden 필드 그대로) POST → `303 → /ko/news?q=%ED%85%8C%EC%8A%A4%ED%8A%B8`,
+      "보안 토큰이 만료" 예외 없음. 이름을 14개로 늘려도 검증 경로가 깨지지 않는다
+- [ ] 커밋 & push (→ 배포) 후 `npm run audit:csrf -- https://gleap-website.vercel.app`
+
+### 이걸로도 지적이 남으면
+
+**더 이상 코드로 대응하지 않는다.** 필드 이름 문제가 아니라는 뜻이므로:
+
+1. 점검 담당자에게 룰 스펙을 직접 확인한다 — "hidden 필드 이름을 어떤 사전과
+   대조하는지, 아니면 `<form>` 존재만으로 올라오는 항목인지". 근거로 프로덕션 HTML
+   캡처와 위 표를 첨부한다
+2. `NEXT_LOCALE` HttpOnly(7건) / `/admin` 200(1건) 오탐과 같이 **`제외 여부`로 예외
+   처리**한다
+
+> 남은 기술적 후보가 하나 있긴 하다: `MemberAuthForm`(로그인/가입)의 `<form>`에는
+> `method`/`action` 속성이 아예 없다(`onSubmit`으로만 제출). 다만 `/news`·`admin/login`
+> 폼은 `method="POST" action=""`가 붙어있는데도 똑같이 지적됐으므로, 이 속성이 원인일
+> 가능성은 낮다. 굳이 시도한다면 non-JS 환경에서 폼이 실제 POST 이동을 하게 되는
+> 부작용을 먼저 확인할 것.

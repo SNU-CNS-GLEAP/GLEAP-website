@@ -24,7 +24,24 @@ const BASE = process.argv[2]?.replace(/\/$/, "") ?? "http://localhost:3000";
 const COOKIE = process.env.AUDIT_COOKIE?.trim();
 
 // 스캐너 사전에 있는 이름들. src/lib/csrf-shared.ts의 CSRF_FIELD_NAMES와 같아야 한다.
-const FIELD_NAMES = ["CSRFToken", "anticsrf", "OWASP_CSRFTOKEN"];
+// (2026-08-31: 세 개만 심었는데도 재점검이 모든 폼을 계속 지적해서, OWASP ZAP 기본
+//  사전 전체로 넓혔다. 경위는 csrf-shared.ts 주석 참고)
+const FIELD_NAMES = [
+  "CSRFToken",
+  "anticsrf",
+  "OWASP_CSRFTOKEN",
+  "__RequestVerificationToken",
+  "csrfmiddlewaretoken",
+  "authenticity_token",
+  "anoncsrf",
+  "csrf_token",
+  "_csrf",
+  "_csrfSecret",
+  "__csrf_magic",
+  "CSRF",
+  "_token",
+  "_csrf_token",
+];
 
 // 로그인 없이 스캐너가 도달할 수 있는 폼이 있는 경로 전부.
 const PATHS = [
@@ -132,7 +149,9 @@ for (const path of targets) {
       if (emptyNames.length > 0) console.log(`    값이 빈 필드: ${emptyNames.join(", ")}`);
       console.log(`    ${form.slice(0, 200).replace(/\s+/g, " ")}…`);
     } else {
-      console.log(`✓ ${label} — ${tokens.map((t) => `${t.name}=${t.value.slice(0, 12)}…`).join(" ")}`);
+      console.log(
+        `✓ ${label} — 토큰 필드 ${tokens.length}개 (${tokens[0].value.slice(0, 12)}…)`,
+      );
     }
   });
 }

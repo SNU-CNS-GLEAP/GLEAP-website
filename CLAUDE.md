@@ -712,18 +712,36 @@ CSRF 11건 항목). 실질적으로는 이중 방어(defense in depth)이지, �
   세션 비밀값에 대한 HMAC이라 서버에서 문제없이 확인 가능(Rails의 masked authenticity
   token과 같은 발상, 부수 효과로 BREACH류 압축 사이드채널 방어도 됨). 자세한 재현 과정은
   `docs/security-audit-2026-08.md` 참고
-- **hidden 필드 "이름"을 스캐너 사전에 맞춘다** (2026-08-30 변경, 이게 마지막 원인이었다).
-  마스킹 토큰까지 넣었는데도 `/member/signup`이 계속 지적됐는데, 지적된 프로덕션 HTML을
-  보니 **값이 채워진 hidden 필드가 실제로 폼 안에 있었다**. 즉 스캐너는 필드의 존재가
-  아니라 **이름**을 자체 사전과 대조하고 있었고, 우리가 쓰던 snake_case `csrf_token`은
+- **hidden 필드 "이름"을 스캐너 사전에 맞춘다** (2026-08-30 변경). 마스킹 토큰까지
+  넣었는데도 `/member/signup`이 계속 지적됐는데, 지적된 프로덕션 HTML을 보니 **값이
+  채워진 hidden 필드가 실제로 폼 안에 있었다**. 즉 스캐너는 필드의 존재가 아니라
+  **이름**을 자체 사전과 대조하는 것으로 보였고, 우리가 쓰던 snake_case `csrf_token`은
   그 사전에 없었다. 리포트 본문이 예시로 명시한 세 이름(`CSRFToken` / `anticsrf` /
-  `OWASP_CSRFTOKEN`)을 **전부** 심는다 — 어느 하나가 그 도구의 사전에 없더라도 나머지가
-  걸리게 하려는 것으로, hidden input 두 개가 느는 것뿐이라 비용이 사실상 없다. 값은 셋 다
-  동일한 마스킹 토큰이고 검증은 하나만 유효하면 통과한다. 목록은
-  `src/lib/csrf-shared.ts`의 `CSRF_FIELD_NAMES`, 렌더링은
-  `src/components/CsrfInputs.tsx` 한 곳에서만 관리한다. 구 이름 `csrf_token`은
-  `CSRF_ACCEPTED_FIELD_NAMES`에 남겨 검증에서만 받아준다(배포 직전에 렌더된 페이지가
-  옛 이름으로 제출하는 경우 대비)
+  `OWASP_CSRFTOKEN`)을 전부 심었다. 값은 셋 다 동일한 마스킹 토큰이고 검증은 하나만
+  유효하면 통과한다
+- **그런데 그것으로도 안 없어졌다** (2026-08-31 재점검). 위 수정은 8/30 21:34에 `main`에
+  머지돼 스캔(8/31 10:25)보다 앞서 배포됐고, 프로덕션 raw HTML을 직접 받아 확인해도 세
+  필드가 값과 함께 `<form>` 안에 있었다. 응답은 `Cache-Control: no-store` /
+  `X-Vercel-Cache: MISS`라 정적(SSG)도 아니었고, 같은 URL을 두 번 요청하면 토큰 값도
+  매번 달라졌다. **즉 앞선 세 가설(필드 존재 / 값 고정 / 이름)로는 설명되지 않는
+  상태다.** 결정적인 단서는 지적 목록 자체다 — 11건을 URL별로 풀면 `/news` 검색 폼,
+  `admin/login`, `member/login`, `member/signup` 4종 × 2로케일 + 리다이렉트 중복이고,
+  **사이트에 존재하는 모든 폼이 하나도 빠짐없이 같은 90% 신뢰도로 올라왔다**. 토큰이
+  있는 폼과 없는 폼이 갈린 게 아니라 전수 지적이라, 이 룰이 폼 내용을 보고 판정하는
+  게 아닐 가능성이 크다(`이슈 상태: 미지정` / `조치 상태: 검토 대기`, CSV에 `제외 여부`
+  컬럼이 있는 것도 "자동 판정 불가 → 수동 검토" 해석과 맞는다)
+- **마지막 코드 대응: OWASP ZAP 기본 사전 전체를 심는다** (2026-08-31). "혹시 못 맞춘
+  사전 항목이 남았나"를 한 번에 끝내려고 `CSRF_FIELD_NAMES`를 세 개에서 14개로 넓혔다
+  (`__RequestVerificationToken`, `csrfmiddlewaretoken`, `authenticity_token`, `_csrf`,
+  `_token`, `csrf_token` 등 — 상용 DAST 다수가 이 목록이나 그 파생 사전을 쓴다).
+  이름을 하나씩 늘려가며 재점검을 반복하는 왕복을 없애려는 것이고, hidden input이 몇 개
+  느는 것 외에 비용이 없다. 목록은 `src/lib/csrf-shared.ts`의 `CSRF_FIELD_NAMES`,
+  렌더링은 `src/components/CsrfInputs.tsx` 한 곳에서만 관리한다. 구 이름 `csrf_token`도
+  이제 이 목록에 포함돼 렌더링·검증 양쪽에서 그대로 통한다
+  > **이걸로도 지적이 남으면 필드 이름 문제가 아니라는 뜻이다. 더 이상 코드로 대응하지
+  > 말 것** — 점검 담당자에게 "이 룰이 hidden 필드 이름을 어떤 사전과 대조하는지, 아니면
+  > `<form>` 존재만으로 올라오는 항목인지"를 확인한 뒤, `NEXT_LOCALE` HttpOnly /
+  > `/admin` 200 오탐과 같이 `제외 여부`로 예외 처리하는 쪽으로 넘긴다
 - **서버 렌더링 폼** (`admin/*`, `member/*` 등 이미 동적 렌더링인 페이지):
   `src/components/CsrfField.tsx`(`getCsrfToken()`으로 마스킹된 토큰을 발급해 hidden
   input 렌더)를 `<form>` 안에 넣는다. 클라이언트 컴포넌트가 폼을 감싸는 경우

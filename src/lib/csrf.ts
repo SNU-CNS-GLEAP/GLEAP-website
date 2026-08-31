@@ -48,7 +48,7 @@ function verifyMaskedToken(secret: string, masked: string) {
   return timingSafeEqual(submittedBuf, expectedBuf);
 }
 
-/** 이미 동적 렌더링인 페이지(admin/*, member/* 등)에서 폼에 심을 토큰을 발급한다.
+/** 이미 동적 렌더링인 페이지(write/*, member/* 등)에서 폼에 심을 토큰을 발급한다.
  * 호출할 때마다(=렌더링될 때마다) 겉보기 값이 달라진다. */
 export async function getCsrfToken() {
   const store = await cookies();

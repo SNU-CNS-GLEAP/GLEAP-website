@@ -155,7 +155,7 @@ function Toolbar({ editor }: { editor: Editor }) {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
+      const res = await fetch("/api/write/upload", { method: "POST", body: formData });
       if (!res.ok) {
         const { error } = await res.json().catch(() => ({ error: t("uploadFailed") }));
         window.alert(t("uploadFailedDetail", { error: error ?? res.statusText }));

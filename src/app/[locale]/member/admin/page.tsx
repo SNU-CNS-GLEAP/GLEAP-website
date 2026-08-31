@@ -5,7 +5,7 @@ import { CsrfField } from "@/components/CsrfField";
 import { requireMember } from "@/lib/member-auth";
 import { getMemberAccessList } from "@/lib/member-community";
 import { isMemberEmailConfigured } from "@/lib/member-email";
-import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
+import { ConfirmSubmitButton } from "@/components/write/ConfirmSubmitButton";
 import { MemberPortalHeader } from "@/components/member/MemberPortalHeader";
 
 type Props = { params: Promise<{ locale: string }> };

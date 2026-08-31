@@ -6,7 +6,7 @@ import { useLocale } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { MobileNav } from "@/components/MobileNav";
-import { logout } from "@/app/[locale]/admin/(dashboard)/actions";
+import { logout } from "@/app/[locale]/write/(dashboard)/actions";
 import type { SiteSettingsDocument } from "@/content/managed-site";
 import { aboutNavigationItems } from "@/content/about-navigation";
 import { localize } from "@/lib/localized-text";
@@ -131,12 +131,12 @@ export function Nav({ activityItems, settings }: { activityItems: ActivityNavIte
     };
   }, [languageOpen, openMega]);
 
-  // 경로 기반 체크는 로그인 상태 fetch가 끝나기 전에도(또는 실패해도) /admin 안에서는
-  // 바로 표시되게 하는 fallback. 실제 로그인 상태(isAdminSession)는 /admin 밖에서도
+  // 경로 기반 체크는 로그인 상태 fetch가 끝나기 전에도(또는 실패해도) /write 안에서는
+  // 바로 표시되게 하는 fallback. 실제 로그인 상태(isAdminSession)는 /write 밖에서도
   // 헤더가 유지되게 함 — 세션 쿠키를 서버 컴포넌트에서 직접 읽지 않으므로 공개 페이지의
   // 정적 렌더링에는 영향 없음 (CLAUDE.md "공개 페이지에서의 수정 진입점" 패턴).
   const isAdminMode =
-    isAdminSession || (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login"));
+    isAdminSession || (pathname.startsWith("/write") && !pathname.startsWith("/write/login"));
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
   const isEnglish = locale === "en";

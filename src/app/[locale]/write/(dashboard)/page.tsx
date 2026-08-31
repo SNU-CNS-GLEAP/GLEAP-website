@@ -13,17 +13,17 @@ export default async function AdminDashboardPage({ params }: Props) {
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-6 py-16">
-      <h1 className="text-2xl font-semibold">관리자</h1>
+      <h1 className="text-2xl font-semibold">소식 게시판 작성자</h1>
       <p className="text-muted">로그인되었습니다.</p>
       <div className="flex gap-2">
         <Link
-          href="/admin/news"
+          href="/write/news"
           className="w-fit rounded border border-border px-4 py-2 text-sm font-medium hover:border-primary hover:text-primary"
         >
           게시물 관리
         </Link>
         <Link
-          href="/admin/news/new"
+          href="/write/news/new"
           className="w-fit rounded bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90"
         >
           새 글 쓰기

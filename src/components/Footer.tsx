@@ -120,7 +120,7 @@ export function Footer({ settings }: { settings: SiteSettingsDocument }) {
               {copy.developer}: <a href={settings.developerLink} target="_blank" rel="noopener noreferrer" className="transition hover:text-white">{developer.text}</a>
             </span>
             <span aria-hidden className="text-white/30">·</span>
-            <Link href="/admin" className="transition hover:text-white">{copy.admin}</Link>
+            <Link href="/write" className="transition hover:text-white">{copy.admin}</Link>
           </div>
         </div>
       </div>

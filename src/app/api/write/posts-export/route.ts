@@ -4,7 +4,7 @@ import { getSession } from "@/lib/session";
 import { getAllPostsForExport } from "@/lib/posts";
 import { POST_SECTION_LABELS, type PostSection } from "@/lib/post-sections";
 
-// 소식 DB 전체를 엑셀(.xlsx) 한 장으로 뽑는 백업 다운로드. `/admin/news`의 버튼에서만
+// 소식 DB 전체를 엑셀(.xlsx) 한 장으로 뽑는 백업 다운로드. `/write/news`의 버튼에서만
 // 링크되는 GET 엔드포인트라 CSRF 토큰이 필요 없다(상태를 바꾸지 않는 조회 요청).
 export async function GET() {
   const session = await getSession();

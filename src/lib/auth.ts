@@ -11,6 +11,6 @@ export async function verifyPassword(password: string) {
 export async function requireAdmin(locale: string) {
   const session = await getSession();
   if (!session.isAdmin) {
-    redirect(`/${locale}/admin/login`);
+    redirect(`/${locale}/write/login`);
   }
 }

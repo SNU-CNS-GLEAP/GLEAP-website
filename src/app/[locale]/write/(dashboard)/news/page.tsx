@@ -3,7 +3,7 @@ import NextLink from "next/link";
 import { Link } from "@/i18n/navigation";
 import { getPosts } from "@/lib/posts";
 import { POST_SECTION_LABELS, type PostSection } from "@/lib/post-sections";
-import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
+import { ConfirmSubmitButton } from "@/components/write/ConfirmSubmitButton";
 import { CsrfField } from "@/components/CsrfField";
 import { deletePostAction } from "./actions";
 
@@ -33,14 +33,14 @@ export default async function AdminNewsListPage({ params, searchParams }: Props)
           {/* 페이지가 아니라 파일 다운로드 응답을 주는 API 라우트라 prefetch를 꺼둠 —
               켜두면 마우스 호버만으로도 엑셀 파일이 매번 새로 생성됨(hover-prefetch) */}
           <NextLink
-            href="/api/admin/posts-export"
+            href="/api/write/posts-export"
             prefetch={false}
             className="rounded border border-border px-3 py-2 text-sm font-medium hover:border-primary hover:text-primary"
           >
             엑셀 백업 다운로드
           </NextLink>
           <Link
-            href="/admin/news/new"
+            href="/write/news/new"
             className="rounded bg-primary px-3 py-2 text-sm font-medium text-white hover:opacity-90"
           >
             새 글 쓰기
@@ -66,7 +66,7 @@ export default async function AdminNewsListPage({ params, searchParams }: Props)
               </div>
               <div className="flex shrink-0 gap-2">
                 <Link
-                  href={`/admin/news/${post.id}/edit`}
+                  href={`/write/news/${post.id}/edit`}
                   className="rounded border border-border px-2 py-1 text-xs hover:border-primary hover:text-primary"
                 >
                   편집
@@ -89,7 +89,7 @@ export default async function AdminNewsListPage({ params, searchParams }: Props)
       {totalPages > 1 && (
         <nav className="flex items-center justify-center gap-4 text-sm">
           {page > 1 ? (
-            <Link href={`/admin/news?page=${page - 1}`} className="text-primary hover:underline">
+            <Link href={`/write/news?page=${page - 1}`} className="text-primary hover:underline">
               이전
             </Link>
           ) : (
@@ -99,7 +99,7 @@ export default async function AdminNewsListPage({ params, searchParams }: Props)
             {page} / {totalPages}
           </span>
           {page < totalPages ? (
-            <Link href={`/admin/news?page=${page + 1}`} className="text-primary hover:underline">
+            <Link href={`/write/news?page=${page + 1}`} className="text-primary hover:underline">
               다음
             </Link>
           ) : (

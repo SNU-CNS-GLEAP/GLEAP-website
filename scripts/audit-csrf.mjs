@@ -48,18 +48,19 @@ const PATHS = [
   "/ko/news",
   "/en/news",
   // 로그인이 필요한 두 진입점. 스캐너는 리다이렉트를 따라간 뒤 최종 페이지의 <form>을
-  // 원래 URL 아래에 기록하므로(2026-08-30 리포트에 /ko/member, /ko/admin 등이 그대로
-  // 올라온 이유), 여기서도 redirect를 따라가 같은 조건으로 검사한다.
+  // 원래 URL 아래에 기록하므로(2026-08-30 리포트에 /ko/member, /ko/admin이 그대로 올라온
+  // 이유 — /admin은 2026-08-31에 /write로 바뀌기 전 경로명), 여기서도 redirect를 따라가
+  // 같은 조건으로 검사한다.
   "/ko/member",
   "/en/member",
-  "/ko/admin",
-  "/en/admin",
+  "/ko/write",
+  "/en/write",
   "/ko/member/login",
   "/en/member/login",
   "/ko/member/signup",
   "/en/member/signup",
-  "/ko/admin/login",
-  "/en/admin/login",
+  "/ko/write/login",
+  "/en/write/login",
 ];
 
 // AUDIT_COOKIE가 있을 때만 추가로 검사하는, 로그인해야 보이는 화면들.
@@ -73,9 +74,9 @@ const AUTHED_PATHS = [
   "/ko/member/members",
   "/ko/member/admin", // 운영진 계정일 때만 접근 가능
   // 관리자 (iron-session)
-  "/ko/admin",
-  "/ko/admin/news",
-  "/ko/admin/news/new",
+  "/ko/write",
+  "/ko/write/news",
+  "/ko/write/news/new",
 ];
 
 function extractForms(html) {
@@ -160,7 +161,7 @@ console.log(`\n검사한 폼 ${formCount}개, 실패 ${failures}개 (${BASE})`);
 if (failures > 0) {
   if (!COOKIE) {
     console.log("");
-    console.log("※ 로그인이 필요한 폼(admin/*, member/* 대시보드)은 검사하지 않았다.");
+    console.log("※ 로그인이 필요한 폼(write/*, member/* 대시보드)은 검사하지 않았다.");
     console.log("  AUDIT_COOKIE 환경변수에 세션 쿠키를 넣으면 그 화면까지 검사한다(파일 상단 주석 참고).");
   }
   process.exit(1);

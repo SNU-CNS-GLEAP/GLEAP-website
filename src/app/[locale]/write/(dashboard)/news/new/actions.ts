@@ -18,7 +18,7 @@ export async function createPostAction(locale: string, formData: FormData) {
   const publishedAtRaw = String(formData.get("published_at") ?? "");
 
   if (!type || !isPostSection(sectionRaw) || !titleKo || !bodyKo) {
-    redirect(`/${locale}/admin/news/new?error=1`);
+    redirect(`/${locale}/write/news/new?error=1`);
   }
 
   const publishedAt = /^\d{4}-\d{2}-\d{2}$/.test(publishedAtRaw)

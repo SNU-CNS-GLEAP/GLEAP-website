@@ -8,5 +8,5 @@ export async function logout(locale: string, formData: FormData) {
   await assertCsrfToken(formData);
   const session = await getSession();
   session.destroy();
-  redirect(`/${locale}/admin/login`);
+  redirect(`/${locale}/write/login`);
 }

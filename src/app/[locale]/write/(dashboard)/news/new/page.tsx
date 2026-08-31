@@ -1,5 +1,5 @@
 import { setRequestLocale } from "next-intl/server";
-import { PostForm } from "@/components/admin/PostForm";
+import { PostForm } from "@/components/write/PostForm";
 import { getPostTypes } from "@/lib/posts";
 import { createPostAction } from "./actions";
 

@@ -447,6 +447,8 @@
     "sendInvitation": "Send an invitation immediately after approval",
     "approveInvitation": "Approve and send invitation",
     "approvedList": "Approved members ({count})",
+    "cohortMemberCount": "{count} members",
+    "unassignedCohort": "Cohort unassigned",
     "emptyApproved": "No approved members have been registered.",
     "notRegistered": "Not registered",
     "registered": "Registration complete (profile connected)",

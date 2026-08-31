@@ -133,6 +133,7 @@ export async function getMemberAccessList() {
     .select({
       id: memberAccess.id,
       email: memberAccess.email,
+      cohort: memberAccess.cohort,
       role: memberAccess.role,
       createdAt: memberAccess.createdAt,
       registeredName: authUsers.name,

@@ -57,6 +57,13 @@
       "when": 1787844259414,
       "tag": "0007_add_member_post_dislikes",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1788152242444,
+      "tag": "0008_add_member_access_cohort",
+      "breakpoints": true
     }
   ]
 }

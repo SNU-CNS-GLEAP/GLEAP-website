@@ -119,6 +119,7 @@ export const authVerifications = pgTable("verification", {
 export const memberAccess = pgTable("member_access", {
   id: uuid("id").primaryKey().defaultRandom(),
   email: text("email").notNull().unique(),
+  cohort: text("cohort"),
   role: text("role").notNull().default("member"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

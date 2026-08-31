@@ -325,16 +325,16 @@ export async function approveMemberEmail(locale: string, formData: FormData) {
 
   const email = approvedEmail(formData);
   const name = String(formData.get("name") ?? "").trim();
-  const cohort = String(formData.get("cohort") ?? "").trim();
+  const cohort = String(formData.get("cohort") ?? "").trim().slice(0, 40) || null;
   const role = formData.get("role") === "admin" ? "admin" : "member";
   const sendInvite = formData.get("sendInvite") === "true" || formData.get("sendInvite") === "on";
 
   await db
     .insert(memberAccess)
-    .values({ email, role, updatedAt: new Date() })
+    .values({ email, cohort, role, updatedAt: new Date() })
     .onConflictDoUpdate({
       target: memberAccess.email,
-      set: { role, updatedAt: new Date() },
+      set: { cohort, role, updatedAt: new Date() },
     });
 
   // 이미 가입한 회원이 있다면 프로필 정보(이름, 기수, 권한)를 함께 동기화한다.
@@ -379,7 +379,7 @@ export async function approveMemberEmail(locale: string, formData: FormData) {
 
     const inviteUrl = `${getMemberInvitationBaseUrl()}/${locale}/member/signup?${params.toString()}`;
     try {
-      await sendMemberInvitationEmail({ email, inviteUrl, name, cohort, role });
+      await sendMemberInvitationEmail({ email, inviteUrl, name, cohort: cohort ?? undefined, role });
       await writeActivity(member.user.id, "send_invite_email", "member_access", email);
     } catch (err) {
       console.error("초대 메일 발송 실패:", err);

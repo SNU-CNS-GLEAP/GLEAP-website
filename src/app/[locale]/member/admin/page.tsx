@@ -10,6 +10,11 @@ import { MemberPortalHeader } from "@/components/member/MemberPortalHeader";
 
 type Props = { params: Promise<{ locale: string }> };
 
+function cohortOrder(cohort: string) {
+  const matched = cohort.match(/^\s*(\d+)/);
+  return matched ? Number(matched[1]) : null;
+}
+
 export default async function MemberAdminPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
@@ -27,6 +32,28 @@ export default async function MemberAdminPage({ params }: Props) {
 
   const approvedMembers = await getMemberAccessList();
   const emailConfigured = isMemberEmailConfigured();
+  const unassignedCohort = t("unassignedCohort");
+  const membersByCohort = new Map<string, typeof approvedMembers>();
+
+  for (const approved of approvedMembers) {
+    const cohort = approved.cohort || approved.registeredCohort || unassignedCohort;
+    const members = membersByCohort.get(cohort) ?? [];
+    members.push(approved);
+    membersByCohort.set(cohort, members);
+  }
+
+  const cohortGroups = [...membersByCohort.entries()].sort(([left], [right]) => {
+    if (left === unassignedCohort) return 1;
+    if (right === unassignedCohort) return -1;
+
+    const leftOrder = cohortOrder(left);
+    const rightOrder = cohortOrder(right);
+    if (leftOrder !== null && rightOrder !== null && leftOrder !== rightOrder) {
+      return rightOrder - leftOrder;
+    }
+
+    return left.localeCompare(right, locale);
+  });
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-6 py-10 sm:py-14">
@@ -134,60 +161,65 @@ export default async function MemberAdminPage({ params }: Props) {
         <div className="border-b border-border px-6 py-4">
           <h2 className="font-semibold text-foreground">{t("approvedList", { count: approvedMembers.length })}</h2>
         </div>
-        <div className="divide-y divide-border">
+        <div className="space-y-6 p-4 sm:p-6">
           {approvedMembers.length === 0 ? (
-            <p className="p-6 text-center text-sm text-muted">{t("emptyApproved")}</p>
+            <p className="py-6 text-center text-sm text-muted">{t("emptyApproved")}</p>
           ) : (
-            approvedMembers.map((approved) => (
-              <div key={approved.id} className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-foreground">
-                      {approved.registeredName || t("notRegistered")}
-                    </span>
-                    {approved.registeredCohort && (
-                      <span className="rounded bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
-                        {approved.registeredCohort}
-                      </span>
-                    )}
-                    <span className="text-sm text-muted">({approved.email})</span>
-                    <span className={`rounded px-2 py-0.5 text-xs font-medium ${approved.role === "admin" ? "bg-amber-100 text-amber-900" : "bg-surface text-muted"}`}>
-                      {approved.role === "admin" ? t("adminRole") : t("memberRole")}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-muted">
-                    {approved.isRegistered ? (
-                      <span className="text-emerald-700 font-medium">✓ {t("registered")}</span>
-                    ) : (
-                      <span className="text-amber-700 font-medium">⏳ {t("waiting")}</span>
-                    )}
-                  </div>
+            cohortGroups.map(([cohort, members]) => (
+              <section key={cohort} className="overflow-hidden border border-border">
+                <div className="flex items-center justify-between border-b border-border bg-surface px-4 py-3">
+                  <h3 className="font-semibold text-foreground">{cohort}</h3>
+                  <span className="text-xs text-muted">{t("cohortMemberCount", { count: members.length })}</span>
                 </div>
+                <div className="divide-y divide-border">
+                  {members.map((approved) => (
+                    <div key={approved.id} className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-foreground">
+                            {approved.registeredName || t("notRegistered")}
+                          </span>
+                          <span className="text-sm text-muted">({approved.email})</span>
+                          <span className={`rounded px-2 py-0.5 text-xs font-medium ${approved.role === "admin" ? "bg-amber-100 text-amber-900" : "bg-surface text-muted"}`}>
+                            {approved.role === "admin" ? t("adminRole") : t("memberRole")}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted">
+                          {approved.isRegistered ? (
+                            <span className="text-emerald-700 font-medium">✓ {t("registered")}</span>
+                          ) : (
+                            <span className="text-amber-700 font-medium">⏳ {t("waiting")}</span>
+                          )}
+                        </div>
+                      </div>
 
-                <div className="flex items-center gap-2">
-                  <form action={resendMemberInvitation.bind(null, locale, approved.email)}>
-                    <CsrfField />
-                    <button
-                      type="submit"
-                      disabled={!emailConfigured}
-                      className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-surface disabled:opacity-40 transition"
-                    >
-                      {t("resend")}
-                    </button>
-                  </form>
-                  {approved.email !== "snucnsgleap@gmail.com" && (
-                    <form action={removeMemberAccess.bind(null, locale, approved.email)}>
-                      <CsrfField />
-                      <ConfirmSubmitButton
-                        confirmMessage={t("removeConfirm", { email: approved.email })}
-                        className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition"
-                      >
-                        {t("remove")}
-                      </ConfirmSubmitButton>
-                    </form>
-                  )}
+                      <div className="flex items-center gap-2">
+                        <form action={resendMemberInvitation.bind(null, locale, approved.email)}>
+                          <CsrfField />
+                          <button
+                            type="submit"
+                            disabled={!emailConfigured}
+                            className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-surface disabled:opacity-40 transition"
+                          >
+                            {t("resend")}
+                          </button>
+                        </form>
+                        {approved.email !== "snucnsgleap@gmail.com" && (
+                          <form action={removeMemberAccess.bind(null, locale, approved.email)}>
+                            <CsrfField />
+                            <ConfirmSubmitButton
+                              confirmMessage={t("removeConfirm", { email: approved.email })}
+                              className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition"
+                            >
+                              {t("remove")}
+                            </ConfirmSubmitButton>
+                          </form>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
+              </section>
             ))
           )}
         </div>

@@ -447,6 +447,8 @@
     "sendInvitation": "등록 즉시 가입 초대 메일 발송하기",
     "approveInvitation": "승인 및 초대장 발송",
     "approvedList": "승인된 회원 명단 ({count}명)",
+    "cohortMemberCount": "{count}명",
+    "unassignedCohort": "기수 미지정",
     "emptyApproved": "등록된 승인 회원이 없습니다.",
     "notRegistered": "미가입",
     "registered": "가입 완료 (프로필 연동됨)",

@@ -8,7 +8,7 @@ import type { NavCopy } from "@/content/managed-site";
 import { aboutNavigationItems } from "@/content/about-navigation";
 import { localize } from "@/lib/localized-text";
 import { POST_SECTIONS, POST_SECTION_LABELS } from "@/lib/post-sections";
-import { logout } from "@/app/[locale]/admin/(dashboard)/actions";
+import { logout } from "@/app/[locale]/write/(dashboard)/actions";
 import { DEFAULT_ALUMNI_COHORT_ID } from "@/content/members";
 import { CsrfInputs } from "@/components/CsrfInputs";
 

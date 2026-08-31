@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
-import { PostForm } from "@/components/admin/PostForm";
-import { ConfirmSubmitButton } from "@/components/admin/ConfirmSubmitButton";
+import { PostForm } from "@/components/write/PostForm";
+import { ConfirmSubmitButton } from "@/components/write/ConfirmSubmitButton";
 import { CsrfField } from "@/components/CsrfField";
 import { getPost, getPostTypes } from "@/lib/posts";
 import type { PostSection } from "@/lib/post-sections";

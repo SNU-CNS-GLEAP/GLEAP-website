@@ -7,7 +7,7 @@ import { Link } from "@/i18n/navigation";
 import { localize } from "@/lib/localized-text";
 import { getPost } from "@/lib/posts";
 import { parseImageSrc } from "@/lib/image-width";
-import { AdminEditButton } from "@/components/admin/AdminEditButton";
+import { AdminEditButton } from "@/components/write/AdminEditButton";
 import { PageHero } from "@/components/PageHero";
 import { excerpt } from "@/lib/text";
 import { localizedAlternates } from "@/lib/site-metadata";

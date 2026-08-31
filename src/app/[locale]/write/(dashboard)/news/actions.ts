@@ -7,5 +7,5 @@ import { assertCsrfToken } from "@/lib/csrf";
 export async function deletePostAction(locale: string, id: number, formData: FormData) {
   await assertCsrfToken(formData);
   await deletePost(id);
-  redirect(`/${locale}/admin/news`);
+  redirect(`/${locale}/write/news`);
 }

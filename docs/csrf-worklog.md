@@ -246,3 +246,63 @@ npm run audit:csrf
 > 폼은 `method="POST" action=""`가 붙어있는데도 똑같이 지적됐으므로, 이 속성이 원인일
 > 가능성은 낮다. 굳이 시도한다면 non-JS 환경에서 폼이 실제 POST 이동을 하게 되는
 > 부작용을 먼저 확인할 것.
+
+---
+
+## 부수 작업 (2026-08-31) — "관리자 페이지 노출" 지적 대응
+
+CSRF와 같은 리포트에 있던 "관리자 페이지 노출"(보통, 1건, `/ko/admin`) 대응 기록.
+CSRF 건과 성격이 같다 — **경로 이름을 사전과 대조하는 룰**이지, 접근 제어가 뚫린 게 아니다.
+
+확인한 실제 방어 상태:
+
+| 항목 | 상태 |
+|---|---|
+| `/ko/admin` 비로그인 접근 | 307 → `/ko/admin/login` (`requireAdmin()`이 차단, 콘텐츠 노출 없음) |
+| 비밀번호 | bcrypt 해시(`ADMIN_PASSWORD_HASH`) |
+| 무차별 대입 | Cloudflare Turnstile이 로그인 폼에 걸려 있음 |
+| robots.txt | `Disallow: /*/admin/` 설정돼 있었음 |
+
+리포트가 제안한 두 조치 중 IP 허용 목록(nginx)은 이 프로젝트에 안 맞는다 — nginx가 없고
+(Vercel 서버리스), 운영진은 IP가 계속 바뀌는 학생이며 담당자가 매년 교체된다. 남은 건
+경로명 변경이라 **URL 경로만** `/admin` → `/write`로 바꿨다(사용자 결정).
+
+- `[locale]/admin/*` → `[locale]/write/*`, `api/admin/*` → `api/write/*`
+- 코드 내부 이름(`requireAdmin`, `session.isAdmin`, `ADMIN_PASSWORD_HASH`,
+  `--admin` 토큰)은 **그대로** — 바꾸면 Vercel 환경변수 교체와
+  기존 세션 만료가 따라오는데 얻는 게 없다
+- `/member/admin`(회원 운영진 화면)은 별개 시스템이라 그대로 뒀다
+
+**한계**: Footer의 `/write` 링크가 여전히 전 페이지에 노출돼 있어, 이 변경으로 줄어드는
+것은 사전 기반 스캐너·봇에게 걸리는 정도뿐이다. 실제 노출을 줄이려면 Footer 링크 제거가
+먼저다(사용자에게 전달함).
+
+### 같이 고친 실제 버그 2건
+
+경로를 확인하다 발견한, 스캐너가 지적하지 않은 진짜 문제.
+
+1. **프로덕션 `robots.txt`/`sitemap.xml`이 `localhost:3000`을 가리키고 있었다.**
+   `.env.example`의 `BETTER_AUTH_URL=http://localhost:3000`이 그대로 Vercel 환경변수로
+   복사된 탓. sitemap 전체가 무효였고 `metadataBase`(정규 URL·OG 이미지)도 같은 값을
+   쓰고 있었다. `getSiteUrl()`에 "배포 환경인데 localhost면 무시하고 Vercel이 주는
+   주소를 쓴다"는 가드를 넣어 **환경변수를 안 고쳐도 정상 동작**하게 만들었다
+2. **`/ko/admin/login`이 `<meta name="robots" content="index, follow">`로 나갔다.**
+   `robots.txt`의 `Disallow`는 크롤링 요청일 뿐이라 색인 자체는 막지 못한다 —
+   "관리자 페이지 노출"이 현실화되는 실제 경로가 이쪽이다. 로그인 페이지와 대시보드
+   레이아웃에 `robots: { index: false, follow: false }` 추가
+
+### 검증
+
+- [x] `npx tsc --noEmit` — 통과 / `npm run lint` — 에러 0(기존 warning 5건만)
+- [x] `npm run build` — 성공. 공개 페이지 SSG(`●`) 유지, 라우트 목록에 `/[locale]/write`,
+      `/write/login`, `/write/news`, `/api/write/*`만 있고 `/admin`은 없음
+- [x] 새 경로 — `/ko/write` **307 → `/ko/write/login`**, `/ko/write/login` **200**
+- [x] 옛 경로 — `/ko/admin`, `/ko/admin/login`, `/api/admin/upload` 전부 **404**
+- [x] 로그인 Server Action redirect — 잘못된 비밀번호 제출 시
+      **303 → `/ko/write/login?error=turnstile`** (경로 치환 누락 없음)
+- [x] `robots.txt` — `Disallow: /*/write/` / `write/login` 응답에 `noindex, nofollow`
+- [x] 공개 페이지(`/ko/news`)는 `index, follow` 유지
+- [x] `VERCEL=1 VERCEL_PROJECT_PRODUCTION_URL=…`로 배포 환경을 재현해 실행 →
+      `robots.txt`의 `Host`/`Sitemap`과 sitemap `<loc>` 전부
+      `https://gleap-website.vercel.app`으로 정상 출력(`.env.local`의 localhost 값 무시됨)
+- [x] `npm run audit:csrf` — 검사한 폼 12개, 실패 0개 (새 경로 기준)

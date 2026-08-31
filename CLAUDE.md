@@ -312,17 +312,17 @@ Neon이 소식 게시물의 유일한 저장소라, 실수로 지우거나 DB �
 ### 게시물 엑셀 백업 다운로드 (2026-08-28)
 
 이메일 백업(위 절)이 "글 하나하나의 시점별 스냅샷"이라면, 이건 "지금 이 순간 DB 전체"를
-한 번에 뽑는 백업. `/admin/news`의 "엑셀 백업 다운로드" 버튼을 누르면 그 순간 `posts`
+한 번에 뽑는 백업. `/write/news`의 "엑셀 백업 다운로드" 버튼을 누르면 그 순간 `posts`
 테이블 전 칼럼(id/section/type/제목·본문 한영/photo/작성자/게시일/생성·수정일시)을 `.xlsx`
 한 장으로 즉석 생성해 다운로드시킨다 — 별도 저장소나 배치 작업 없이 요청 시점에만 만들어지는
 방식이라 운영 비용 0원 원칙과 맞음.
 
-- `src/app/api/admin/posts-export/route.ts` (GET). `/admin/upload`와 동일한 패턴으로
+- `src/app/api/write/posts-export/route.ts` (GET). `/api/write/upload`와 동일한 패턴으로
   `getSession()`을 직접 읽어 `session.isAdmin`이 아니면 401 — 상태를 바꾸지 않는 조회
   요청이라 `requireAdmin()`(리다이렉트 지향)이나 CSRF 토큰은 쓰지 않음
 - 엑셀 생성은 `exceljs`(신규 의존성). 워크북 하나·시트 하나("소식")에 헤더 행 + 전체 행을
   그대로 씀. `getAllPostsForExport()`(`src/lib/posts.ts`)가 페이지네이션 없이 전체를 조회
-- 관리자 화면(`/admin/news/page.tsx`)의 다운로드 링크는 `@/i18n/navigation`의 `Link`가 아니라
+- 관리자 화면(`/write/news/page.tsx`)의 다운로드 링크는 `@/i18n/navigation`의 `Link`가 아니라
   `next/link`를 `NextLink`로 바로 import해서 씀 — 이 링크는 페이지 이동이 아니라 파일
   다운로드 응답을 주는 API 라우트라 `prefetch={false}`가 필요한데, i18n `Link`는 이 prop을
   그대로 통과시켜주는지 보장이 없어 표준 `next/link`를 직접 쓰는 쪽을 택함.
@@ -445,16 +445,45 @@ Neon이 소식 게시물의 유일한 저장소라, 실수로 지우거나 DB �
 
 - `src/lib/session.ts`: iron-session 설정 (`getSession()`)
 - `src/lib/auth.ts`: `verifyPassword()`, `requireAdmin(locale)` (세션 없으면 로그인 페이지로 redirect)
-- `src/app/[locale]/admin/login/`: 로그인 폼 + Server Action (`actions.ts`)
-- `src/app/[locale]/admin/(dashboard)/`: 로그인 필요한 라우트 그룹.
+- `src/app/[locale]/write/login/`: 로그인 폼 + Server Action (`actions.ts`)
+- `src/app/[locale]/write/(dashboard)/`: 로그인 필요한 라우트 그룹.
   `layout.tsx`에서 `requireAdmin()` 호출 — 이 그룹 안에 게시판 관리 페이지를 앞으로 추가
 - 로그아웃도 Server Action (`(dashboard)/actions.ts`)
 - **관리자 모드 시각 구분**: `Nav.tsx`가 이미 클라이언트 컴포넌트라 `usePathname()`으로
-  `/admin` 진입(로그인 페이지 `/admin/login`은 제외) 여부를 판단해 헤더 테두리 색 + "ADMIN" 배지를
+  `/write` 진입(로그인 페이지 `/write/login`은 제외) 여부를 판단해 헤더 테두리 색 + "ADMIN" 배지를
   다르게 표시. 세션 쿠키를 직접 읽지 않고 경로만 보는 방식이라, 공개 페이지들의 정적 렌더링에는
   전혀 영향을 주지 않음. 색상은 `--admin` 토큰(디자인 컬러 섹션 참고)
-- Footer 우측 끝에 `/admin`으로 가는 작은 링크(`Footer.admin`) 배치 — 로그인 안 된 상태면
+- Footer 우측 끝에 `/write`로 가는 작은 링크(`Footer.admin`) 배치 — 로그인 안 된 상태면
   `requireAdmin`이 알아서 로그인 페이지로 보냄
+
+### 경로가 `/admin`이 아니라 `/write`인 이유 (2026-08-31 변경)
+
+보안 점검에서 "관리자 페이지 노출"(보통)로 지적됐다. 접근 제어가 뚫렸다는 게 아니라
+**`admin` / `administrator` / `console` / `manage` / `wp-admin` 같은 흔한 경로명을 사전과
+대조해 탐지**하는 룰이고(지적문에 그 목록이 그대로 적혀 있다), 실제로 `/ko/admin`은
+`requireAdmin()`이 `307`로 로그인 페이지에 넘기고 있었다. 그래서 **경로 이름만** 바꿨다.
+
+- 폴더째 옮겼다: `[locale]/admin/*` → `[locale]/write/*`, `api/admin/*` → `api/write/*`
+  (App Router는 폴더 경로가 곧 URL이라 다른 방법이 없다). 이 페이지들이 쓰는
+  `components/admin/`도 `components/write/`로 같이 옮겼다 — import 경로만 바뀌는
+  순수 리팩터링이고, 폴더 구조를 훑을 때 `write` 페이지와 `admin` 컴포넌트가 어긋나
+  보이는 걸 없애려는 것
+- **코드 내부 이름은 그대로 둔다** — `requireAdmin()`, `session.isAdmin`,
+  `ADMIN_PASSWORD_HASH`, `--admin` 색상 토큰은 손대지 않았다. 개념은 여전히 "관리자"이고
+  `/write`는 스캐너 사전을 피하려고 URL에만 붙인 별명이다. `requireWriter()` 같은 이름은
+  "글쓰기 권한"처럼 읽혀서 실제 역할(사이트 전체를 운영하는 단일 계정 인증)을 흐린다.
+  게다가 환경변수·세션 필드명까지 바꾸면 배포 전에 Vercel 설정을 같이 고쳐야 하고
+  (안 고치면 `env.ts` 검증에서 빌드가 실패한다) 기존 로그인 세션도 전부 풀린다
+- 지적 대상이 아닌 `/member/admin`(회원 운영진 화면)은 그대로 뒀다 — 별개 시스템이고
+  사전에 걸리는 최상위 경로도 아니다
+- 새 경로도 `robots.txt`의 `Disallow`(`/*/write/`)와 로그인 페이지의
+  `robots: { index: false }` 대상이다. 관리자 라우트를 추가할 때 이 두 곳을 같이 볼 것
+
+> **한계를 명확히 해둔다.** Footer에 `/write` 링크가 여전히 모든 페이지에 노출돼 있으므로,
+> 이 변경으로 줄어드는 것은 "사전 기반 스캐너·봇에게 걸리는 정도"뿐이고 사람이 사이트를
+> 훑어보면 여전히 한 번에 찾을 수 있다. **실제 노출을 줄이려면 Footer 링크를 없애는 게
+> 먼저다**(운영진은 주소를 알고 있으면 된다). 진짜 방어선은 경로명이 아니라 로그인
+> 자체이고, 그쪽은 bcrypt 해시 + Cloudflare Turnstile로 무차별 대입까지 막혀 있다
 
 > 회원 운영진 권한은 이 단일 관리자 비밀번호와 완전히 다른, 별도 체계다. 회원 기능은
 > `memberAccess.role`(Better Auth + Neon)로 권한을 판단한다. 두 시스템은 쿠키도 세션 저장소도
@@ -666,6 +695,27 @@ next-intl은 기본적으로 요청 헤더에서 locale을 읽기 때문에, 아
 - 확인 방법: `npm run build` 출력에서 admin 제외 전부 `●`(SSG)인지 확인.
   배포 후에는 응답 헤더 `x-vercel-cache: HIT`/`PRERENDER`, `x-vercel-id`에 `iad1`이 없는지 확인
 
+## 사이트 주소 (robots.txt / sitemap.xml / 정규 URL)
+
+`src/lib/site-metadata.ts`의 `getSiteUrl()` 하나가 `robots.txt`, `sitemap.xml`,
+`metadataBase`(정규 URL·OG 이미지 절대경로)를 전부 결정한다.
+
+- 우선순위: `BETTER_AUTH_URL`(명시 설정) → Vercel이 자동 주입하는
+  `VERCEL_PROJECT_PRODUCTION_URL`/`VERCEL_URL` → `http://localhost:3000`.
+  **배포 환경(`process.env.VERCEL`)인데 값이 localhost를 가리키면 건너뛴다**
+- 이 localhost 가드가 필요한 이유(2026-08-31): 프로덕션 `robots.txt`가
+  `Host: http://localhost:3000`, `sitemap.xml`의 모든 `<loc>`이 localhost로 나가고
+  있었다. `.env.example`의 `BETTER_AUTH_URL`이 `http://localhost:3000`이라 그 값이
+  그대로 Vercel 환경변수에 복사돼 있었던 것. **화면상으로는 아무 이상이 없고 검색
+  노출만 조용히 죽는 종류의 사고**라 환경변수만 고치지 않고 코드에서 막았다
+- 학교 도메인(CNAME)이 붙으면 Vercel의 `BETTER_AUTH_URL`을 그 주소로 바꾸면 되고,
+  그때까지는 아무 설정 없이도 배포 주소가 자동으로 잡힌다
+- **관리자 화면은 `robots.txt`의 `Disallow`만으로는 부족하다.** `Disallow`는 크롤링
+  하지 말라는 요청일 뿐이라, 다른 곳에 링크가 있으면 URL만으로 색인돼 검색 결과에
+  뜰 수 있다. 색인 자체를 막는 건 `metadata.robots`이므로 `write/login/page.tsx`와
+  `write/(dashboard)/layout.tsx`에 `robots: { index: false, follow: false }`를 뒀다.
+  로그인 뒤에 숨겨야 할 라우트를 추가하면 이것도 같이 챙길 것
+
 ## 보안 헤더
 
 `next.config.ts`의 `headers()`에서 전 경로에 일괄 적용. Sparrow 웹 취약점 점검
@@ -792,6 +842,10 @@ CSRF 11건 항목). 실질적으로는 이중 방어(defense in depth)이지, �
   로그인 페이지 리다이렉트 자체가 이미 정상 동작(스캐너가 리다이렉트를 따라가서 최종
   200을 기록한 것)이라 고칠 대상이 없다. CSRF는 진짜로 몇 겹 더 방어를 얹을 수 있어서
   했지만, 이 둘은 "고치는 척"이 곧 회귀이므로 사용자와 상의 후 그대로 둠(2026-08-27)
+  > 후자와 별개로, 2026-08-31 재점검의 **"관리자 페이지 노출"**(경로명 사전 탐지) 지적에
+  > 대해서는 경로를 `/admin` → `/write`로 바꿨다 — 리다이렉트 동작을 고친 게 아니라
+  > 이름만 바꾼 것이고, 판단 근거와 한계는 [관리자 인증](#관리자-인증) 절의
+  > "경로가 `/admin`이 아니라 `/write`인 이유" 참고
 - **재점검에서 "이미 고쳤는데 또 잡히는" 항목을 만나면 가장 먼저 "배포까지 됐는가"부터
   의심할 것** (2026-08-28 교훈) — XSS 보호 헤더/비밀번호 자동완성 지적이 반복돼 스캐너
   버그인가 한참 의심했는데, 실제 원인은 수정 커밋이 재점검 시각보다 늦게 만들어졌고

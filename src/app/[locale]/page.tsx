@@ -221,7 +221,7 @@ export default async function Home({ params }: Props) {
           <section className={`${styles.reveal} ${styles.updatePanel}`} data-reveal>
             <header className={styles.updateHeader}>
               <h2>{sectionCopy.news}</h2>
-              <Link href="/news?section=academic" className={styles.moreLink}>
+              <Link href="/news" className={styles.moreLink}>
                 {sectionCopy.viewAll}<span aria-hidden="true">›</span>
               </Link>
             </header>

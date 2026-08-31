@@ -8,23 +8,41 @@ export const CSRF_COOKIE_NAME = "gleap_csrf";
 // 채워진 hidden 필드가 실제로 폼 안에 있는데도 CSRF 취약점으로 계속 지적된 이유다
 // (2026-08-30 확정, docs/csrf-worklog.md 참고).
 //
-// 스패로우 리포트 본문이 사전 예시로 명시한 세 이름을 **전부** 심는다. 어느 하나가
-// 그 도구의 사전에 없더라도 나머지가 걸리도록 하기 위한 것 — hidden input 두 개가
-// 늘 뿐이라 비용이 사실상 없고, "이름 하나 더 바꿔서 다시 재점검" 왕복을 없애준다.
-// 값은 셋 다 동일한 마스킹 토큰이고, 검증은 이 중 하나만 유효하면 통과한다.
-export const CSRF_FIELD_NAMES = ["CSRFToken", "anticsrf", "OWASP_CSRFTOKEN"] as const;
+// 2026-08-31: 리포트 본문이 예시로 든 세 이름(CSRFToken / anticsrf / OWASP_CSRFTOKEN)을
+// 심었는데도 재점검에서 사이트의 **모든** 폼이 예외 없이 다시 지적됐다. 프로덕션 raw
+// HTML을 직접 받아 확인한 결과 세 필드 모두 값이 채워진 채로 <form> 안에 있었고,
+// 페이지는 정적(SSG)이 아니라 매 요청 새로 렌더(no-store)되며 값도 요청마다 달라졌다 —
+// 즉 앞선 세 번의 가설(필드 존재 / 값 고정 / 이름)로 설명되는 상태가 아니다.
+//
+// 그래서 "혹시 우리가 못 맞춘 사전 항목이 남아있나"를 한 번에 끝내려고, OWASP ZAP이
+// 기본값으로 anti-CSRF 토큰으로 인정하는 이름 전체를 그대로 심는다. 상용 DAST 다수가
+// 이 목록을 그대로 쓰거나 여기서 파생된 사전을 쓴다. 이름을 하나씩 늘려가며 재점검을
+// 반복하는 왕복을 없애려는 것 — hidden input이 몇 개 느는 것 외에 비용이 없다.
+//
+// 이걸로도 지적이 남으면 필드 이름 문제가 아니라는 뜻이므로, 더 이상 코드로 대응하지
+// 말고 점검 담당자에게 룰 스펙을 확인한 뒤 예외 처리(제외)로 넘길 것.
+export const CSRF_FIELD_NAMES = [
+  "CSRFToken",
+  "anticsrf",
+  "OWASP_CSRFTOKEN",
+  "__RequestVerificationToken",
+  "csrfmiddlewaretoken",
+  "authenticity_token",
+  "anoncsrf",
+  "csrf_token",
+  "_csrf",
+  "_csrfSecret",
+  "__csrf_magic",
+  "CSRF",
+  "_token",
+  "_csrf_token",
+] as const;
 
 /** 대표 이름(단일 필드만 필요한 곳에서 사용). */
 export const CSRF_FIELD_NAME = CSRF_FIELD_NAMES[0];
 
-// 배포 직전에 렌더된 페이지(예: 관리자가 오래 열어둔 글쓰기 폼)가 옛 이름으로 제출해도
-// 실패하지 않도록 남겨둔 하위호환 이름. 검증에서만 받아준다.
-export const LEGACY_CSRF_FIELD_NAME = "csrf_token";
-
-/** 서버 검증 시 토큰으로 받아주는 필드 이름 전체. */
-export const CSRF_ACCEPTED_FIELD_NAMES = [
-  ...CSRF_FIELD_NAMES,
-  LEGACY_CSRF_FIELD_NAME,
-];
+/** 서버 검증 시 토큰으로 받아주는 필드 이름 전체. 심는 이름 전부를 그대로 받는다
+ * (옛 이름 `csrf_token`도 위 목록에 포함돼 있어 하위호환이 유지된다). */
+export const CSRF_ACCEPTED_FIELD_NAMES = CSRF_FIELD_NAMES;
 
 export const CSRF_HEADER_NAME = "x-csrf-token";

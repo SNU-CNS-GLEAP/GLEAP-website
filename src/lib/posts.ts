@@ -108,3 +108,12 @@ export async function updatePost(id: number, input: PostInput) {
 export async function deletePost(id: number) {
   await db.delete(posts).where(eq(posts.id, id));
 }
+
+// sitemap.xml 전용 — 개별 소식 글의 URL과 마지막 수정 시각만 뽑는다.
+// 전체 칼럼(본문 Markdown 포함)을 끌어올 이유가 없어 getAllPostsForExport()와 따로 둔다.
+export async function getPostSitemapEntries() {
+  return db
+    .select({ id: posts.id, updatedAt: posts.updatedAt, publishedAt: posts.publishedAt })
+    .from(posts)
+    .orderBy(desc(posts.publishedAt), desc(posts.id));
+}

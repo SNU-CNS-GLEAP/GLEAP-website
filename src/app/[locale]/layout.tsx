@@ -11,6 +11,7 @@ import {
   defaultSiteSettings,
 } from "@/content/managed-site";
 import { getSiteUrl, localizedAlternates } from "@/lib/site-metadata";
+import { env } from "@/lib/env";
 import { localize } from "@/lib/localized-text";
 import "../globals.css";
 
@@ -65,6 +66,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     robots: {
       index: true,
       follow: true,
+    },
+    // 구글 서치 콘솔 / 네이버 서치어드바이저 소유 확인 태그. 환경변수가 비어 있으면
+    // 아무 태그도 렌더되지 않으므로 로컬·프리뷰에서는 신경 쓸 필요가 없다.
+    verification: {
+      ...(env.googleSiteVerification ? { google: env.googleSiteVerification } : {}),
+      ...(env.naverSiteVerification
+        ? { other: { "naver-site-verification": env.naverSiteVerification } }
+        : {}),
     },
   };
 }

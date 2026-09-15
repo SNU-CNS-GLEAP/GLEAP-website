@@ -33,4 +33,9 @@ export const env = {
   // 백업 메일을 받을 주소. 비어있으면 발신 계정(GMAIL_SMTP_USER) 자신에게 보낸다 — 즉 기본은
   // "snucnsgleap@gmail.com이 자기 자신에게 보내는" 자체 백업.
   postBackupEmailTo: optional("POST_BACKUP_EMAIL_TO") || optional("GMAIL_SMTP_USER"),
+  // 검색엔진 소유 확인용 문자열. 구글 서치 콘솔 / 네이버 서치어드바이저가 발급하는
+  // meta 태그의 content 값만 넣는다(태그 전체가 아님). 없으면 태그가 아예 안 붙는다 —
+  // 확인이 끝난 뒤에도 값은 그대로 두어야 소유권이 유지된다.
+  googleSiteVerification: optional("GOOGLE_SITE_VERIFICATION"),
+  naverSiteVerification: optional("NAVER_SITE_VERIFICATION"),
 };

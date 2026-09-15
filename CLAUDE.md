@@ -716,6 +716,95 @@ next-intl은 기본적으로 요청 헤더에서 locale을 읽기 때문에, 아
   `write/(dashboard)/layout.tsx`에 `robots: { index: false, follow: false }`를 뒀다.
   로그인 뒤에 숨겨야 할 라우트를 추가하면 이것도 같이 챙길 것
 
+### sitemap.xml에 들어가는 것 (2026-09-03)
+
+`src/app/sitemap.ts` 하나가 전부 만든다. 정적 경로 목록 + 콘텐츠 배열에서 파생되는
+경로 + **DB의 소식 게시물 개별 URL**을 합쳐 로케일(ko/en) 2벌로 내보내고, 각 항목에
+`xhtml:link` hreflang 대체 링크를 붙인다.
+
+- 소식 글은 `getPostSitemapEntries()`(`src/lib/posts.ts`)로 id·수정시각만 조회한다 —
+  본문까지 끌어오는 `getAllPostsForExport()`(엑셀 백업용)와 목적이 달라 따로 뒀다
+- **`export const revalidate = 3600`**: sitemap은 기본적으로 빌드 시점에 한 번만
+  만들어지는데, 그러면 배포하기 전까지 새 글이 sitemap에 안 잡혀 색인이 늦어진다.
+  1시간마다 다시 만들게 해서 배포와 무관하게 반영되게 했다
+- **DB 조회는 try/catch로 감쌌다** — Neon이 잠깐 안 되더라도 sitemap 전체가
+  빌드 실패로 날아가는 것보다 정적 경로만이라도 내보내는 쪽이 낫다
+- 페이지를 새로 추가하면 `staticPaths`에도 한 줄 넣을 것. `/activities/[category]`,
+  `/members/alumni/[id]`, `/legal/[document]`처럼 배열에서 파생되는 경로는 자동
+- `/write/*`, `/member/*`는 애초에 넣지 않는다(robots.txt에서도 `Disallow`)
+
+### 크롤러 차단 / 엣지 리퀘스트 폭증 (2026-09-15)
+
+**증상**: 도메인이 붙은 9/2 이후, 9/10부터 Vercel 엣지 리퀘스트가 하루 10만 수준으로
+올라갔다. Hobby 한도가 월 100만이라 이대로면 9/20 전후에 프로젝트가 멈춘다.
+
+**원인**: 상위 IP가 `57.141.x`였고 ARIN RDAP로 조회하니
+`57.141.0.0 - 57.149.255.255` = `FB-BLOCK` / Meta Platforms Ireland,
+ASN은 AS32934(Facebook, Inc.). **Meta의 AI 학습 크롤러가 전체의 95% 이상**이었다.
+검색 유입도 DoS도 아니었다.
+
+**판별에 쓴 근거** (다음에 같은 일이 생기면 이 순서로 볼 것):
+1. **엣지 리퀘스트 ≠ 방문자 수.** JS 청크·CSS·폰트·`/_next/image`·RSC 페이로드가 전부
+   1건씩 잡힌다. 페이지 한 번 열면 25~40건, 사진이 많은 `/members`는 60건도 나온다.
+   **SSG 캐시 HIT도 그대로 카운트되므로 정적 렌더링으로는 이 숫자가 안 줄어든다**
+2. **"매일 꾸준히 10만"은 공격이 아니라 자동 크롤링의 특징이다.** 공격자가 며칠씩
+   같은 양을 유지할 이유가 없다
+3. 새 도메인은 TLS 인증서가 **Certificate Transparency 로그**에 공개되는 순간 봇에게
+   발견된다. 링크를 아무 데도 안 걸어도 트래픽이 온다
+4. IP 대역 소유자는 ARIN RDAP로 바로 확인된다:
+   `https://rdap.arin.net/registry/ip/<IP>` (PTR 레코드는 없는 경우가 많다)
+5. Hobby 플랜 Firewall 분석 뷰에는 **User-Agent 그룹핑이 없을 수 있다.** Runtime Logs도
+   함수 호출만 기록해서 정적 파일 요청은 안 남는다 — UA를 못 봐도 IP/ASN이면 판정에 충분
+
+**대응**:
+- `src/app/robots.ts`에 AI 학습 크롤러 + SEO 도구 크롤러를 `Disallow: /`로 명시.
+  목록과 "왜 이것만 막는지"는 그 파일 주석에 있다
+- **`facebookexternalhit`(링크 미리보기)은 절대 같이 막지 말 것.** Meta 것이라고 IP나
+  ASN으로 통째로 끊으면 인스타그램·페이스북에 사이트 링크를 올릴 때 썸네일이 사라진다.
+  차단은 반드시 **User-Agent 기준**으로 한다
+- `Google-Extended` / `Applebot-Extended`는 AI 학습 전용 옵트아웃 토큰이라 막아도
+  Googlebot·Applebot의 일반 검색 색인에는 영향이 없다
+- **robots.txt는 요청일 뿐 강제가 아니다.** Bytespider처럼 무시하는 봇이 있으므로 실제
+  집행은 Vercel Firewall 커스텀 규칙(User-Agent `meta-externalagent` → **Deny**)으로 한다
+- **Bot Protection을 Challenge로 두는 것만으로는 부족할 수 있다** — Challenge는 요청을
+  떨구는 게 아니라 자바스크립트 챌린지 **페이지를 내려보내므로** 엣지 리퀘스트가 계속
+  소모될 수 있다. 크롤러는 어차피 챌린지를 못 푸니 이 경우 Challenge가 Deny보다 나은
+  점이 없다. Challenge는 오탐 대비 안전망으로만 남기고 표적은 Deny로 잡는다
+- **Attack Challenge Mode(Danger Zone)는 쓰지 말 것.** 모든 방문자를 챌린지하므로
+  Googlebot·네이버 Yeti의 색인까지 같이 막힌다. 원인이 특정 봇으로 좁혀진 상황에서는
+  틀린 도구다
+
+**효과 확인**: Vercel Usage 페이지의 Edge Requests 그래프가 다음 날 꺾이는지 본다.
+안 꺾이면 UA가 안 맞은 것이므로 ASN(AS32934) 차단으로 올리되, 그때는 링크 미리보기를
+포기하는 트레이드오프를 감수하는 것이다.
+
+> 참고로 `src/components/Nav.tsx`는 **모든 방문자가 페이지를 이동할 때마다**
+> `/api/session-status`를 호출한다(루트 레이아웃에 있고 deps가 `[pathname]`). 익명
+> 방문자에겐 쓸모없는 응답인데 엣지 리퀘스트와 함수 호출을 둘 다 먹는다. 이번 폭증의
+> 주범은 아니지만(페이지 이동당 1건) 정리 대상이다.
+
+### 구글·네이버 검색 등록 (소유 확인)
+
+소유 확인용 meta 태그는 `[locale]/layout.tsx`의 `generateMetadata()` → `verification`이
+그린다. 값은 환경변수 두 개에서 오고, **비어 있으면 태그 자체가 렌더되지 않는다** —
+로컬·프리뷰에서는 신경 쓸 필요가 없고 Vercel 프로덕션에만 넣으면 된다.
+
+| 환경변수 | 넣는 값 |
+|---|---|
+| `GOOGLE_SITE_VERIFICATION` | 구글 서치 콘솔이 준 meta 태그의 `content` 값만 |
+| `NAVER_SITE_VERIFICATION` | 네이버 서치어드바이저가 준 meta 태그의 `content` 값만 |
+
+`<meta name="..." content="...">` 태그를 통째로 넣으면 안 된다 — `content` 안의
+문자열만 넣는다. **확인이 끝난 뒤에도 값을 지우면 안 된다**(소유권이 주기적으로
+재확인되며, 태그가 사라지면 등록이 풀린다).
+
+- 두 서비스 모두 "HTML 파일 업로드" 방식도 제공하지만 meta 태그 쪽을 택했다 —
+  파일 방식은 `public/`에 확인용 파일을 커밋해야 해서 public 레포에 흔적이 남고,
+  나중에 도메인이 바뀌면 파일도 같이 관리해야 한다
+- 값을 넣거나 바꾼 뒤에는 **Vercel에서 Redeploy**해야 반영된다(환경변수 공통 규칙)
+- 학교 도메인(CNAME)이 붙으면 그 주소는 **별개의 사이트로 다시 등록**해야 한다.
+  그때 `BETTER_AUTH_URL`도 새 주소로 바꿔야 sitemap의 `<loc>`이 새 도메인으로 나간다
+
 ## 보안 헤더
 
 `next.config.ts`의 `headers()`에서 전 경로에 일괄 적용. Sparrow 웹 취약점 점검

@@ -456,6 +456,56 @@ Neon이 소식 게시물의 유일한 저장소라, 실수로 지우거나 DB �
 - Footer 우측 끝에 `/write`로 가는 작은 링크(`Footer.admin`) 배치 — 로그인 안 된 상태면
   `requireAdmin`이 알아서 로그인 페이지로 보냄
 
+### 비밀번호 교체 (2026-09-21)
+
+계정이 DB에 없고 `ADMIN_PASSWORD_HASH` 환경변수의 bcrypt 해시 하나가 계정의 전부이므로,
+비밀번호 교체 = 해시를 새로 만들어 환경변수를 바꾸는 것이다.
+
+```bash
+npm run admin:hash
+```
+
+`scripts/hash-password.mjs`가 비밀번호를 **화면에 표시하지 않고** 입력받아 해시를 출력한다.
+
+- **명령줄 인자로는 받지 않는다.** 인자로 주면 셸 히스토리(`.bash_history` 등)와 실행 중인
+  프로세스 목록에 비밀번호가 평문으로 남는다. 프롬프트 직접 입력만 허용
+- 두 번 입력받아 오타를 거르고, 만든 해시를 `bcrypt.compare()`로 되검증한 뒤에 출력한다 —
+  엉뚱한 해시를 배포해서 로그인이 막히는 상황을 막기 위함
+- 비용 계수는 12 (약 290ms). 이 값을 바꿔도 **기존 해시는 그대로 동작한다** — bcrypt 해시
+  문자열 안에 자기 비용 계수가 들어있어 `compare()`가 알아서 읽는다
+- 출력은 두 벌이다: **Vercel용 원본**과 **`.env.local`용(`$` 이스케이프됨)**.
+  로컬 파일에 넣을 때 `$`를 escape해야 하는 이유는 [환경변수](#환경변수) 절 참고
+
+**적용 순서** (환경변수만 바꾸고 재배포를 안 하면 옛 비밀번호가 계속 통한다):
+
+1. Vercel > Settings > Environment Variables에서 `ADMIN_PASSWORD_HASH` 교체 (Production)
+2. **Redeploy**
+3. 배포된 사이트 `/ko/write/login`에서 새 비밀번호로 로그인 확인
+4. 팀 볼트(Bitwarden 등) 갱신
+
+> 해시 자체는 비밀이 아니지만(비밀번호를 되돌릴 수 없다) 굳이 공개할 이유도 없다.
+> 커밋하지 말 것 — `.env.local`은 이미 `.gitignore`에 있다.
+
+> **교체가 필요한 시점**: 집행부 교체 때는 반드시. 그 외에 비밀번호를 카톡·노션 등
+> 평문으로 주고받은 적이 있거나, 알고 있던 사람이 팀을 떠날 때도 교체한다.
+
+**⚠️ 비밀번호를 바꿔도 이미 로그인된 세션은 그대로 살아있다.** 세션 쿠키(`gleap_session`)는
+`SESSION_SECRET`으로 암호화되고 `ADMIN_PASSWORD_HASH`와 아무 관계가 없다(`src/lib/session.ts`).
+즉 해시만 바꾸면 "앞으로 새로 로그인하려면 새 비밀번호가 필요하다"가 될 뿐, **이미 브라우저에
+로그인 쿠키를 갖고 있는 사람은 만료될 때까지 계속 관리자다.**
+
+그래서 **접근 권한을 실제로 회수해야 하는 상황**(알던 사람이 팀을 떠남, 비밀번호 유출 의심)
+이라면 `SESSION_SECRET`도 **같이** 새 랜덤값으로 교체해야 한다 — 그래야 기존 쿠키가 복호화
+불가가 되어 전원 로그아웃된다. 집행부 교체처럼 단순 정기 교체라면 해시만 바꿔도 된다.
+
+```bash
+# SESSION_SECRET 새 값 생성 (32바이트 랜덤 hex)
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+`SESSION_SECRET` 교체는 **관리자 세션만** 끊는다. 회원 로그인은 Better Auth가 자체 세션
+테이블과 `BETTER_AUTH_SECRET`으로 관리하므로 영향받지 않는다.
+
 ### 경로가 `/admin`이 아니라 `/write`인 이유 (2026-08-31 변경)
 
 보안 점검에서 "관리자 페이지 노출"(보통)로 지적됐다. 접근 제어가 뚫렸다는 게 아니라
@@ -1002,8 +1052,9 @@ CSRF 11건 항목). 실질적으로는 이중 방어(defense in depth)이지, �
 
 - [ ] Vercel 계정 로그인 정보 이양 (팀 볼트)
 - [ ] GitHub Organization owner 권한 이양
-- [ ] 관리자 비밀번호 교체 절차 문서화
-      → bcrypt 해시 생성 → Vercel `ADMIN_PASSWORD_HASH` 교체 → Redeploy
+- [x] 관리자 비밀번호 교체 절차 문서화
+      → `npm run admin:hash` → Vercel `ADMIN_PASSWORD_HASH` 교체 → Redeploy
+      → 자세한 절차는 [관리자 인증](#관리자-인증) 절의 "비밀번호 교체"
 - [ ] Neon / Blob 대시보드 접근 경로 안내
 - [ ] 학교 DNS 담당 부서 연락처 기록
 - [ ] Vercel 팀 계정에 결제 수단(카드)이 등록되지 않은 상태인지 주기적으로 확인

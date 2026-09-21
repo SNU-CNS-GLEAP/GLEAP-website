@@ -44,7 +44,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/members",
     "/members/alumni",
     "/activities",
-    "/wall-of-honor",
     "/news",
   ];
 

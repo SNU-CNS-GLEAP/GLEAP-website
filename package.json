@@ -10,7 +10,8 @@
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node scripts/migrate.mjs",
-    "audit:csrf": "node scripts/audit-csrf.mjs"
+    "audit:csrf": "node scripts/audit-csrf.mjs",
+    "admin:hash": "node scripts/hash-password.mjs"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.7.1",

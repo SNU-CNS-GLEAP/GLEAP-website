@@ -5,6 +5,7 @@ import { createPost } from "@/lib/posts";
 import { assertCsrfToken } from "@/lib/csrf";
 import { isPostSection } from "@/lib/post-sections";
 import { sendPostBackupEmail } from "@/lib/post-backup-email";
+import { revalidateNewsPages } from "../revalidate";
 
 export async function createPostAction(locale: string, formData: FormData) {
   await assertCsrfToken(formData);
@@ -35,6 +36,7 @@ export async function createPostAction(locale: string, formData: FormData) {
     authorName: authorName || null,
     publishedAt,
   });
+  revalidateNewsPages(id);
 
   await sendPostBackupEmail({
     id,
